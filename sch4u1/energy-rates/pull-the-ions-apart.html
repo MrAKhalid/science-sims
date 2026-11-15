@@ -1,0 +1,309 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Pull the Ions Apart</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Shadows+Into+Light+Two&display=swap">
+<style>
+/* Layout: lined notebook paper (single light theme, like Aaron's notes). Tabs, a sticky control bar,
+   then the particle scene and its live potential-energy graph side by side (stacked on phones). */
+:root{
+  --paper:#fdfdf7;--rule:#b9d4ee;--margin:#ef9a9a;--ink:#1f2030;--ink-soft:#5b5d70;
+  --red:#d62828;--green:#2f9e4b;--pink:#e0399b;--blue:#2457d6;--violet:#6a4bc4;
+  --endo-bg:#fde4e4;--exo-bg:#e3f4e6;
+  --hand:"Patrick Hand","Comic Sans MS","Segoe Print",cursive;
+  --title:"Shadows Into Light Two","Patrick Hand","Segoe Print",cursive;
+  color-scheme:light;
+}
+html{background:var(--paper)}
+body{
+  background-color:var(--paper);
+  background-image:
+    linear-gradient(90deg,transparent 0,transparent 46px,var(--margin) 46px,var(--margin) 48px,transparent 48px),
+    repeating-linear-gradient(180deg,transparent 0,transparent 31px,var(--rule) 31px,var(--rule) 32px);
+  color:var(--ink);font-family:var(--hand);font-size:19px;line-height:1.35;
+}
+.sheet{max-width:1240px;margin:0 auto;padding-block:14px 32px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:12px}
+@media (min-width:700px){.sheet{padding-left:max(64px,env(safe-area-inset-left,0px))}}
+@media (max-width:699px){body{background-image:repeating-linear-gradient(180deg,transparent 0,transparent 31px,var(--rule) 31px,var(--rule) 32px)}}
+h1{font-family:var(--title);font-weight:400;font-size:clamp(26px,3.6vw,38px);margin:0;line-height:1.15;color:var(--blue);text-decoration:underline;text-decoration-color:var(--pink);text-underline-offset:6px;text-wrap:balance}
+.tabs{display:flex;flex-wrap:wrap;border-bottom:2px solid var(--ink)}
+.tabs button{font-family:var(--title);font-size:24px;padding:4px 18px;border:2px solid var(--ink);border-bottom:0;border-radius:8px 8px 0 0;background:var(--paper);color:var(--ink-soft);cursor:pointer;margin-right:6px}
+#tabA[aria-selected="true"]{background:var(--red);border-color:var(--red);color:var(--paper)}
+#tabB[aria-selected="true"]{background:var(--green);border-color:var(--green);color:var(--paper)}
+.ctlbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--paper);padding-block:8px;border-bottom:2px solid var(--ink);display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center}
+.btn{font:inherit;font-size:20px;padding:5px 18px;border:2px solid var(--ink);border-radius:6px;background:var(--paper);color:var(--ink);cursor:pointer}
+.btn:hover{filter:brightness(.95)}
+button:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.badge{font-family:var(--title);font-size:21px;padding:1px 10px;border:2px solid currentColor;border-radius:6px;white-space:nowrap}
+.badge.endo{color:var(--red);background:var(--endo-bg)} .badge.exo{color:var(--green);background:var(--exo-bg)}
+.count{font-size:19px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.stage{display:grid;gap:12px;grid-template-columns:1fr;border:2px solid var(--ink);border-radius:8px;background:rgba(253,253,247,.6);padding:8px}
+@media (min-width:900px),(orientation:landscape){.stage{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:center}}
+canvas{display:block;width:100%;height:auto;max-width:100%}
+#scene{touch-action:none;cursor:grab}
+#scene.dragging{cursor:grabbing}
+.caption{margin:0;min-height:2.8em;font-size:20px;padding:4px 12px;border-left:4px solid var(--ink-soft);background:rgba(253,253,247,.9)}
+.caption.brk{border-color:var(--red)} .caption.hyd{border-color:var(--green)}
+/* landscape: shrink both canvases so scene + graph fit on one screen without scrolling */
+@media (orientation:landscape){
+  canvas{width:min(100%,calc((100dvh - var(--chrome,225px))*600/560));justify-self:center}
+  .sheet{padding-block:8px 6px;gap:8px}
+  .caption{min-height:0}
+}
+@media (orientation:landscape) and (max-height:620px){
+  :root{--chrome:158px}
+  h1{display:none}
+  .sheet{padding-block:4px 8px;gap:6px}
+  .tabs button{font-size:18px;padding:2px 12px}
+  .ctlbar{padding-block:4px}
+  .btn{font-size:16px;padding:2px 12px}
+  .badge{font-size:16px}
+  .count{font-size:15px}
+  .caption{font-size:15px;min-height:0;padding:2px 8px}
+  .stage{padding:4px;gap:6px}
+}
+</style>
+
+<div class="sheet">
+  <h1>Pull the ions apart</h1>
+  <div class="tabs" role="tablist">
+    <button type="button" role="tab" id="tabA" data-tab="endo" aria-selected="true">Endothermic: NH₄NO₃</button>
+    <button type="button" role="tab" id="tabB" data-tab="exo" aria-selected="false">Exothermic: CaCl₂</button>
+  </div>
+  <div class="ctlbar">
+    <button class="btn" id="reset" type="button">Reset crystal</button>
+    <span class="badge" id="badge"></span>
+    <span class="count" id="count"></span>
+  </div>
+  <p class="caption" id="cap"></p>
+  <div class="stage">
+    <canvas id="scene" width="600" height="560" aria-label="A small ionic crystal in water. Drag an ion away from the crystal."></canvas>
+    <canvas id="graph" width="600" height="560" aria-label="Potential energy of the ion you are pulling, plotted against how far it is pulled"></canvas>
+  </div>
+</div>
+
+<script>
+(()=>{
+const HAND='"Patrick Hand","Comic Sans MS",cursive';
+const COL={ink:"#1f2030",soft:"#5b5d70",red:"#d62828",green:"#2f9e4b",pink:"#e0399b",blue:"#2457d6",violet:"#6a4bc4",bub:"#eef5fd"};
+const PAGES={
+  endo:{name:"NH₄NO₃",cat:{t:"NH₄⁺",q:"+",r:17,sh:3},an:{t:"NO₃⁻",q:"−",r:19,sh:3},ratio:1,final:0.25,dH:"+25.7",U:676},
+  exo:{name:"CaCl₂",cat:{t:"Ca²⁺",q:"2+",r:16,sh:4},an:{t:"Cl⁻",q:"−",r:19,sh:3},ratio:2,final:-0.35,dH:"−82.8",U:2258},
+};
+/* Schematic potential energy of the pulled ion vs how far it is pulled (x = 0 in crystal, 1 = fully out).
+   Ionic attraction (Morse-like rise) plus the attraction of water that can only get in once the ion is far enough out. */
+const Mrs=x=>Math.pow(1-Math.exp(-x/0.16),2), Sg=x=>1/(1+Math.exp(-(x-0.6)/0.06));
+const Efn=(x,f)=>Mrs(x)-(1-f)*Sg(x)-(1-f)*0*x;
+function peakOf(f){let bx=0,be=-9;for(let x=0;x<=1;x+=0.001){const e=Efn(x,f);if(e>be){be=e;bx=x;}}return {x:bx,E:be};}
+
+const W=600,H=560,BX=290,BY=285,BR=255,DF=160,WR=10,NW=30,V0=46,KE_PER_E=5;
+const $=id=>document.getElementById(id);
+function setup(cv){const dpr=Math.min(window.devicePixelRatio||1,2);cv.width=W*dpr;cv.height=H*dpr;const c=cv.getContext("2d");c.setTransform(dpr,0,0,dpr,0,0);return c;}
+const sc=$("scene"),gc=$("graph"),sx=setup(sc),gx=setup(gc);
+function rnd(n){const x=Math.sin(n*12.9898+78.233)*43758.5453;return x-Math.floor(x);}
+function hline(ctx,x1,y1,x2,y2,seed=1){const dx=x2-x1,dy=y2-y1,len=Math.hypot(dx,dy)||1,off=(rnd(seed)-.5)*Math.min(5,len*.035);const mx=(x1+x2)/2-dy/len*off,my=(y1+y2)/2+dx/len*off;ctx.beginPath();ctx.moveTo(x1,y1);ctx.quadraticCurveTo(mx,my,x2,y2);ctx.stroke();}
+function arrow(ctx,x,y,dx,dy,color,seed,w=2.6){const len=Math.hypot(dx,dy);if(len<2)return;ctx.save();ctx.strokeStyle=color;ctx.lineWidth=w;ctx.lineCap="round";ctx.lineJoin="round";const x2=x+dx,y2=y+dy;hline(ctx,x,y,x2,y2,seed);const a=Math.atan2(dy,dx),hl=Math.min(14,len*.4);ctx.beginPath();ctx.moveTo(x2-hl*Math.cos(a-.48),y2-hl*Math.sin(a-.48));ctx.lineTo(x2,y2);ctx.lineTo(x2-hl*Math.cos(a+.48),y2-hl*Math.sin(a+.48));ctx.stroke();ctx.restore();}
+function txt(ctx,t,x,y,color,size=18,align="left"){ctx.save();ctx.font=`${size}px ${HAND}`;ctx.textAlign=align;ctx.textBaseline="middle";ctx.lineWidth=4;ctx.strokeStyle="rgba(253,253,247,.92)";ctx.strokeText(t,x,y);ctx.fillStyle=color;ctx.fillText(t,x,y);ctx.restore();}
+const lerp=(a,b,t)=>a+(b-a)*t;
+function flashColor(f){const base=[200,214,232],c=f<0?[31,95,214]:[240,120,0],t=Math.min(1,Math.abs(f));return `rgb(${base.map((v,i)=>Math.round(lerp(v,c[i],t))).join(",")})`;}
+
+let page="endo",S=null,hintOn=true;
+function build(){
+  const P=PAGES[page],sp=2*Math.max(P.cat.r,P.an.r)+6,cols=3,rows=2;
+  S={P,sp,ions:[],waters:[],active:null,done:0,peak:peakOf(P.final),cap:"",lastE:0,flashT:0};
+  for(let r=0;r<rows;r++)for(let q=0;q<cols;q++){
+    const cat=P.ratio===1?((r+q)%2===0):(q===1),t=cat?P.cat:P.an;
+    const x=BX+(q-(cols-1)/2)*sp,y=BY+20+(r-(rows-1)/2)*sp;
+    S.ions.push({cat,r:t.r,q:t.q,sh:t.sh,hx:x,hy:y,x,y,state:"lattice",xp:0,v:0,dir:[0,-1],shell:[],vx:0,vy:0});
+  }
+  const bw=cols*sp/2+16,bh=rows*sp/2+16;let tries=0;
+  while(S.waters.length<NW&&tries<30000){
+    tries++;const a=Math.random()*6.283,rr=Math.sqrt(Math.random())*(BR-16),x=BX+Math.cos(a)*rr,y=BY+Math.sin(a)*rr;
+    if(Math.abs(x-BX)<bw+WR&&Math.abs(y-BY-20)<bh+WR)continue;
+    if(S.waters.some(w=>Math.hypot(w.x-x,w.y-y)<2*WR+10))continue;
+    const e=0.85+Math.random()*0.3,th=Math.random()*6.283,v=V0*Math.sqrt(e);
+    S.waters.push({x,y,vx:Math.cos(th)*v,vy:Math.sin(th)*v,ang:Math.random()*6.28,av:(Math.random()-.5)*2.4,state:"free",fl:0,ion:null,slot:0});
+  }
+  S.E0=S.waters.reduce((a,w)=>a+eOf(w),0)/S.waters.length;S.Tm=0;
+  updateDom(true);
+}
+const eOf=w=>(w.vx*w.vx+w.vy*w.vy)/(V0*V0);
+function setE(w,e){e=Math.max(0.03,e);const v=Math.hypot(w.vx,w.vy),nv=V0*Math.sqrt(e);if(v<1e-6){const th=Math.random()*6.28;w.vx=Math.cos(th)*nv;w.vy=Math.sin(th)*nv;}else{w.vx*=nv/v;w.vy*=nv/v;}}
+const freeW=()=>S.waters.filter(w=>w.state==="free");
+/* move kinetic energy between the pulled ion's bonds and the nearest water molecules */
+function exchange(ion,dE){
+  if(Math.abs(dE)<1e-6)return;
+  const amt=dE*KE_PER_E,near=freeW().map(w=>[w,Math.hypot(w.x-ion.x,w.y-ion.y)]).sort((a,b)=>a[1]-b[1]).slice(0,6).map(p=>p[0]);
+  if(!near.length)return;
+  if(amt>0){let left=amt;for(const grp of [near,freeW()])for(let k=0;k<4&&left>1e-6;k++){const per=left/grp.length;left=0;for(const w of grp){const can=Math.max(0,eOf(w)-0.06),t=Math.min(can,per);setE(w,eOf(w)-t);left+=per-t;w.fl=Math.max(-1,w.fl-t*1.6);}}}
+  else{const per=-amt/near.length;for(const w of near){setE(w,eOf(w)+per);w.fl=Math.min(1,w.fl+per*1.6);}}
+}
+function ionPos(o){let x=o.hx+o.dir[0]*o.xp*DF,y=o.hy+o.dir[1]*o.xp*DF;const R=BR-o.r-(o.state==="escape"?2*WR+8:4),dx=x-BX,dy=y-BY,d=Math.hypot(dx,dy);if(d>R){x=BX+dx/d*R;y=BY+dy/d*R;}o.x=x;o.y=y;}
+
+/* ---- pointer: grab a crystal ion and pull ---- */
+function pt(e){const r=sc.getBoundingClientRect();return [(e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height];}
+let drag=null;
+sc.addEventListener("pointerdown",e=>{
+  if(S.active)return;const [px,py]=pt(e);
+  const o=S.ions.filter(o=>o.state==="lattice").find(o=>Math.hypot(o.x-px,o.y-py)<o.r+10);
+  if(!o)return;
+  e.preventDefault();sc.setPointerCapture(e.pointerId);sc.classList.add("dragging");
+  o.state="held";o.xp=0;o.v=0;S.active=o;drag={id:e.pointerId,ox:px-o.hx,oy:py-o.hy};hintOn=false;S.lastE=0;
+});
+sc.addEventListener("pointermove",e=>{
+  if(!drag||e.pointerId!==drag.id||!S.active||S.active.state!=="held")return;
+  const o=S.active,[px,py]=pt(e),vx=px-drag.ox-o.hx,vy=py-drag.oy-o.hy,d=Math.hypot(vx,vy);
+  if(d>3)o.dir=[vx/d,vy/d];
+  o.xp=Math.max(0,Math.min(1,d/DF));
+  if(o.xp>S.peak.x+0.03){o.state="escape";endDrag();}
+});
+function endDrag(){drag=null;sc.classList.remove("dragging");}
+function release(e){
+  if(!drag||e.pointerId!==drag.id)return;endDrag();
+  const o=S.active;if(!o||o.state!=="held")return;
+  o.state=o.xp>=S.peak.x?"escape":"snap";o.v=0;
+}
+sc.addEventListener("pointerup",release);sc.addEventListener("pointercancel",release);
+
+/* ---- simulation step ---- */
+function step(dt){
+  const P=S.P,o=S.active;
+  if(o){
+    if(o.state==="snap"){o.v+=(-120*o.xp-11*o.v)*dt;o.xp+=o.v*dt;if(o.xp<0){o.xp=0;o.v*=-0.3;}if(o.xp<0.004&&Math.abs(o.v)<0.03){o.xp=0;o.state="lattice";S.active=null;}}
+    else if(o.state==="escape"){
+      o.xp+=(1.04-o.xp)*Math.min(1,dt*2.2);
+      if(o.xp>0.5&&!o.shell.length){
+        const pool=freeW().map(w=>[w,Math.hypot(w.x-o.x,w.y-o.y)]).sort((a,b)=>a[1]-b[1]).slice(0,o.sh).map(p=>p[0]);
+        pool.forEach(w=>{const rest=freeW().filter(q=>!pool.includes(q));if(!rest.length)return;const m=rest.reduce((a,q)=>a+eOf(q),0)/rest.length,d=eOf(w)-m;
+          for(const q of rest)setE(q,eOf(q)+d/rest.length);w.ke=m;});
+        pool.forEach((w,j)=>{w.state="docking";w.ion=o;w.slot=j*2*Math.PI/o.sh+Math.random()*0.5;w.dt=0;w.sx=w.x;w.sy=w.y;w.sang=w.ang;o.shell.push(w);});
+      }
+      if(o.xp>=0.995){o.xp=1;o.state="free";const th=Math.atan2(o.dir[1],o.dir[0])+(Math.random()-.5);o.vx=Math.cos(th)*12;o.vy=Math.sin(th)*12;S.active=null;S.done++;updateDom(true);}
+    }
+    if(o.state==="held"||o.state==="snap"||o.state==="escape"||o.state==="free"){
+      const xx=Math.min(1,o.xp),E=Efn(xx,P.final);exchange(o,E-S.lastE);S.lastE=o.state==="free"?0:E;
+      if(o.state!=="free")ionPos(o);
+    }
+  }
+  const now=performance.now();
+  for(const i of S.ions){
+    if(i.state==="lattice"){i.x=i.hx+Math.sin(now/170+i.hx)*0.8;i.y=i.hy+Math.cos(now/200+i.hy)*0.8;}
+    else if(i.state==="free"){i.x+=i.vx*dt;i.y+=i.vy*dt;const R=BR-i.r-2*WR-8,dx=i.x-BX,dy=i.y-BY,d=Math.hypot(dx,dy);
+      if(d>R){const nx=dx/d,ny=dy/d,vn=i.vx*nx+i.vy*ny;if(vn>0){i.vx-=2*vn*nx;i.vy-=2*vn*ny;}i.x=BX+nx*R;i.y=BY+ny*R;}
+      for(const j of S.ions){if(j===i)continue;const ddx=i.x-j.x,ddy=i.y-j.y,dd=Math.hypot(ddx,ddy)||1,mn=i.r+j.r+(j.state==="free"?4*WR+8:2*WR+10);
+        if(dd<mn){const nx=ddx/dd,ny=ddy/dd,vn=i.vx*nx+i.vy*ny;if(vn<0){i.vx-=2*vn*nx;i.vy-=2*vn*ny;}i.x+=nx*(mn-dd)*.3;i.y+=ny*(mn-dd)*.3;}}}
+  }
+  for(const w of S.waters){
+    w.fl*=Math.exp(-dt/1.6);
+    if(w.state==="docking"||w.state==="bound"){
+      const i=w.ion,dist=i.r+(i.cat?WR+1:WR+11),th=w.slot,tx=i.x+Math.cos(th)*dist,ty=i.y+Math.sin(th)*dist,ta=i.cat?th:th+Math.PI+0.91;
+      if(w.state==="docking"){w.dt+=dt/0.55;const t=Math.min(1,w.dt),e=t*t*(3-2*t);w.x=lerp(w.sx,tx,e);w.y=lerp(w.sy,ty,e);w.ang=lerp(w.sang,ta,e);if(t>=1)w.state="bound";}
+      else{w.x=tx;w.y=ty;w.ang=ta;}
+    }
+  }
+  const fw=freeW();
+  for(const w of fw){w.x+=w.vx*dt;w.y+=w.vy*dt;w.ang+=w.av*dt*Math.sqrt(eOf(w)+.05);
+    const dx=w.x-BX,dy=w.y-BY,d=Math.hypot(dx,dy),R=BR-WR-3;
+    if(d>R){const nx=dx/d,ny=dy/d,vn=w.vx*nx+w.vy*ny;if(vn>0){w.vx-=2*vn*nx;w.vy-=2*vn*ny;}w.x=BX+nx*R;w.y=BY+ny*R;}
+    for(const i of S.ions){const rr=i.r+WR+3+((i.state==="free"||i.state==="escape")&&i.shell.length?2*WR+6:0),ddx=w.x-i.x,ddy=w.y-i.y,dd=Math.hypot(ddx,ddy)||1;
+      if(dd<rr){const nx=ddx/dd,ny=ddy/dd,vn=w.vx*nx+w.vy*ny;if(vn<0){w.vx-=2*vn*nx;w.vy-=2*vn*ny;}w.x=i.x+nx*rr;w.y=i.y+ny*rr;}}
+  }
+  for(let a=0;a<fw.length;a++)for(let b=a+1;b<fw.length;b++){const p=fw[a],q=fw[b],dx=p.x-q.x,dy=p.y-q.y,d2=dx*dx+dy*dy,m=2*WR+2;
+    if(d2<m*m&&d2>.01){const d=Math.sqrt(d2),nx=dx/d,ny=dy/d,k=(p.vx-q.vx)*nx+(p.vy-q.vy)*ny;if(k<0){p.vx-=k*nx;p.vy-=k*ny;q.vx+=k*nx;q.vy+=k*ny;}const o2=(m-d)/2;p.x+=nx*o2;p.y+=ny*o2;q.x-=nx*o2;q.y-=ny*o2;}}
+  // thermometer: average kinetic energy of the free water vs the start
+  const m=fw.length?fw.reduce((a,w)=>a+eOf(w),0)/fw.length:S.E0; // average KE of the moving water (shell molecules handed their difference back when they docked)
+  S.Tm+=((m/S.E0-1)-S.Tm)*(1-Math.exp(-dt/0.8));
+  updateDom(false);
+}
+
+/* ---- drawing: scene ---- */
+function drawWater(ctx,x,y,ang,fill,bound){const hd=WR+3,sp=0.91;ctx.lineWidth=1.3;ctx.strokeStyle=COL.ink;
+  for(const s of [-1,1]){ctx.beginPath();ctx.arc(x+Math.cos(ang+s*sp)*hd,y+Math.sin(ang+s*sp)*hd,4.8,0,6.28);ctx.fillStyle="#fff";ctx.fill();ctx.stroke();}
+  ctx.beginPath();ctx.arc(x,y,WR,0,6.28);ctx.fillStyle=fill;ctx.fill();ctx.strokeStyle=bound?COL.blue:COL.ink;ctx.lineWidth=bound?2.2:1.3;ctx.stroke();}
+function drawIon(ctx,o,glow){
+  if(glow){ctx.beginPath();ctx.arc(o.x,o.y,o.r+7,0,6.28);ctx.fillStyle="rgba(214,40,40,.15)";ctx.fill();}
+  ctx.beginPath();ctx.arc(o.x,o.y,o.r,0,6.28);ctx.fillStyle=o.cat?COL.pink:COL.violet;ctx.fill();ctx.strokeStyle=COL.ink;ctx.lineWidth=1.8;ctx.stroke();
+  ctx.fillStyle="#fff";ctx.font=`bold 17px ${HAND}`;ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(o.q,o.x,o.y+1);}
+function spring(ctx,a,b,d0){
+  const dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy)||1,ux=dx/d,uy=dy/d,nx=-uy,ny=ux;
+  const s=(d-d0)/DF;                       // stretch fraction
+  const x1=a.x+ux*a.r,y1=a.y+uy*a.r,x2=b.x-ux*b.r,y2=b.y-uy*b.r,L=Math.hypot(x2-x1,y2-y1);
+  if(L<2)return;
+  const amp=Math.max(1.5,6*Math.min(1,(d0-a.r-b.r+4)/(L+1))),coils=6,t=Math.min(1,Math.max(0,s/0.45));
+  ctx.strokeStyle=`rgb(${Math.round(lerp(31,214,t))},${Math.round(lerp(32,40,t))},${Math.round(lerp(48,40,t))})`;
+  ctx.lineWidth=lerp(3,1.6,t);ctx.beginPath();ctx.moveTo(x1,y1);
+  const n=coils*2;for(let i=1;i<n;i++){const f=i/n,sg=i%2?1:-1;ctx.lineTo(x1+(x2-x1)*f+nx*amp*sg,y1+(y2-y1)*f+ny*amp*sg);}ctx.lineTo(x2,y2);ctx.stroke();
+}
+function drawScene(){
+  const ctx=sx,P=S.P;ctx.clearRect(0,0,W,H);
+  ctx.save();ctx.beginPath();ctx.arc(BX,BY,BR,0,6.28);ctx.fillStyle=COL.bub;ctx.fill();ctx.clip();
+  // ionic bonds as springs between neighbouring opposite ions still attached
+  const att=S.ions.filter(o=>o.state==="lattice"||o.state==="held"||o.state==="snap"||(o.state==="escape"&&o.xp<S.peak.x+0.06));
+  for(let i=0;i<att.length;i++)for(let j=i+1;j<att.length;j++){const a=att[i],b=att[j];if(a.cat===b.cat)continue;
+    const d0=Math.hypot(a.hx-b.hx,a.hy-b.hy);if(d0>S.sp*1.05)continue;spring(ctx,a,b,d0);}
+  for(const w of S.waters)if(w.state==="free")drawWater(ctx,w.x,w.y,w.ang,flashColor(w.fl),false);
+  for(const o of S.ions){for(const w of o.shell)drawWater(ctx,w.x,w.y,w.ang,flashColor(w.fl),true);drawIon(ctx,o,o===S.active&&o.state==="held");}
+  ctx.restore();
+  ctx.strokeStyle=COL.ink;ctx.lineWidth=2.6;ctx.beginPath();ctx.arc(BX,BY,BR,0,6.28);ctx.stroke();
+  // hint
+  if(hintOn){const o=S.ions[0],t=(performance.now()/900)%1;arrow(ctx,o.x-o.r-6,o.y-o.r-6,-40-20*t,-40-20*t,COL.red,9,3);txt(ctx,"drag an ion out",o.x-100,o.y-92,COL.red,20,"center");}
+  // legend
+  ctx.fillStyle=COL.pink;ctx.beginPath();ctx.arc(30,H-14,8,0,6.28);ctx.fill();txt(ctx,P.cat.t,44,H-14,COL.ink,17);
+  ctx.fillStyle=COL.violet;ctx.beginPath();ctx.arc(110,H-14,8,0,6.28);ctx.fill();txt(ctx,P.an.t,124,H-14,COL.ink,17);
+  txt(ctx,"water flashes blue = slowed down (lost KE), orange = sped up (gained KE)",W-6,H-14,COL.soft,14,"right");
+  // little thermometer (sketch)
+  const tx=W-24,t0=70,t1=420,mid=(t0+t1)/2,lvl=Math.max(t0+10,Math.min(t1-10,mid-S.Tm*600));
+  ctx.fillStyle="#fff";ctx.strokeStyle=COL.ink;ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(tx-7,t0,14,t1-t0+10,7);ctx.fill();ctx.stroke();
+  ctx.beginPath();ctx.arc(tx,t1+18,12,0,6.28);ctx.fillStyle=COL.red;ctx.fill();ctx.stroke();ctx.fillStyle=COL.red;ctx.fillRect(tx-3,lvl,6,t1+10-lvl);
+  ctx.strokeStyle=COL.blue;ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(tx-16,mid);ctx.lineTo(tx-7,mid);ctx.stroke();ctx.setLineDash([]);
+  txt(ctx,"start",tx-18,mid,COL.blue,13,"right");txt(ctx,"water",tx,t0-28,COL.ink,15,"center");txt(ctx,"temp.",tx,t0-12,COL.ink,15,"center");
+}
+
+/* ---- drawing: potential energy graph ---- */
+const GX0=78,GX1=470,EMIN=-0.6,EMAX=1.12,GY0=470,GY1=70;
+const gpx=x=>GX0+x*(GX1-GX0),gpy=E=>GY0-(E-EMIN)/(EMAX-EMIN)*(GY0-GY1);
+function drawGraph(){
+  const ctx=gx,P=S.P,f=P.final,pk=S.peak,endo=f>0,o=S.active;
+  ctx.clearRect(0,0,W,H);
+  arrow(ctx,GX0,GY0+20,0,-(GY0+20-GY1)-18,COL.ink,3,2.2);ctx.strokeStyle=COL.ink;ctx.lineWidth=2.2;hline(ctx,GX0,GY0+20,GX1+60,GY0+20,4);
+  ctx.save();ctx.translate(28,(GY0+GY1)/2);ctx.rotate(-Math.PI/2);txt(ctx,"Potential energy",0,0,COL.ink,20,"center");ctx.restore();
+  txt(ctx,"Distance pulled →",(GX0+GX1)/2+20,GY0+44,COL.ink,20,"center");
+  // baseline
+  ctx.setLineDash([5,5]);ctx.strokeStyle=COL.soft;ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(GX0,gpy(0));ctx.lineTo(GX1+60,gpy(0));ctx.stroke();ctx.setLineDash([]);
+  // curve
+  ctx.strokeStyle=COL.ink;ctx.lineWidth=3;ctx.lineJoin="round";ctx.beginPath();
+  for(let i=0;i<=200;i++){const x=i/200,y=gpy(Efn(x,f));if(i)ctx.lineTo(gpx(x),y);else ctx.moveTo(gpx(x),y);}ctx.stroke();
+  // the ball for the ion being pulled
+  if(o&&o.state!=="free"){const x=Math.min(1,o.xp),y=gpy(Efn(x,f));ctx.beginPath();ctx.arc(gpx(x),y-11,11,0,6.28);ctx.fillStyle=o.cat?COL.pink:COL.violet;ctx.fill();ctx.strokeStyle=COL.ink;ctx.lineWidth=1.8;ctx.stroke();}
+  else{const y=gpy(0);ctx.beginPath();ctx.arc(gpx(0),y-11,11,0,6.28);ctx.fillStyle="rgba(31,32,48,.12)";ctx.fill();ctx.strokeStyle=COL.soft;ctx.setLineDash([3,3]);ctx.stroke();ctx.setLineDash([]);}
+  // dissolved ions resting at the bottom
+  for(let i=0;i<S.done;i++){const io=S.ions.filter(q=>q.state==="free")[i];if(!io)continue;ctx.beginPath();ctx.arc(GX1-14-i*22,gpy(f)-9,8,0,6.28);ctx.fillStyle=io.cat?COL.pink:COL.violet;ctx.fill();ctx.strokeStyle=COL.blue;ctx.lineWidth=2;ctx.stroke();}
+}
+
+/* ---- text ---- */
+function updateDom(force){
+  const P=S.P,o=S.active,endo=P.final>0;
+  $("badge").className="badge "+(endo?"endo":"exo");$("badge").textContent=`${endo?"Endothermic":"Exothermic"}: ΔH ${endo?"> 0":"< 0"}`;
+  $("count").textContent=`Ions dissolved: ${S.done} of ${S.ions.length}`;
+  let cap,cls="";
+  if(!o){cap=S.done===S.ions.length?`Every ion is hydrated. Each one ended ${endo?"higher":"lower"} than it started, so the water ended up ${endo?"cooler (slower)":"warmer (faster)"}. Press Reset to try again.`:`Drag an ion out of the crystal. Pull gently first and let go to see what happens.`;}
+  else if(o.state==="held"){cls="brk";cap=o.xp<S.peak.x*0.6?`The ionic bonds stretch. Pulling the ion away raises its potential energy, and that energy comes from the water.`:`Almost there… the bonds are stretched thin. Let go now and it snaps back. Pull a little further and it breaks free.`;}
+  else if(o.state==="snap"){cls="brk";cap=`Not far enough! The ionic bonds pull the ion back into the crystal and the energy goes back to the water.`;}
+  else if(o.state==="escape"){cls="hyd";cap=`It broke free! Water molecules swarm the ion (${o.cat?"O end toward the + ion":"H end toward the − ion"}). The new attractions lower its potential energy and that energy goes into the water, which speeds up.`;}
+  if(force||cap!==S.cap){$("cap").textContent=cap;$("cap").className="caption "+cls;S.cap=cap;}
+}
+
+/* ---- tabs, reset, loop ---- */
+function show(p,push){page=p;$("tabA").setAttribute("aria-selected",p==="endo"?"true":"false");$("tabB").setAttribute("aria-selected",p==="exo"?"true":"false");build();if(push){try{history.replaceState(null,"",p==="endo"?"#endothermic":"#exothermic");}catch(e){}}}
+document.querySelectorAll(".tabs button").forEach(b=>b.addEventListener("click",()=>show(b.dataset.tab,true)));
+$("reset").addEventListener("click",()=>build());
+window.addEventListener("hashchange",()=>show(location.hash==="#exothermic"?"exo":"endo",false));
+show(location.hash==="#exothermic"?"exo":"endo",false);
+let last=performance.now();
+function frame(now){const dt=Math.min(0.04,(now-last)/1000);last=now;for(let i=0;i<2;i++)step(dt/2);drawScene();drawGraph();requestAnimationFrame(frame);}
+requestAnimationFrame(frame);
+})();
+</script>
+
+</body></html>
