@@ -7,7 +7,7 @@ const srv=http.createServer((q,r)=>{const f=path.join(root,decodeURIComponent(q.
   fs.readFile(f,(e,d)=>{if(e){r.writeHead(404);r.end();return;}r.writeHead(200,{'Content-Type':types[path.extname(f)]||'application/octet-stream'});r.end(d);});}).listen(0);
 (async()=>{
   const port=srv.address().port;
-  const sims=[];for(const c of ['sph4u1','sch4u1'])for(const u of fs.readdirSync(path.join(root,c),{withFileTypes:true}))
+  const sims=[];for(const c of ['sph4u1','sch4u1','green-industries'])for(const u of fs.readdirSync(path.join(root,c),{withFileTypes:true}))
     if(u.isDirectory())for(const f of fs.readdirSync(path.join(root,c,u.name)))if(f.endsWith('.html'))sims.push(`${c}/${u.name}/${f}`);
   const b=await chromium.launch();
   for(const s of sims){
