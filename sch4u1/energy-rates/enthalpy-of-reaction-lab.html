@@ -1,0 +1,810 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Enthalpy of Reaction Lab</title>
+<style>
+:root{
+  color-scheme:light;
+  --bg:#eef1f5; --panel:#ffffff; --ink:#1d2430; --muted:#5b6575; --line:#d5dbe4;
+  --accent:#1f5fbf; --accent2:#e2e9f6; --good:#1e8a4c; --goodbg:#e3f4ea; --bad:#b3261e; --badbg:#fbe7e5;
+  --warn:#8a5a00; --warnbg:#fff3d6; --trace:#d43fc4;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:15px}
+header{background:#14325f;color:#fff;padding:10px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+header h1{font-size:18px;margin:0;font-weight:600}
+nav{display:flex;gap:4px;flex-wrap:wrap}
+nav button{background:#24497f;color:#fff;border:0;padding:8px 14px;border-radius:6px;font-size:14px;cursor:pointer}
+nav button.active{background:#fff;color:#14325f;font-weight:600}
+header .spacer{flex:1}
+header .ctl{display:flex;gap:8px;align-items:center;font-size:13px}
+header select, header .btn{font-size:13px}
+.wrap{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:14px;padding:14px;max-width:1400px;margin:0 auto}
+@media (max-width:900px){.wrap{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
+.tab{display:none}.tab.active{display:block}
+h2{font-size:17px;margin:0 0 8px}
+h3{font-size:15px;margin:12px 0 6px}
+.btn{background:var(--accent);color:#fff;border:0;border-radius:6px;padding:8px 12px;font-size:14px;cursor:pointer;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.btn.secondary{background:var(--accent2);color:var(--accent)}
+.btn.danger{background:#b3261e}
+.btn.go{background:#1e8a4c}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btnrow{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.msg{border-radius:6px;padding:8px 10px;margin:8px 0;font-size:14px}
+.msg.info{background:var(--accent2);color:#163a73}
+.msg.warn{background:var(--warnbg);color:var(--warn)}
+.msg.bad{background:var(--badbg);color:var(--bad)}
+.msg.good{background:var(--goodbg);color:var(--good)}
+.muted{color:var(--muted);font-size:13px}
+.calgrid{display:grid;grid-template-columns:minmax(260px,360px) minmax(0,1fr);gap:14px}
+@media (max-width:760px){.calgrid{grid-template-columns:1fr}}
+.readout{font-size:52px;color:var(--trace);font-weight:300;line-height:1;font-variant-numeric:tabular-nums}
+.readbox{border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.readbox .lbl{font-size:12px;color:var(--muted)}
+canvas{width:100%;display:block;border:1px solid var(--line);border-radius:8px;background:#fff}
+.measgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.measgrid{grid-template-columns:1fr}}
+.lcd{font-family:"Courier New",monospace}
+.notebook{background:#fffdf3;border:1px solid #e7dfb8;background-image:repeating-linear-gradient(#fffdf3 0 27px,#e8e4cf 27px 28px)}
+.notebook label{display:block;font-size:13px;margin-top:10px;color:#4a4230}
+.notebook input,.notebook select,.notebook textarea{width:100%;font-size:15px;padding:6px 8px;border:1px solid #cfc6a0;border-radius:5px;background:#fff;font-family:inherit}
+.fieldrow{display:flex;gap:6px;align-items:center}
+.fieldrow input{flex:1}
+.unit{font-size:13px;color:#4a4230;min-width:34px}
+.status{font-size:12px;margin-top:3px;min-height:15px}
+.status.good{color:var(--good)}.status.bad{color:var(--bad)}.status.warn{color:var(--warn)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border:1px solid var(--line);padding:5px 7px;text-align:left}
+th{background:#f3f5f9}
+.calc label{display:block;font-weight:600;margin-top:12px;font-size:14px}
+.calc .fieldrow input{max-width:200px}
+.calc select{font-size:15px;padding:6px}
+.calc input{font-size:15px;padding:6px 8px;border:1px solid var(--line);border-radius:5px}
+.eq{font-family:Georgia,serif;font-size:18px;background:#f6f8fb;border-radius:6px;padding:8px 12px;display:inline-block}
+@keyframes swirl{0%{transform:translate(0,0) rotate(0)}25%{transform:translate(5px,-1px) rotate(1.2deg)}50%{transform:translate(0,-2px) rotate(0)}75%{transform:translate(-5px,-1px) rotate(-1.2deg)}100%{transform:translate(0,0) rotate(0)}}
+#cupGroup.swirling{animation:swirl .55s linear infinite;transform-box:fill-box;transform-origin:50% 100%}
+#lidGroup{transition:transform .6s ease}
+#lidGroup.off{transform:translate(120px,40px) rotate(8deg)}
+.small{font-size:12px}
+.nbjump{display:none;text-decoration:none}
+@media (max-width:900px){.nbjump{display:inline-block}}
+.notebook input:disabled,.notebook select:disabled,.notebook textarea:disabled,.calc input:disabled{background:#f1efe6;color:#555}
+@media (max-width:600px){.wrap{padding:8px;gap:8px}.panel{padding:10px}header h1{font-size:16px}.readout{font-size:40px}.btn{padding:9px 11px}}
+.tscroll{overflow-x:auto}
+table.rep td:nth-child(4){min-width:220px}
+tr.r-good td:last-child{color:var(--good)} tr.r-bad td:last-child{color:var(--bad)} tr.r-warn td:last-child{color:var(--warn)}
+@media print{header,aside,#tab-cal,#tab-meas,.btnrow{display:none!important} .tab{display:block!important} .wrap{display:block}}
+
+.eqbar{background:#f6f8fb;border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin:0 0 10px;font-size:16px}
+.rxnpick{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.rxnpick select{font-size:15px;padding:6px;max-width:100%}
+.cylrow{display:flex;gap:10px;align-items:flex-start}
+.cylsvg{width:80px;flex:none}
+.zoomcol{flex:1;min-width:0}
+.zoomsvg{width:100%;max-width:230px;border:1px solid var(--line);border-radius:8px;background:#fff}
+.bottle{margin:4px 0 8px}
+.bottleTag{display:inline-block;border:2px solid #14325f;border-radius:6px;padding:4px 10px;font-weight:700;font-size:14px;background:#fff;line-height:1.3}
+.probebox{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:6px 0}
+.probeRead{font-size:26px;color:var(--trace);font-variant-numeric:tabular-nums;min-width:110px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Enthalpy of Reaction: Coffee-Cup Calorimetry</h1>
+  <nav>
+    <button data-tab="cal" class="active">1. Calorimeter</button>
+    <button data-tab="meas">2. Measurements</button>
+    <button data-tab="calc">3. Calculations and Analysis</button>
+  </nav>
+  <div class="spacer"></div>
+  <div class="ctl">
+    <label for="speed">Sim speed</label>
+    <select id="speed"><option value="1">1×</option><option value="2" selected>2×</option><option value="4">4×</option><option value="8">8×</option></select>
+    <a class="btn secondary nbjump" href="#notebook">📓 Notebook</a>
+    <button class="btn danger" id="newTrial">New trial</button>
+  </div>
+</header>
+
+<div class="wrap">
+<main>
+  <!-- ================= CALORIMETER ================= -->
+  <section class="tab active panel" id="tab-cal">
+    <div id="calBanner" class="msg warn">Before you can start, go to the <b>Measurements</b> tab, choose a reaction, and measure your solutions. Write every value in your lab notebook.</div>
+    <div class="eqbar" id="eqBarCal"></div>
+    <div class="calgrid">
+      <div>
+        <svg id="calSvg" viewBox="0 0 360 340" width="100%" aria-label="Foam cup calorimeter on lab bench">
+          <defs>
+            <linearGradient id="bench" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b3f45"/><stop offset="1" stop-color="#23262a"/></linearGradient>
+            <linearGradient id="foam" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#e9ecef"/><stop offset=".35" stop-color="#ffffff"/><stop offset=".8" stop-color="#f3f4f6"/><stop offset="1" stop-color="#d9dde2"/></linearGradient>
+            <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#dfe7ef"/><stop offset="1" stop-color="#c9d3de"/></linearGradient>
+          </defs>
+          <rect x="0" y="0" width="360" height="270" fill="url(#wall)"/>
+          <rect x="0" y="262" width="360" height="78" fill="url(#bench)"/>
+          <rect x="0" y="262" width="360" height="5" fill="#55595f"/>
+          <rect x="285" y="40" width="8" height="225" fill="#8a9097"/>
+          <rect x="262" y="258" width="70" height="8" rx="2" fill="#6d737a"/>
+          <rect x="190" y="58" width="100" height="7" fill="#8a9097"/>
+          <rect x="182" y="50" width="16" height="22" rx="3" fill="#55595f"/>
+          <path d="M190 52 C 230 10, 300 20, 330 60" stroke="#c8d0d8" stroke-width="3" fill="none"/>
+          <rect x="300" y="55" width="44" height="22" rx="5" fill="#2a63c9"/><text x="322" y="70" font-size="8" fill="#fff" text-anchor="middle">PASCO</text>
+          <g id="cupGroup">
+            <ellipse cx="150" cy="262" rx="70" ry="7" fill="#000" opacity=".25"/>
+            <rect x="185" y="40" width="10" height="40" rx="3" fill="#2a63c9"/>
+            <rect x="188.5" y="78" width="3" height="150" fill="#b9c1c9"/>
+            <path d="M80 110 L220 110 L205 260 L95 260 Z" fill="url(#foam)" stroke="#c6ccd3"/>
+            <ellipse cx="150" cy="110" rx="70" ry="9" fill="#f7f8f9" stroke="#c6ccd3"/>
+            <ellipse id="cupInside" cx="150" cy="111" rx="62" ry="6" fill="#dfe3e8"/>
+            <text x="150" y="170" text-anchor="middle" font-size="12.5" font-weight="700" fill="#14325f">Gonzaga Chemistry</text>
+            <text x="150" y="188" text-anchor="middle" font-size="11" fill="#14325f">Max Volume 75 mL</text>
+            <g id="dirtyFilm" style="display:none" fill="#b8b2a0" opacity=".55">
+              <circle cx="104" cy="150" r="3"/><circle cx="112" cy="222" r="2.5"/><circle cx="190" cy="200" r="3.5"/><circle cx="170" cy="240" r="2"/><circle cx="125" cy="125" r="2"/><circle cx="198" cy="235" r="2.5"/>
+            </g>
+            <g id="wetDrops" style="display:none" fill="#a9d3f5" opacity=".9">
+              <ellipse cx="100" cy="135" rx="2.5" ry="4"/><ellipse cx="118" cy="205" rx="2" ry="3.5"/><ellipse cx="196" cy="150" rx="2.5" ry="4"/>
+              <ellipse cx="182" cy="225" rx="2" ry="3.5"/><ellipse cx="140" cy="232" rx="2" ry="3"/><ellipse cx="205" cy="128" rx="2" ry="3"/>
+            </g>
+            <g id="lidGroup">
+              <ellipse cx="150" cy="104" rx="74" ry="10" fill="#fafafa" stroke="#bfc6ce"/>
+              <rect x="76" y="96" width="148" height="8" fill="#fafafa"/>
+              <ellipse cx="150" cy="96" rx="74" ry="10" fill="#ffffff" stroke="#bfc6ce"/>
+              <text x="120" y="99" font-size="8" fill="#98a1ab">LID</text>
+            </g>
+            <ellipse cx="190" cy="96" rx="5" ry="2" fill="#7f8891"/>
+          </g>
+          <g id="cylAOnBench" style="display:none">
+            <rect x="18" y="150" width="20" height="112" fill="#e8f3ff" stroke="#8aa" opacity=".9"/>
+            <rect id="cylAOnBenchLiq" x="19" y="200" width="18" height="62" fill="#9cc8f2" opacity=".8"/>
+            <text x="28" y="282" text-anchor="middle" font-size="10" fill="#ddd">A</text>
+          </g>
+          <g id="cylBOnBench" style="display:none">
+            <rect x="236" y="150" width="20" height="112" fill="#e8f3ff" stroke="#8aa" opacity=".9"/>
+            <rect id="cylBOnBenchLiq" x="237" y="200" width="18" height="62" fill="#9cc8f2" opacity=".8"/>
+            <text x="246" y="282" text-anchor="middle" font-size="10" fill="#ddd">B</text>
+          </g>
+          <g id="znOnBench" style="display:none">
+            <path d="M226 255 L270 255 L262 262 L234 262 Z" fill="#eef3f8" stroke="#9aa6b2"/>
+            <ellipse cx="248" cy="254" rx="13" ry="4" fill="#9aa0a6" stroke="#777"/>
+            <text x="248" y="282" text-anchor="middle" font-size="10" fill="#ddd">Zn powder</text>
+          </g>
+        </svg>
+        <div class="btnrow">
+          <button class="btn secondary" id="btnRinse">Rinse with distilled water</button>
+          <button class="btn secondary" id="btnDry">Dry with paper towel</button>
+        </div>
+        <div class="btnrow">
+          <button class="btn" id="btnAddA">Pour solution A</button>
+          <button class="btn go" id="btnStart">Start</button>
+          <button class="btn danger" id="btnStop">Stop</button>
+        </div>
+        <div class="btnrow">
+          <button class="btn secondary" id="btnLid">Remove lid</button>
+          <button class="btn secondary" id="btnAddB">Pour solution B</button>
+          <button class="btn secondary" id="btnSwirl">Hold to swirl</button>
+        </div>
+        <div id="calMsg" class="msg info">Measure your solutions first.</div>
+      </div>
+      <div>
+        <div class="readbox">
+          <div><div class="lbl">Temperature (°C) · Latest value</div><div class="readout" id="readout">--.- °C</div></div>
+          <div class="muted" style="text-align:right">Run time<br><b id="runTime" style="font-size:20px">0 s</b><br><span id="runState">Not recording</span></div>
+        </div>
+        <canvas id="graph" width="900" height="520"></canvas>
+        <p class="muted">Record T<sub>i</sub> from the digital readout once solution A's graph is flat (both solutions are assumed to start at the same temperature). Then record T<sub>f</sub> at the highest (or lowest) temperature, once the graph levels off. Probe resolution: 0.1 °C.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MEASUREMENTS ================= -->
+  <section class="tab panel" id="tab-meas">
+    <div class="rxnpick">
+      <label for="rxnSel"><b>Reaction:</b></label>
+      <select id="rxnSel"></select>
+    </div>
+    <div class="eqbar" id="eqBarMeas"></div>
+    <div class="measgrid">
+      <div class="cylpanel" id="panelA">
+        <h2>Solution A: <span id="nameA"></span></h2>
+        <div class="bottle"><span class="bottleTag" id="labelA"></span></div>
+        <div class="cylrow">
+          <svg id="cylSvgA" viewBox="0 0 90 330" class="cylsvg" aria-label="Graduated cylinder A"></svg>
+          <div class="zoomcol">
+            <div class="muted small">Eye-level view of the meniscus</div>
+            <svg id="zoomSvgA" viewBox="0 0 220 300" class="zoomsvg" aria-label="Magnified meniscus A"></svg>
+          </div>
+        </div>
+        <div class="btnrow">
+          <button class="btn" data-pour="A" data-amt="big">Pour from bottle</button>
+          <button class="btn" data-pour="A" data-amt="small">Pour slowly</button>
+          <button class="btn" data-pour="A" data-amt="drop">Add with dropper</button>
+          <button class="btn secondary" data-pour="A" data-amt="out">Pour a little out</button>
+        </div>
+        <div class="btnrow"><button class="btn go" data-take="A">Take cylinder A to calorimeter</button></div>
+        <div id="msgA" class="msg info">Read the bottom of the meniscus and estimate one digit past the 1 mL marks.</div>
+      </div>
+      <div class="cylpanel" id="panelB">
+        <h2>Solution B: <span id="nameB"></span></h2>
+        <div id="bSolution">
+          <div class="bottle"><span class="bottleTag" id="labelB"></span></div>
+          <div class="cylrow">
+            <svg id="cylSvgB" viewBox="0 0 90 330" class="cylsvg" aria-label="Graduated cylinder B"></svg>
+            <div class="zoomcol">
+              <div class="muted small">Eye-level view of the meniscus</div>
+              <svg id="zoomSvgB" viewBox="0 0 220 300" class="zoomsvg" aria-label="Magnified meniscus B"></svg>
+            </div>
+          </div>
+          <div class="btnrow">
+            <button class="btn" data-pour="B" data-amt="big">Pour from bottle</button>
+            <button class="btn" data-pour="B" data-amt="small">Pour slowly</button>
+            <button class="btn" data-pour="B" data-amt="drop">Add with dropper</button>
+            <button class="btn secondary" data-pour="B" data-amt="out">Pour a little out</button>
+          </div>
+          <div class="btnrow"><button class="btn go" data-take="B">Take cylinder B to calorimeter</button></div>
+        </div>
+        <div id="bZinc" style="display:none">
+          <p>Zinc powder is added <b>in excess</b>, so all of the copper(II) sulfate reacts. You don't need to weigh it. Its mass is not included in m.</p>
+          <div class="btnrow"><button class="btn go" id="btnTakeZn">Take a scoop of zinc powder to the calorimeter</button></div>
+        </div>
+        <div id="msgB" class="msg info">Read the bottom of the meniscus and estimate one digit past the 1 mL marks.</div>
+      </div>
+    </div>
+    <div class="msg info">The calorimeter holds at most <b>75 mL</b> in total. Plan your volumes so that A + B fits.</div>
+  </section>
+
+  <!-- ================= CALCULATIONS ================= -->
+  <section class="tab panel calc" id="tab-calc">
+    <h2>Calculations and Analysis</h2>
+    <p>Use only the data in your lab notebook. Assume the solutions have the density of water (1.00 g/mL) and c = 4.18 J/(g·°C). The mass m is the total mass of solution in the calorimeter. ΔH<sub>x</sub> is per mole of solution A's solute, which is always the limiting reactant.</p>
+    <div class="eq">nΔH<sub>x</sub> = −mcΔT &nbsp;&nbsp; n = cV</div>
+    <div id="calcNeeds" class="msg warn"></div>
+    <div id="calcBody">
+      <label>1. Total mass of solution, m</label>
+      <div class="fieldrow"><input id="cM" inputmode="decimal" autocomplete="off"><span class="unit">g</span></div>
+      <label>2. Change in temperature, ΔT = T<sub>f</sub> − T<sub>i</sub></label>
+      <div class="fieldrow"><input id="cDT" inputmode="decimal" autocomplete="off"><span class="unit">°C</span></div>
+      <label id="lblN">3. Moles of limiting reactant, n</label>
+      <div class="fieldrow"><input id="cN" inputmode="decimal" autocomplete="off"><span class="unit">mol</span></div>
+      <label id="lblH">4. Molar enthalpy of reaction, ΔH<sub>x</sub></label>
+      <div class="fieldrow"><input id="cH" inputmode="decimal" autocomplete="off">
+        <select id="cHU"><option value="">unit…</option><option>J</option><option>kJ</option><option>J/mol</option><option>kJ/mol</option><option>J/mL</option><option>J/(g·°C)</option><option>mol/L</option></select>
+      </div>
+      <label>5. Percent error</label>
+      <div class="fieldrow"><input id="cP" inputmode="decimal" autocomplete="off"><span class="unit">%</span></div>
+      <p class="muted">% error = |experimental − accepted| ÷ |accepted| × 100%. Enter numbers only (scientific notation like 1.8e4 is fine). Use a minus sign where needed.</p>
+      <div class="btnrow"><button class="btn go" id="btnSubmit">Submit lab (one attempt)</button></div>
+    </div>
+    <div id="report"></div>
+    <h3>Reference data</h3>
+    <div class="tscroll"><table id="refTable"><thead><tr><th>Reaction</th><th>ΔH<sub>x</sub> per mole of</th><th>Accepted ΔH<sub>x</sub> (kJ/mol)</th></tr></thead><tbody></tbody></table></div>
+  </section>
+</main>
+
+<!-- ================= NOTEBOOK ================= -->
+<aside class="panel notebook" id="notebook">
+  <h2>📓 Lab notebook</h2>
+  <div class="muted small">The equipment won't remember your readings. Write each value here with the correct number of significant digits.</div>
+  <label for="nbRxn">Reaction</label>
+  <select id="nbRxn"><option value="">choose…</option></select>
+  <label for="nbCA" id="nbLblCA">Concentration of solution A</label>
+  <div class="fieldrow"><input id="nbCA" inputmode="decimal" autocomplete="off"><span class="unit">mol/L</span></div>
+  <label for="nbVA" id="nbLblVA">Volume of solution A</label>
+  <div class="fieldrow"><input id="nbVA" inputmode="decimal" autocomplete="off"><span class="unit">mL</span></div>
+  <div id="nbBfields">
+    <label for="nbVB" id="nbLblVB">Volume of solution B</label>
+    <div class="fieldrow"><input id="nbVB" inputmode="decimal" autocomplete="off"><span class="unit">mL</span></div>
+  </div>
+  <label for="nbTi">Initial temperature, T<sub>i</sub></label>
+  <div class="fieldrow"><input id="nbTi" inputmode="decimal" autocomplete="off"><span class="unit">°C</span></div>
+  <label for="nbTf">Final temperature, T<sub>f</sub></label>
+  <div class="fieldrow"><input id="nbTf" inputmode="decimal" autocomplete="off"><span class="unit">°C</span></div>
+  <div class="muted small">Your notebook is checked when you submit the lab on the Calculations and Analysis tab.</div>
+</aside>
+</div>
+
+<script>
+(() => {
+"use strict";
+// ---------- reactions (ΔH from standard enthalpies of formation, 25 °C) ----------
+const CONCS = [0.25, 0.50, 0.75, 1.00, 1.25, 1.50];
+const RXNS = [
+  {id:"HCl", title:"Neutralization of hydrochloric acid", eq:"HCl(aq) + NaOH(aq) → NaCl(aq) + H₂O(l)",
+   A:{f:"HCl(aq)", name:"hydrochloric acid", conc:[0.50,0.75,1.00,1.25]}, B:{f:"NaOH(aq)", name:"sodium hydroxide"}, ratio:1, dH:-55.8, per:"HCl",
+   obs:"No visible change; the solution stays colourless."},
+  {id:"HNO3", title:"Neutralization of nitric acid", eq:"HNO₃(aq) + KOH(aq) → KNO₃(aq) + H₂O(l)",
+   A:{f:"HNO₃(aq)", name:"nitric acid", conc:[0.50,0.75,1.00,1.25]}, B:{f:"KOH(aq)", name:"potassium hydroxide"}, ratio:1, dH:-55.8, per:"HNO₃",
+   obs:"No visible change; the solution stays colourless."},
+  {id:"H2SO4", title:"Neutralization of sulfuric acid", eq:"H₂SO₄(aq) + 2 NaOH(aq) → Na₂SO₄(aq) + 2 H₂O(l)",
+   A:{f:"H₂SO₄(aq)", name:"sulfuric acid", conc:[0.25,0.50]}, B:{f:"NaOH(aq)", name:"sodium hydroxide"}, ratio:2, dH:-111.6, per:"H₂SO₄",
+   obs:"No visible change; the solution stays colourless."},
+  {id:"AgNO3", title:"Precipitation of silver chloride", eq:"AgNO₃(aq) + NaCl(aq) → AgCl(s) + NaNO₃(aq)",
+   A:{f:"AgNO₃(aq)", name:"silver nitrate", conc:[0.25,0.50,0.75,1.00]}, B:{f:"NaCl(aq)", name:"sodium chloride"}, ratio:1, dH:-65.4, per:"AgNO₃",
+   obs:"A thick white precipitate forms immediately.", mix:"#f4f4f2"},
+  {id:"CuSO4", title:"Zinc and copper(II) sulfate", eq:"Zn(s) + CuSO₄(aq) → ZnSO₄(aq) + Cu(s)",
+   A:{f:"CuSO₄(aq)", name:"copper(II) sulfate", conc:[0.25,0.50,0.75], color:"#4a90d9"}, B:null, ratio:1, dH:-218.7, per:"CuSO₄",
+   obs:"The blue colour fades and a reddish-brown solid (copper) forms.", mix:"#b9d6ee", slow:true},
+  {id:"NaHCO3", title:"Sodium bicarbonate and hydrochloric acid", eq:"NaHCO₃(aq) + HCl(aq) → NaCl(aq) + H₂O(l) + CO₂(g)",
+   A:{f:"NaHCO₃(aq)", name:"sodium hydrogen carbonate", conc:[0.75,1.00]}, B:{f:"HCl(aq)", name:"hydrochloric acid"}, ratio:1, dH:12.7, per:"NaHCO₃",
+   obs:"The mixture fizzes as carbon dioxide gas bubbles out."},
+];
+for(let i=RXNS.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [RXNS[i],RXNS[j]]=[RXNS[j],RXNS[i]]; }
+// random bottle labels each time the app opens; solution B is always in excess when equal volumes are used
+RXNS.forEach(r => {
+  r.cA = r.A.conc[Math.floor(Math.random()*r.A.conc.length)];
+  if(r.B){ const ok = CONCS.filter(c => c >= r.ratio*r.cA + 0.249); r.cB = ok[Math.floor(Math.random()*ok.length)]; }
+});
+const C_WATER = 4.18, CUP_HEAT_CAP = 10, MAX_CAL = 75;
+const $ = id => document.getElementById(id);
+const rand = (a,b) => a + Math.random()*(b-a);
+let gaussSpare = null;
+function gauss(){ if(gaussSpare!==null){const g=gaussSpare;gaussSpare=null;return g;}
+  let u=0,v=0; while(u===0)u=Math.random(); v=Math.random();
+  const r=Math.sqrt(-2*Math.log(u)); gaussSpare=r*Math.sin(2*Math.PI*v); return r*Math.cos(2*Math.PI*v); }
+const rxnById = id => RXNS.find(r=>r.id===id);
+const cStr = c => c.toFixed(2);
+
+// ---------- state ----------
+let S;
+function newState(){
+  const room = rand(20.5, 23.0);
+  return {
+    room, rxn: null,
+    cyl: { A:{V:0, T: room, taken:false, poured:false},
+           B:{V:0, T: room, taken:false, poured:false} },
+    znTaken:false,
+    rinsed:false, dried:false, dirty:true, residual:rand(1.5, 3.0),
+    aAdded:false, bAdded:false, calV:0, lidOn:true,
+    Tw: room, Tp: room, fluct:0, fluctEnv:0, f:0, nRxn:0, swirl:false, dHtrue:0,
+    running:false, stopped:false, submitted:false, t:0, sampleAcc:0, data:[],
+    tB:null, bLidOff:null, swirlAfterB:0, lidOffSince:null, bLimiting:false,
+    TiTrue:null, TiProbeSettled:true, TfTrue:null, TfLo:null, TfHi:null, completeAt:null,
+  };
+}
+
+// ---------- tabs ----------
+document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
+  document.querySelectorAll("nav button").forEach(x => x.classList.toggle("active", x===b));
+  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.id==="tab-"+b.dataset.tab));
+  if(b.dataset.tab==="calc") refreshCalc();
+  drawGraph();
+});
+
+// ---------- menus and reference table ----------
+const rxnSel = $("rxnSel"), nbRxn = $("nbRxn");
+RXNS.forEach(r => {
+  rxnSel.add(new Option(r.title, r.id));
+  nbRxn.add(new Option(r.title, r.id));
+  const tr = document.createElement("tr");
+  tr.innerHTML = `<td>${r.eq}</td><td>${r.per}</td><td>${r.dH>0?"+":""}${r.dH.toFixed(1)}</td>`;
+  document.querySelector("#refTable tbody").appendChild(tr);
+});
+function msg(el, text, kind="info"){ const e=$(el); e.className="msg "+kind; e.innerHTML=text; }
+function curRxn(){ return rxnById(rxnSel.value); }
+
+function renderRxn(){
+  const r = curRxn();
+  rxnSel.disabled = S.cyl.A.V>0 || S.cyl.B.V>0 || S.aAdded || S.znTaken;
+  const eq = `<b>${r.eq}</b> <span class="muted">· ΔH<sub>x</sub> per mole of ${r.per}</span>`;
+  $("eqBarMeas").innerHTML = eq;
+  $("eqBarCal").innerHTML = S.rxn ? `<b>${rxnById(S.rxn).eq}</b>` : "";
+  $("eqBarCal").style.display = S.rxn ? "" : "none";
+  $("nameA").textContent = `${r.A.name}, ${r.A.f}`;
+  $("labelA").innerHTML = `${r.A.f}<br>${cStr(r.cA)} mol/L`;
+  if(r.B){ $("nameB").textContent = `${r.B.name}, ${r.B.f}`; $("labelB").innerHTML = `${r.B.f}<br>${cStr(r.cB)} mol/L`; }
+  else $("nameB").textContent = "zinc powder, Zn(s)";
+  $("bSolution").style.display = r.B ? "" : "none";
+  $("bZinc").style.display = r.B ? "none" : "";
+  $("msgB").style.display = r.B ? "" : "none";
+  $("btnTakeZn").disabled = S.znTaken;
+  $("btnAddB").textContent = r.B ? "Pour solution B" : "Add zinc powder";
+  // notebook labels follow the reaction chosen in the notebook (or the current one)
+  const nr = rxnById(nbRxn.value) || r;
+  $("nbLblCA").textContent = `Concentration of ${nr.A.f}`;
+  $("nbLblVA").textContent = `Volume of ${nr.A.f}`;
+  $("nbBfields").style.display = nr.B ? "" : "none";
+  if(nr.B){ $("nbLblVB").textContent = `Volume of ${nr.B.f}`; }
+  $("lblN").innerHTML = `3. Moles of ${nr.per}, n`;
+  $("lblH").innerHTML = `4. Molar enthalpy of reaction, ΔH<sub>x</sub> (per mole of ${nr.per})`;
+}
+rxnSel.onchange = () => { nbRxn.value = rxnSel.value; renderRxn(); renderCyl("A"); renderCyl("B"); };
+// keep the bench reaction and the notebook reaction in step
+nbRxn.onchange = () => {
+  if(nbRxn.value && nbRxn.value !== rxnSel.value){
+    if(!rxnSel.disabled){ rxnSel.value = nbRxn.value; renderCyl("A"); renderCyl("B"); }
+    else alertRxn();
+  }
+  renderRxn();
+};
+function alertRxn(){ const t=$("msgA"); if(t){ t.className="msg warn"; t.innerHTML=`Careful: the reaction on your bench is <b>${curRxn().title}</b>. Your notebook should record the reaction you actually ran.`; } }
+
+// =============== GRADUATED CYLINDERS ===============
+const CYL = {top:20, bottom:310, x:22, w:44};
+const cylY = v => CYL.bottom - (v/100)*(CYL.bottom-CYL.top-10);
+function liqColor(k){ const r = curRxn(); return (k==="A" && r.A.color) ? r.A.color : "#9cc8f2"; }
+function renderCyl(k){
+  const c = S.cyl[k], col = liqColor(k); let h = "";
+  h += `<rect x="${CYL.x-10}" y="${CYL.bottom}" width="${CYL.w+20}" height="10" rx="3" fill="#8aa1b5"/>`;
+  if(c.V>0){ const y=cylY(c.V); h += `<rect x="${CYL.x+1}" y="${y}" width="${CYL.w-2}" height="${CYL.bottom-y}" fill="${col}" opacity=".85"/>`; }
+  h += `<rect x="${CYL.x}" y="${CYL.top}" width="${CYL.w}" height="${CYL.bottom-CYL.top}" fill="none" stroke="#7c94a8" stroke-width="1.5"/>`;
+  for(let v=0; v<=100; v++){ const y=cylY(v); const L = v%10===0?14:(v%5===0?9:5);
+    h += `<line x1="${CYL.x}" x2="${CYL.x+L}" y1="${y}" y2="${y}" stroke="#334" stroke-width=".6"/>`;
+    if(v%10===0 && v>0) h += `<text x="${CYL.x+17}" y="${y+3}" font-size="8" fill="#223">${v}</text>`; }
+  h += `<text x="${CYL.x+CYL.w/2}" y="${CYL.top-6}" font-size="8" text-anchor="middle" fill="#334">mL</text>`;
+  $("cylSvg"+k).innerHTML = h;
+  const ppm = 22, cy = 150, V = c.V; let g = "";
+  const yv = v => cy - (v - V)*ppm;
+  g += `<rect x="40" y="0" width="140" height="300" fill="#f8fbff"/>`;
+  if(V>0){ const yb = yv(V), rise = 0.55*ppm;
+    g += `<path d="M40 ${yb-rise} Q 48 ${yb+1} 110 ${yb} Q 172 ${yb+1} 180 ${yb-rise} L180 300 L40 300 Z" fill="${col}" opacity=".8"/>`;
+    g += `<path d="M40 ${yb-rise} Q 48 ${yb+1} 110 ${yb} Q 172 ${yb+1} 180 ${yb-rise}" fill="none" stroke="#3b78b8" stroke-width="1.5"/>`; }
+  for(let v=Math.floor(V-8); v<=Math.ceil(V+8); v++){ if(v<0||v>100) continue; const y=yv(v); if(y<-5||y>305) continue;
+    const L = v%10===0?70:(v%5===0?50:32);
+    g += `<line x1="40" x2="${40+L}" y1="${y}" y2="${y}" stroke="#223" stroke-width="${v%10===0?1.6:1}"/>`;
+    if(v%10===0) g += `<text x="${40+L+6}" y="${y+5}" font-size="14" fill="#223">${v}</text>`; }
+  g += `<rect x="40" y="0" width="140" height="300" fill="none" stroke="#7c94a8" stroke-width="2"/>`;
+  g += `<line x1="0" y1="${cy}" x2="30" y2="${cy}" stroke="#d43" stroke-dasharray="3 3"/><text x="2" y="${cy-5}" font-size="10" fill="#d43">eye</text>`;
+  if(V<=0) g += `<text x="150" y="110" text-anchor="middle" font-size="13" fill="#889">empty</text>`;
+  $("zoomSvg"+k).innerHTML = g;
+  const lock = c.taken;
+  document.querySelectorAll(`[data-pour="${k}"]`).forEach(b => b.disabled = lock || (b.dataset.amt==="out" && V<=0));
+  document.querySelector(`[data-take="${k}"]`).disabled = lock || V<=0;
+}
+function pour(k, amt){
+  const c = S.cyl[k];
+  const dv = {big:rand(8,13), small:rand(0.7,1.6), drop:rand(0.05,0.18), out:-rand(0.4,2.5)}[amt];
+  c.V = Math.max(0, c.V + dv);
+  if(c.V>100){ c.V = 100; msg("msg"+k,"The cylinder overflowed! Pour some out.","bad"); }
+  else if(c.V>MAX_CAL) msg("msg"+k,"That is more than the calorimeter can hold (75 mL), even before you add the other solution.","warn");
+  else msg("msg"+k,"Read the bottom of the meniscus. Estimate one digit past the 1 mL marks.","info");
+  renderRxn(); renderCyl(k);
+}
+document.querySelectorAll("[data-pour]").forEach(b => b.onclick = () => pour(b.dataset.pour, b.dataset.amt));
+document.querySelectorAll("[data-take]").forEach(b => b.onclick = () => {
+  const k = b.dataset.take, c = S.cyl[k];
+  c.taken = true; S.rxn = rxnSel.value; renderRxn(); renderCyl(k); updateCal();
+  msg("msg"+k,`Cylinder ${k} carried to the calorimeter. Its volume is no longer shown; I hope you wrote them down!`,"good");
+});
+$("btnTakeZn").onclick = () => { S.znTaken = true; S.rxn = rxnSel.value; renderRxn(); updateCal(); };
+
+// =============== CALORIMETER ===============
+function updateCal(){
+  const r = S.rxn ? rxnById(S.rxn) : curRxn();
+  $("cylAOnBench").style.display = (S.cyl.A.taken && !S.cyl.A.poured) ? "" : "none";
+  $("cylBOnBench").style.display = (r.B && S.cyl.B.taken && !S.cyl.B.poured) ? "" : "none";
+  $("znOnBench").style.display = (!r.B && S.znTaken && !S.bAdded) ? "" : "none";
+  $("cylAOnBenchLiq").setAttribute("fill", r.A.color || "#9cc8f2");
+  $("lidGroup").classList.toggle("off", !S.lidOn);
+  $("btnLid").textContent = S.lidOn ? "Remove lid" : "Put lid on";
+  $("btnAddB").textContent = r.B ? "Pour solution B" : "Add zinc powder";
+  const ready = S.cyl.A.taken && (r.B ? S.cyl.B.taken : S.znTaken);
+  $("calBanner").style.display = ready ? "none" : "";
+  $("wetDrops").style.display = (S.residual > 0.2 && !S.aAdded) ? "" : "none";
+  $("dirtyFilm").style.display = (S.dirty && !S.aAdded) ? "" : "none";
+  $("btnRinse").disabled = S.aAdded || S.submitted;
+  $("btnDry").disabled = S.aAdded || S.residual < 0.2 || S.submitted;
+  $("btnAddA").disabled = S.aAdded || S.stopped || S.submitted;
+  $("btnStart").disabled = S.running || S.stopped;
+  $("btnStop").disabled = !S.running;
+  $("btnLid").disabled = S.stopped;
+  $("btnAddB").disabled = S.bAdded || S.stopped;
+  $("btnSwirl").disabled = !S.aAdded || S.stopped;
+  $("runState").textContent = S.stopped ? "Stopped" : (S.running ? "● Recording" : "Not recording");
+  $("cupInside").setAttribute("fill", S.lidOn ? "#dfe3e8" : (S.bAdded && r.mix ? r.mix : (S.aAdded ? (r.A.color && !S.bAdded ? r.A.color : "#cfe3f5") : "#dfe3e8")));
+}
+$("btnRinse").onclick = () => { S.rinsed = true; S.dirty = false; S.dried = false; S.residual = rand(1.5, 3.5); updateCal();
+  msg("calMsg","Calorimeter rinsed with distilled water. Some water is still clinging to the inside.","info"); };
+$("btnDry").onclick = () => { S.dried = true; S.residual = rand(0, 0.04); updateCal();
+  msg("calMsg", S.dirty ? "Calorimeter dried with a paper towel, but the previous group's residue is still on the walls." : "Calorimeter dried with a paper towel.", S.dirty?"warn":"good"); };
+$("btnAddA").onclick = () => {
+  if(!S.cyl.A.taken){ msg("calMsg","Measure solution A in a graduated cylinder on the <b>Measurements</b> tab, then take it to the calorimeter.","warn"); return; }
+  if(S.lidOn){ msg("calMsg","Take the lid off before pouring.","warn"); return; }
+  if(S.cyl.A.V > MAX_CAL){ overflow(); return; }
+  S.aAdded = true; S.cyl.A.poured = true; S.calV = S.cyl.A.V; S.Tw = S.cyl.A.T; S.Tp = S.room;
+  updateCal(); msg("calMsg","Solution A is in the calorimeter. Put the lid on and press <b>Start</b>.","info");
+};
+function overflow(){
+  msg("calMsg","Overflow! The calorimeter only holds 75 mL and solution spilled onto the bench. Press <b>New trial</b> to start over.","bad");
+  S.stopped = true; S.running = false; S.overflowed = true; updateCal();
+}
+$("btnStart").onclick = () => {
+  if(!S.aAdded){ msg("calMsg","Pour solution A into the calorimeter before starting. The probe needs to be in the liquid.","warn"); return; }
+  S.running = true; updateCal();
+  msg("calMsg","Recording. Wait until the graph is flat and record T<sub>i</sub>. Then remove the lid, add the second reactant, and replace the lid quickly. Hold <b>Swirl</b> to mix.","info");
+};
+$("btnStop").onclick = () => { S.running = false; S.stopped = true; setSwirl(false); updateCal();
+  msg("calMsg","Data collection stopped. Record T<sub>f</sub> if you haven't already, then go to <b>Calculations and Analysis</b>.","info"); };
+$("btnLid").onclick = () => {
+  S.lidOn = !S.lidOn;
+  if(!S.lidOn) S.lidOffSince = S.t;
+  else { if(S.bAdded && S.bLidOff===null) S.bLidOff = S.t - S.tB; S.lidOffSince = null; }
+  S.fluctEnv = Math.max(S.fluctEnv, 0.6); updateCal();
+};
+$("btnAddB").onclick = () => {
+  const r = rxnById(S.rxn || rxnSel.value);
+  if(!(r.B ? S.cyl.B.taken : S.znTaken)){ msg("calMsg", r.B ? "Measure solution B on the <b>Measurements</b> tab first." : "Get a scoop of zinc powder on the <b>Measurements</b> tab first.","warn"); return; }
+  if(!S.aAdded){ msg("calMsg","Pour solution A in first.","warn"); return; }
+  if(!S.running){ msg("calMsg","Press <b>Start</b> before adding the second reactant, or you won't capture the temperature change.","warn"); return; }
+  if(S.lidOn){ msg("calMsg","Remove the lid first.","warn"); return; }
+  if(r.B && S.calV + S.cyl.B.V > MAX_CAL){ overflow(); return; }
+  S.bAdded = true; S.tB = S.t;
+  S.TiTrue = S.Tw; S.TiProbeSettled = Math.abs(S.Tp - S.Tw) < 0.15;
+  if(r.B){ S.cyl.B.poured = true; S.Tw = (S.calV*S.Tw + S.cyl.B.V*S.cyl.B.T)/(S.calV + S.cyl.B.V); S.calV += S.cyl.B.V; }
+  const nA = r.cA*S.cyl.A.V/1000, nB = r.B ? r.cB*S.cyl.B.V/1000/r.ratio : Infinity;
+  S.nRxn = Math.min(nA, nB); S.bLimiting = nB < nA - 1e-9;
+  S.dHtrue = r.dH*1000*(1 + 0.015*gauss());
+  updateCal();
+  msg("calMsg", `${r.obs} Put the lid back on quickly and hold <b>Swirl</b>.`, "warn");
+};
+function setSwirl(on){ S.swirl = on && S.aAdded && !S.stopped; $("cupGroup").classList.toggle("swirling", S.swirl); }
+const sw = $("btnSwirl");
+sw.addEventListener("pointerdown", e => { e.preventDefault(); if(!sw.disabled){ try{sw.setPointerCapture(e.pointerId);}catch(_){} setSwirl(true);} });
+sw.addEventListener("contextmenu", e => e.preventDefault());
+["pointerup","pointercancel","lostpointercapture"].forEach(ev => sw.addEventListener(ev, () => setSwirl(false)));
+window.addEventListener("keydown", e => { if(e.code==="Space" && document.querySelector("#tab-cal.active") && !sw.disabled){ e.preventDefault(); setSwirl(true);} });
+window.addEventListener("keyup", e => { if(e.code==="Space") setSwirl(false); });
+
+// ---------- physics ----------
+function step(dt){
+  // probes in the graduated cylinders
+  if(!S.aAdded){ S.Tp += (S.room - S.Tp)*dt/3; return; }
+  const r = rxnById(S.rxn);
+  const Cw = (S.calV + S.residual)*C_WATER + CUP_HEAT_CAP;
+  let P = (S.lidOn ? 0.018 : 0.35)*(S.room - S.Tw);
+  if(!S.lidOn) P -= 0.25;
+  if(S.bAdded){
+    const rate = r.slow ? (S.swirl ? 0.06 : 0.015) : (S.swirl ? 0.6 : 0.12);
+    const df = rate*(1-S.f)*dt; S.f += df;
+    P -= S.nRxn*S.dHtrue*df/dt;
+    if(r.id==="NaHCO3" && !S.lidOn) P -= 0.3*(1-S.f); // fizzing carries extra heat away when the lid is off
+  }
+  S.Tw += P*dt/Cw;
+  const tau = S.swirl ? 1.5 : 3.0;
+  S.Tp += (S.Tw - S.Tp)*dt/tau;
+  S.fluctEnv += ((S.lidOn?0:1) - S.fluctEnv)*dt/(S.lidOn?5:1.2);
+  S.fluct += (-S.fluct/1.2)*dt + 0.3*Math.sqrt(2*dt/1.2)*gauss();
+  if(S.bAdded && S.TfTrue===null){
+    const pending = Math.abs(S.nRxn*S.dHtrue*(1-S.f))/Cw;
+    if(pending < 0.1 && Math.abs(S.Tp - S.Tw) < 0.03 && S.t - S.tB > 5){ S.TfTrue = S.Tp; S.completeAt = S.t; S.TfLo = S.TfHi = S.Tp; }
+  }
+  if(S.TfTrue!==null && S.running){ S.TfLo = Math.min(S.TfLo, S.Tp); S.TfHi = Math.max(S.TfHi, S.Tp); }
+}
+const reading = () => Math.round((S.Tp + S.fluct*S.fluctEnv + 0.008*gauss())*10)/10;
+
+// ---------- graph ----------
+const cv = $("graph"), ctx = cv.getContext("2d");
+function niceStep(range){ const raw = range/6; const p = Math.pow(10, Math.floor(Math.log10(raw))); const m = raw/p; return (m<1.5?1:m<3?2:m<7?5:10)*p; }
+function drawGraph(){
+  const rc = cv.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  if(rc.width > 0){ const w = Math.round(rc.width*dpr), h = Math.round(Math.max(230, Math.min(rc.width*0.62, 520))*dpr);
+    if(cv.width!==w || cv.height!==h){ cv.width = w; cv.height = h; } }
+  const u = dpr, W = cv.width, H = cv.height, L=52*u, R=12*u, T=12*u, B=40*u;
+  ctx.clearRect(0,0,W,H); ctx.fillStyle="#fff"; ctx.fillRect(0,0,W,H);
+  const d = S.data;
+  const tMax = Math.max(300, d.length? d[d.length-1][0]*1.25 : 0);
+  const dMax = d.reduce((m,p)=>Math.max(m,p[1]), 0), lo = 0, hi = dMax > 73 ? Math.ceil((dMax+3)/5)*5 : 75;
+  const X = t => L + (t/tMax)*(W-L-R), Y = v => T + (hi-v)/(hi-lo)*(H-T-B);
+  ctx.font = (13*u)+"px system-ui"; ctx.fillStyle="#555"; ctx.strokeStyle="#e6e9ee"; ctx.lineWidth=1;
+  for(let v=0; v<=hi; v+=5){ ctx.beginPath(); ctx.moveTo(L,Y(v)); ctx.lineTo(W-R,Y(v)); ctx.stroke(); if(v%10===0||v===75){ ctx.textAlign="right"; ctx.fillText(v, L-6*u, Y(v)+4*u); } }
+  const xs = niceStep(tMax);
+  for(let t=0; t<=tMax; t+=xs){ ctx.beginPath(); ctx.moveTo(X(t),T); ctx.lineTo(X(t),H-B); ctx.stroke(); ctx.textAlign="center"; ctx.fillText(t, X(t), H-B+16*u); }
+  ctx.strokeStyle="#888"; ctx.strokeRect(L,T,W-L-R,H-T-B);
+  ctx.fillStyle="#333"; ctx.textAlign="center"; ctx.fillText("Time (s)", L+(W-L-R)/2, H-5*u);
+  ctx.save(); ctx.translate(13*u, T+(H-T-B)/2); ctx.rotate(-Math.PI/2); ctx.fillText("Temperature (°C)", 0, 0); ctx.restore();
+  if(d.length>1){ ctx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue("--trace"); ctx.lineWidth=2.5*u; ctx.lineJoin="round"; ctx.beginPath();
+    d.forEach((p,i)=> i? ctx.lineTo(X(p[0]),Y(p[1])) : ctx.moveTo(X(p[0]),Y(p[1]))); ctx.stroke(); }
+}
+
+// ---------- main loop ----------
+let last = performance.now(), readTimer = 0, shown = null;
+function loop(now){
+  const real = Math.min(0.1, (now-last)/1000); last = now;
+  let simDt = real * +$("speed").value;
+  while(simDt > 1e-6){ const dt = Math.min(0.05, simDt); simDt -= dt;
+    step(dt);
+    if(S.swirl && S.bAdded && S.running) S.swirlAfterB += dt;
+    if(S.running){ S.t += dt; S.sampleAcc += dt; if(S.sampleAcc >= 0.1){ S.sampleAcc -= 0.1; S.data.push([S.t, reading()]); } }
+  }
+  readTimer += real;
+  if(readTimer > 0.25){ readTimer = 0;
+    if(S.running && S.data.length) shown = S.data[S.data.length-1][1];
+    else if(!S.stopped) shown = null;
+    $("readout").textContent = shown===null ? "--.- °C" : shown.toFixed(1)+" °C";
+    $("runTime").textContent = Math.floor(S.t)+" s";
+    if(S.running && document.querySelector("#tab-cal.active")) drawGraph();
+  }
+  requestAnimationFrame(loop);
+}
+
+// =============== SIG FIGS & CHECKING ===============
+function parseNum(str){
+  if(str==null) return null; let s = String(str).trim().replace(/\s+/g,"").replace(/,/g,"").replace(/−/g,"-");
+  s = s.replace(/[x×]10\^?([+-]?\d+)/i, "e$1");
+  if(!/^[+-]?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?$/i.test(s)) return null;
+  return {v: parseFloat(s), s};
+}
+function sigFigs(s){
+  let m = s.replace(/^[+-]/,"").split(/e/i)[0];
+  const hasDot = m.includes(".");
+  let digits = m.replace(".","").replace(/^0+/,"");
+  if(!hasDot) digits = digits.replace(/0+$/,"");
+  return digits==="" ? 1 : digits.length;
+}
+function decimals(s){ const m = s.replace(/^[+-]/,"").split(/e/i)[0]; return m.includes(".") ? m.split(".")[1].length : 0; }
+function sfRange(s){ const m = s.replace(/^[+-]/,"").split(/e/i)[0]; if(m.includes(".")) { const k = sigFigs(s); return [k,k]; } const d = m.replace(/^0+/,""); return [Math.max(1, d.replace(/0+$/,"").length), Math.max(1, d.length)]; }
+function sigRound(x, n){ if(!isFinite(x)||x===0) return "0"; const r = Number(x.toPrecision(n)); const d = n - 1 - Math.floor(Math.log10(Math.abs(r))); return d>0 ? r.toFixed(d) : String(r); }
+function closeTo(a, b, rel){ return Math.abs(a-b) <= Math.abs(b)*rel + 1e-9; }
+function nb(){ return { rxn: nbRxn.value, cA: parseNum($("nbCA").value), VA: parseNum($("nbVA").value), Ti: parseNum($("nbTi").value),
+  VB: parseNum($("nbVB").value), Tf: parseNum($("nbTf").value) }; }
+
+function expected(){
+  const n = nb(); const r = rxnById(n.rxn); if(!r || !n.cA || !n.VA || !n.Ti || !n.Tf) return null;
+  if(r.B && !n.VB) return null;
+  const Vsum = n.VA.v + (r.B ? n.VB.v : 0);
+  const dpSum = r.B ? Math.min(decimals(n.VA.s), decimals(n.VB.s)) : decimals(n.VA.s);
+  const sfM = Math.min(sigFigs(Vsum.toFixed(dpSum)), 3);
+  const Ti = n.Ti.v, dpT = decimals(n.Ti.s);
+  const dT = n.Tf.v - Ti;
+  const sfDT = sigFigs(dT.toFixed(Math.min(dpT, decimals(n.Tf.s))));
+  const mol = n.cA.v * n.VA.v / 1000;
+  const sfN = Math.min(sigFigs(cStr(r.cA)), sigFigs(n.VA.s)); // use the label's precision, not however the student copied it
+  const H = -Vsum*C_WATER*dT/mol;
+  const sfH = Math.min(sfM, sfDT, sfN, 3);
+  const Hset = [H];
+  return {r, m:Vsum, sfM, Ti, dpT, dT, sfDT, mol, sfN, H, Hset, sfH, pe: Math.abs(H/1000 - r.dH)/Math.abs(r.dH)*100};
+}
+function refreshCalc(){
+  const n = nb(), r = rxnById(n.rxn), miss = [];
+  if(!r) miss.push("the reaction"); if(!n.cA) miss.push("concentration"); if(!n.VA) miss.push("volume of solution A"); if(!n.Ti) miss.push("initial temperature");
+  if(r && r.B){ if(!n.VB) miss.push("volume of solution B"); }
+  if(!n.Tf) miss.push("final temperature");
+  $("calcNeeds").style.display = miss.length ? "" : "none";
+  $("calcNeeds").innerHTML = "Your notebook is missing: <b>" + miss.join(", ") + "</b>. Without these values you can't finish the calculations. If the equipment no longer shows a value, you need to redo the run (New trial).";
+}
+function lockInputs(on){
+  document.querySelectorAll("aside input, aside select, #calcBody input, #calcBody select").forEach(e=>e.disabled=on);
+  $("btnSubmit").disabled = on;
+}
+
+function buildReport(){
+  const R = [], C = []; const n = nb(); const raw = id => $(id).value.trim() || "—";
+  const add = (item, yours, correct, kind, comment) => R.push({item, yours, correct, kind, comment});
+  const addC = (item, yours, correct, kind, comment) => C.push({item, yours, correct, kind, comment});
+  const redo = " You will need to redo the run.";
+  const r = S.rxn ? rxnById(S.rxn) : null;
+  if(S.overflowed) add("Volume in calorimeter","Overflowed","75 mL or less","bad","The calorimeter overflowed."+redo);
+  // technique
+  if(!S.rinsed && !S.dried) add("Rinsing and drying the calorimeter","Neither","Rinse, then dry","bad",`The cup still held about ${S.residual.toFixed(1)} mL of the previous group's solution. That extra liquid wasn't in your measured volumes, so your m is too small, and the leftover chemicals contaminated your reaction.`);
+  else if(!S.rinsed) add("Rinsing and drying the calorimeter","Dried only","Rinse, then dry","warn","Drying removed the leftover liquid, but residue from the previous group was still on the walls. Rinse with distilled water first.");
+  else if(!S.dried) add("Rinsing and drying the calorimeter","Rinsed, not dried","Rinse, then dry","bad",`About ${S.residual.toFixed(1)} mL of rinse water was left in the cup. It wasn't in your measured volumes, so your m is too small.`);
+  else add("Rinsing and drying the calorimeter","Rinsed and dried","Rinse, then dry","good","Good technique.");
+  if(!r){ add("Reaction","—","—","bad","You never carried out a reaction."+redo); }
+  else {
+    if(!n.rxn) add("Reaction","—", r.title,"bad","Not recorded.");
+    else if(n.rxn!==r.id) add("Reaction", rxnById(n.rxn).title, r.title,"bad","You recorded a different reaction from the one you did.");
+    else add("Reaction", r.title, r.title,"good","");
+    // concentration
+    if(!n.cA) add(`Concentration of ${r.A.f}`,"—", cStr(r.cA)+" mol/L","bad","Not recorded. It's printed on the bottle label.");
+    else if(Math.abs(n.cA.v - r.cA)>1e-6) add(`Concentration of ${r.A.f}`, n.cA.s+" mol/L", cStr(r.cA)+" mol/L","bad","That doesn't match the bottle label.");
+    else add(`Concentration of ${r.A.f}`, n.cA.s+" mol/L", cStr(r.cA)+" mol/L", sigFigs(n.cA.s)===sigFigs(cStr(r.cA))?"good":"warn", sigFigs(n.cA.s)===sigFigs(cStr(r.cA))?"Correct.":"Copy the concentration exactly as printed on the label, including trailing zeros.");
+    // volumes and temperatures
+    const vt = (k, sol, nbV) => {
+      const c = S.cyl[k];
+      if(!c.poured) { add(`Volume of ${sol}`, nbV? nbV.s+" mL":"—", "—","bad","This solution never went into the calorimeter."+redo); return; }
+      if(!nbV) add(`Volume of ${sol}`,"—", c.V.toFixed(1)+" mL","bad","Not recorded."+redo);
+      else { let kd="good", cm=[];
+        if(Math.abs(nbV.v - c.V) > 0.2){ kd="bad"; cm.push("Off by more than the ±0.2 mL uncertainty. Read the bottom of the meniscus at eye level."); }
+        if(decimals(nbV.s)!==1){ kd = kd==="good"?"warn":kd; cm.push("Record to 0.1 mL (estimate one digit past the 1 mL marks)."); }
+        add(`Volume of ${sol}`, nbV.s+" mL", c.V.toFixed(1)+" mL (±0.2)", kd, cm.join(" ") || "Good reading of the meniscus."); }
+    };
+    vt("A", r.A.f, n.VA);
+    if(r.B) vt("B", r.B.f, n.VB);
+    if(S.TiTrue===null) add("Initial temperature, Tᵢ", raw("nbTi"), "—","bad", S.bAdded ? "" : `${r.B ? "Solution B was" : "The zinc was"} never added.`+redo);
+    else if(!n.Ti) add("Initial temperature, Tᵢ","—", S.TiTrue.toFixed(1)+" °C","bad","Not recorded."+redo);
+    else { let kd="good", cm=[];
+      if(Math.abs(n.Ti.v - S.TiTrue)>0.2){ kd="bad"; cm.push(`Read Tᵢ from solution A in the calorimeter once the graph is flat, just before adding ${r.B ? "solution B" : "the zinc"}.`); }
+      if(!S.TiProbeSettled){ kd = kd==="good"?"warn":kd; cm.push("The graph hadn't fully levelled off yet. Wait for a slope of zero."); }
+      if(decimals(n.Ti.s)!==1){ kd = kd==="good"?"warn":kd; cm.push("The probe reads to 0.1 °C; record one decimal place."); }
+      add("Initial temperature, Tᵢ", n.Ti.s+" °C", S.TiTrue.toFixed(1)+" °C", kd, cm.join(" ") || "Good."); }
+    if(S.bAdded && r.B && S.bLimiting) add("Amounts of reactants", `${S.cyl.A.V.toFixed(1)} mL A, ${S.cyl.B.V.toFixed(1)} mL B`, `Enough ${r.B.f} to react with all the ${r.per}`, "bad", `There wasn't enough ${r.B.f} to react with all of the ${r.per}, so fewer moles reacted than n = cV predicts. Use at least as much volume of B as A.`);
+    if(S.bAdded){
+      const off = S.bLidOff===null ? (S.lidOn? 0 : S.t - S.tB) : S.bLidOff;
+      if(S.bLidOff===null && !S.lidOn) add("Replacing the lid","Never replaced","Within a few seconds","bad","Leaving the lid off lets heat transfer to or from the room.");
+      else add("Replacing the lid", off.toFixed(0)+" s after mixing", "Within ~5 s", off<=6?"good":(off<=15?"warn":"bad"), off<=6?"Quick, good.":"The longer the lid is off, the more heat is exchanged with the room.");
+      const dt = S.completeAt!==null ? S.completeAt - S.tB : null;
+      add("Swirling", S.swirlAfterB.toFixed(0)+" s of swirling", "Swirl until the reaction is complete", dt!==null && dt < (r.slow?120:30) ? "good" : "warn",
+        dt!==null ? `The reaction took about ${dt.toFixed(0)} s to finish.` + (dt >= (r.slow?120:30) ? " More swirling mixes the reactants faster, so less heat is exchanged with the room." : "") : "The reaction hadn't finished when you stopped.");
+    }
+    if(!S.bAdded){}
+    else if(S.TfTrue===null) add("Final temperature, Tf", raw("nbTf"), "—","bad","You stopped before the temperature reached its peak and levelled off."+redo);
+    else if(!n.Tf) add("Final temperature, Tf","—", S.TfTrue.toFixed(1)+" °C","bad","Not recorded."+redo);
+    else { let kd="good", cm=[];
+      if(n.Tf.v < S.TfLo-0.2 || n.Tf.v > S.TfHi+0.2){ kd="bad"; cm.push(`Record T<sub>f</sub> at the ${r.dH<0?"highest":"lowest"} temperature, once the graph levels off.`); }
+      if(decimals(n.Tf.s)!==1){ kd = kd==="good"?"warn":kd; cm.push("Record one decimal place."); }
+      add("Final temperature, Tf", n.Tf.s+" °C", S.TfTrue.toFixed(1)+" °C", kd, cm.join(" ") || "Good."); }
+  }
+  // calculations, checked against the student's own notebook data
+  const E = expected();
+  if(!E) addC("Calculations","—","—","bad","Your notebook was missing values, so the calculations couldn't be checked.");
+  else {
+    const chk = (id, label, target, unit, sfWant, rel, extra, shown) => {
+      const x = parseNum($(id).value); const corr = (shown!==undefined ? shown : String(+target.toPrecision(4)))+" "+unit;
+      if(!x) return addC(label,"—",corr,"bad","Not answered.");
+      if(extra){ const e = extra(x); if(e) return addC(label, x.s+" "+unit, corr, "bad", e); }
+      const roundTol = 0.5*Math.pow(10, Math.floor(Math.log10(Math.abs(target)||1)) - sfWant + 1)*1.01;
+      if(!closeTo(x.v,target,rel) && Math.abs(x.v-target) > roundTol) return addC(label, x.s+" "+unit, corr, "bad", "Incorrect value.");
+      const sf = sigFigs(x.s);
+      addC(label, x.s+" "+unit, corr, "good", "Correct.");
+    };
+    chk("cM","Total mass of solution, m", E.m, "g", E.sfM, 0.001, x => (E.r.B && closeTo(x.v, n.VA.v, 0.001)) ? "m is the mass of both solutions combined." : "");
+    (() => { const x = parseNum($("cDT").value), corr = (Math.round(E.dT*10)/10).toFixed(1)+" °C";
+      if(!x) return addC("ΔT","—",corr,"bad","Not answered.");
+      if(E.dT!==0 && Math.abs(x.v + E.dT) <= 0.11 && Math.abs(x.v - E.dT) > 0.11) return addC("ΔT", x.s+" °C", corr, "bad", "Wrong order: ΔT = T<sub>f</sub> − T<sub>i</sub>.");
+      if(Math.abs(x.v - E.dT) > 0.11) return addC("ΔT", x.s+" °C", corr, "bad", "Incorrect value.");
+      addC("ΔT", x.s+" °C", corr, decimals(x.s)===1 ? "good" : "warn", decimals(x.s)===1 ? "Correct." : "Temperatures (and temperature changes) have one decimal place, the precision of the thermometer."); })();
+    chk("cN",`n (${E.r.per})`, E.mol, "mol", E.sfN, 0.006, x => closeTo(x.v, E.mol*1000, 0.006) ? "Convert mL to L before using n = cV." : "");
+    const u = $("cHU").value, x = parseNum($("cH").value), corr = sigRound(E.H/1000, E.sfH)+" kJ/mol";
+    // follow-through marking: ΔHx worked out correctly from the student's own m, ΔT and n
+    const sm = parseNum($("cM").value), sdt = parseNum($("cDT").value), sn = parseNum($("cN").value);
+    const Hown = (sm && sdt && sn && sn.v!==0) ? -sm.v*C_WATER*sdt.v/sn.v : null;
+    const sfOk = str => { const r2 = sfRange(str); return r2[1] >= E.sfH-1 && r2[0] <= E.sfH+1; };
+    if(!x || !u) addC("ΔHₓ", x? x.s+" "+(u||"(no unit)") : "—", corr, "bad", !x?"Not answered.":"No unit chosen.");
+    else if(u!=="J/mol" && u!=="kJ/mol") addC("ΔHₓ", x.s+" "+u, corr, "bad","Molar enthalpy is energy per mole (J/mol or kJ/mol).");
+    else { const v = u==="kJ/mol" ? x.v*1000 : x.v, hit = h => h!==null && closeTo(v, h, 0.03);
+      if(E.Hset.some(hit)) addC("ΔHₓ", x.s+" "+u, corr, sfOk(x.s)?"good":"warn", sfOk(x.s) ? "Correct." : `Correct value, sign and unit. Round to about ${E.sfH} significant digits.`);
+      else if(hit(-E.H) && !hit(Hown)) addC("ΔHₓ", x.s+" "+u, corr, "bad", "Sign error. If the temperature rose, the reaction released energy (ΔHₓ < 0). Use nΔHₓ = −mcΔT.");
+      else if(closeTo(v*1000,E.H,0.03)||closeTo(v/1000,E.H,0.03)) addC("ΔHₓ", x.s+" "+u, corr, "bad","Off by a factor of 1000. Check J vs kJ.");
+      else if(hit(Hown)) addC("ΔHₓ", x.s+" "+u, corr, "warn","You calculated this correctly from your own earlier answers, but one of those steps was wrong (see above).");
+      else addC("ΔHₓ", x.s+" "+u, corr, "bad","Incorrect value. Rearrange nΔHₓ = −mcΔT."); }
+    // % error: also accept it worked out from the student's own ΔHx, and accept a negative sign
+    const pe = parseNum($("cP").value);
+    const own = (x && (u==="kJ/mol"||u==="J/mol")) ? Math.abs((u==="J/mol"? x.v/1000 : x.v) - E.r.dH)/Math.abs(E.r.dH)*100 : null;
+    const okPe = p2 => [E.pe, own].some(t => t!==null && (closeTo(Math.abs(p2),t,0.03) || Math.abs(Math.abs(p2)-t)<=0.15));
+    const peShow = (own!==null ? own : E.pe).toFixed(1)+" %";
+    if(!pe) addC("% error","—",peShow,"bad","Not answered.");
+    else addC("% error", pe.s+" %", peShow, okPe(pe.v)?"good":"bad", okPe(pe.v) ? "Correct." : `Compare your ΔHₓ to the accepted ${E.r.dH>0?"+":""}${E.r.dH} kJ/mol.`);
+  }
+  let best = "";
+  if(r && S.TfTrue!==null && S.bAdded){
+    const Vt = S.cyl.A.V + (r.B ? S.cyl.B.V : 0);
+    const Hb = -Vt*C_WATER*(S.TfTrue - S.TiTrue)/(r.cA*S.cyl.A.V/1000)/1000;
+    best = `<p class="muted">Using perfect readings from this run, ΔHₓ would have been ${Hb>0?"+":""}${Hb.toFixed(1)} kJ/mol (accepted ${r.dH>0?"+":""}${r.dH} kJ/mol). The difference comes from the experiment itself: heat exchanged with the room, heat absorbed by the cup and probe, ${S.residual>0.2?"leftover liquid in the cup, ":""}and assuming the solution has the same density and c as water.</p>`;
+  }
+  const all = R.concat(C), score = all.length, good = all.filter(x=>x.kind==="good").length;
+  const row = x => `<tr class="r-${x.kind}"><td>${x.item}</td><td>${x.yours}</td><td>${x.correct}</td><td>${{good:"✓",warn:"△",bad:"✗"}[x.kind]} ${x.comment}</td></tr>`;
+  const head = `<thead><tr><th>Item</th><th>You</th><th>Should be</th><th>Feedback</th></tr></thead>`;
+  $("report").innerHTML = `<h3>Lab summary</h3><div class="msg ${good===score?"good":"info"}">${good} of ${score} items fully correct. Submitted at run time ${Math.floor(S.t)} s, ${new Date().toLocaleString()}.</div>
+    <h3>Measurements and technique</h3><div class="tscroll"><table class="rep">${head}<tbody>${R.map(row).join("")}</tbody></table></div>
+    <h3>Calculations</h3><p class="muted">Checked against your own notebook data, so a measurement mistake isn't counted twice. Significant digits are only checked loosely on the final ΔH<sub>x</sub> (within one digit); keep unrounded values until then. Scientific notation is optional. Temperatures always have one decimal place (thermometer precision).</p><div class="tscroll"><table class="rep">${head}<tbody>${C.map(row).join("")}</tbody></table></div>${best}
+    ${window.self===window.top ? '<div class="btnrow"><button class="btn secondary" onclick="window.print()">Print / save as PDF</button></div>' : '<p class="muted">Take a screenshot of this summary to hand in.</p>'}`;
+  $("report").scrollIntoView({behavior:"smooth"});
+}
+function confirmClick(btn, label, action){
+  if(btn.dataset.armed){ clearTimeout(+btn.dataset.armed); delete btn.dataset.armed; btn.textContent = label; action(); return; }
+  btn.textContent = "Click again to confirm";
+  btn.dataset.armed = setTimeout(() => { delete btn.dataset.armed; btn.textContent = label; }, 4000);
+}
+$("btnSubmit").onclick = () => { refreshCalc(); confirmClick($("btnSubmit"), "Submit lab (one attempt)", () => {
+  S.submitted = true; if(S.running){ S.running=false; S.stopped=true; }
+  lockInputs(true); updateCal(); buildReport(); }); };
+
+// ---------- reset ----------
+function reset(){
+  S = newState(); shown = null;
+  ["nbCA","nbVA","nbVB","nbTi","nbTf","cM","cDT","cN","cH","cP"].forEach(id=>$(id).value="");
+  nbRxn.value=""; $("cHU").value=""; $("report").innerHTML=""; lockInputs(false); setSwirl(false);
+  msg("msgA","Read the bottom of the meniscus and estimate one digit past the 1 mL marks.","info");
+  msg("msgB","Read the bottom of the meniscus and estimate one digit past the 1 mL marks.","info");
+  msg("calMsg","Choose a reaction and measure your solutions on the <b>Measurements</b> tab first.","info");
+  renderRxn(); renderCyl("A"); renderCyl("B"); updateCal(); refreshCalc(); drawGraph();
+}
+$("newTrial").onclick = () => confirmClick($("newTrial"), "New trial", reset);
+reset();
+requestAnimationFrame(loop);
+window.addEventListener("resize", () => drawGraph());
+window.__sim = () => S; window.__rxns = RXNS;
+})();
+</script>
+</body>
+</html>
