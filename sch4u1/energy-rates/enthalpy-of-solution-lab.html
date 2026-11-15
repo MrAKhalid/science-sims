@@ -554,7 +554,7 @@ function step(dt){
   if(S.saltAdded){
     const s = saltById(S.salt), n = S.saltInCal / s.M;
     const r = S.swirl ? 0.085 : 0.03;
-    const df = r*(S.fMax-S.f)*dt, dh = (S.f - S.h)*dt/TAU_H;
+    const df = r*(S.fMax-S.f)*dt, dh = (S.f - S.h)*dt*(r/0.085)/TAU_H; // hydration keeps pace with dissolving, so the dip shows whether or not they swirl
     S.f += df; S.h += dh;
     P -= (n*(S.dHtrue + S.X)*df - n*S.X*dh)/dt;
   }
