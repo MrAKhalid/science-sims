@@ -2,7 +2,7 @@
 // 1. Put the .html file in the right course/unit folder.
 // 2. Add one line to that unit's "sims" list below: { title, file, blurb }.
 // Bump this number whenever a simulation file changes, so browsers load the new copy.
-window.SIMS_VERSION = "202611150127";
+window.SIMS_VERSION = "202611150130";
 
 window.COURSES = {
   sph4u1: {
@@ -34,7 +34,7 @@ window.COURSES = {
     ]
   },
   "green-industries": {
-    name: "Green Industries", full: "Technological Education",
+    name: "THJ2O1", full: "Green Industries",
     units: [
       { id: "general", name: "Simulations", sims: [
         { title: "Reservoir Top-Up Calculator", file: "reservoir-top-up.html", blurb: "Measure the reservoir level and calculate how much water and Part A and Part B nutrient to add." }
