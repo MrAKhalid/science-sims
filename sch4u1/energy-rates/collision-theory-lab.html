@@ -1,0 +1,865 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Collision Theory Lab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+/* Layout: projector-first stage. Equation strip across the top, collision chamber + controls on the left, energy diagram + verdict on the right. */
+:root{
+  --bg:#eaf0f3; --panel:#ffffff; --ink:#15212b; --muted:#566676; --line:#cfd9e1;
+  --accent:#0f6e8c; --accent-ink:#ffffff; --accent-soft:#d9ecf2;
+  --good:#1b7f45; --good-soft:#e0f3e7; --bad:#b4322a; --bad-soft:#fbe5e2; --warn:#a8650a; --warn-soft:#fdf0d8;
+  --chamber:#f6f9fb; --head:#12303d; --head-ink:#ffffff; --head-btn:#1f4a5c; --curve:#15212b; --gold:#d99a00;
+  --font-display:"Space Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-body:"Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e161c; --panel:#15212a; --ink:#e5edf2; --muted:#9aabb8; --line:#2a3a46;
+    --accent:#4fb3d1; --accent-ink:#06222c; --accent-soft:#163440;
+    --good:#4cc47f; --good-soft:#143224; --bad:#ff7d70; --bad-soft:#3b1d1a; --warn:#f0b34a; --warn-soft:#3a2c12;
+    --chamber:#101a21; --head:#08131a; --head-ink:#e5edf2; --head-btn:#1b3442; --curve:#e5edf2; --gold:#ffc940;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e161c; --panel:#15212a; --ink:#e5edf2; --muted:#9aabb8; --line:#2a3a46;
+  --accent:#4fb3d1; --accent-ink:#06222c; --accent-soft:#163440;
+  --good:#4cc47f; --good-soft:#143224; --bad:#ff7d70; --bad-soft:#3b1d1a; --warn:#f0b34a; --warn-soft:#3a2c12;
+  --chamber:#101a21; --head:#08131a; --head-ink:#e5edf2; --head-btn:#1b3442; --curve:#e5edf2; --gold:#ffc940;
+  color-scheme:dark;
+}
+html{font-size:clamp(14px, 1.02vw, 20px); height:100%}
+*{box-sizing:border-box}
+body{margin:0; height:100%; display:flex; flex-direction:column; background:var(--bg); color:var(--ink); font-family:var(--font-body); font-size:1rem}
+button{font:inherit; color:inherit}
+h1,h2,h3{font-family:var(--font-display); text-wrap:balance; margin:0}
+
+.top{background:var(--head); color:var(--head-ink); display:flex; flex-wrap:wrap; align-items:center; gap:.6rem 1.4rem;
+  padding-block:.55rem; padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.brand{display:flex; align-items:baseline; gap:.7rem}
+.brand h1{font-size:1.35rem; font-weight:700; letter-spacing:.01em}
+.brand .sub{font-size:.8rem; opacity:.75; letter-spacing:.06em; text-transform:uppercase}
+.tabs{display:flex; flex-wrap:wrap; gap:.35rem; margin-left:auto}
+.tabs button{background:var(--head-btn); color:var(--head-ink); border:0; border-radius:.45rem; padding:.45rem .9rem; font-size:.95rem; font-weight:600; cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--head-ink); color:var(--head)}
+.tabs button:focus-visible, button:focus-visible, canvas:focus-visible, input:focus-visible{outline:3px solid var(--gold); outline-offset:2px}
+
+.app{flex:1; min-height:0; display:grid; grid-template-columns:minmax(0,1fr) minmax(300px, 31%); grid-template-rows:auto minmax(0,1fr); gap:.75rem;
+  padding-block:.75rem; padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.panel{background:var(--panel); border:1px solid var(--line); border-radius:.6rem}
+
+.eq{grid-column:1 / -1; display:grid; grid-template-columns:minmax(10rem, 15rem) minmax(0,1fr) auto; align-items:center; gap:1rem; padding:.5rem 1rem}
+.eq-title{font-family:var(--font-display); font-weight:600; font-size:1.05rem; line-height:1.2}
+.eq-context{color:var(--muted); font-size:.82rem; margin-top:.2rem; line-height:1.35}
+.eq-canvas{height:5.6rem; position:relative; min-width:0}
+.eq-canvas canvas{position:absolute; inset:0; width:100%; height:100%}
+.eq-badge{display:flex; flex-direction:column; align-items:flex-end; gap:.25rem}
+.pill{font-weight:700; font-size:.85rem; letter-spacing:.06em; text-transform:uppercase; padding:.3rem .7rem; border-radius:99px}
+.pill.exo{background:var(--bad-soft); color:var(--bad)}
+.pill.endo{background:var(--accent-soft); color:var(--accent)}
+.dh{font-family:var(--font-display); font-size:1.15rem; font-weight:600; font-variant-numeric:tabular-nums}
+
+.stage{display:flex; flex-direction:column; gap:.75rem; min-height:0; min-width:0}
+.chamber{flex:1; min-height:14rem; position:relative; overflow:hidden; touch-action:none}
+.chamber canvas{position:absolute; inset:0; width:100%; height:100%; cursor:grab}
+.chamber canvas.locked{cursor:default}
+.controls{display:flex; flex-wrap:wrap; align-items:stretch; gap:.6rem 1.1rem; padding:.6rem .9rem}
+.dial{display:flex; align-items:center; gap:.55rem}
+.dial canvas{width:6.4rem; height:6.4rem; cursor:grab; border-radius:50%; touch-action:none}
+.dial-cap{display:flex; flex-direction:column; gap:.2rem; font-size:.85rem}
+.dial-cap .who{font-size:.72rem; text-transform:uppercase; letter-spacing:.07em; color:var(--muted); font-weight:600}
+.dial-cap .name{font-family:var(--font-display); font-weight:600; font-size:1.05rem}
+.dial-cap .ang{font-variant-numeric:tabular-nums; color:var(--muted)}
+.mini{display:flex; gap:.25rem}
+.btn{background:var(--panel); border:1px solid var(--line); border-radius:.4rem; padding:.3rem .55rem; font-size:.85rem; cursor:pointer}
+.btn:hover:not(:disabled){border-color:var(--accent)}
+.btn:disabled, .primary:disabled{opacity:.45; cursor:not-allowed}
+.temp{flex:1; min-width:13rem; display:flex; flex-direction:column; justify-content:center; gap:.3rem}
+.temp .lbl{font-size:.72rem; text-transform:uppercase; letter-spacing:.07em; color:var(--muted); font-weight:600}
+.temp .row{display:flex; align-items:center; gap:.45rem}
+.temp .read{font-family:var(--font-display); font-weight:700; font-size:1.6rem; font-variant-numeric:tabular-nums}
+.temp .read small{font-size:.85rem; color:var(--muted); font-weight:500; margin-left:.35rem}
+#temp{flex:1; min-width:0; height:1.6rem; accent-color:var(--accent)}
+.temp .scale{display:flex; justify-content:space-between; font-size:.72rem; color:var(--muted); padding-inline:2.4rem}
+.run{display:flex; flex-direction:column; justify-content:center; gap:.35rem}
+.primary{background:var(--accent); color:var(--accent-ink); border:0; border-radius:.5rem; padding:.6rem 1.1rem; font-size:1.15rem; font-weight:700; cursor:pointer; min-width:8.2rem}
+.run .mini .btn{flex:1}
+
+.side{display:flex; flex-direction:column; gap:.75rem; min-height:0; min-width:0}
+.pe{flex:1; min-height:12rem; display:flex; flex-direction:column; padding:.5rem .6rem .3rem}
+.ph{font-size:.72rem; text-transform:uppercase; letter-spacing:.07em; color:var(--muted); font-weight:600; padding-left:.2rem}
+.pe-box{flex:1; position:relative; min-height:0}
+.pe-box canvas{position:absolute; inset:0; width:100%; height:100%}
+.verdict{padding:.65rem .85rem; border-left-width:6px}
+.verdict.good{border-left-color:var(--good); background:var(--good-soft)}
+.verdict.bad{border-left-color:var(--bad); background:var(--bad-soft)}
+.verdict h2{font-size:1.15rem; margin-bottom:.3rem}
+.verdict.good h2{color:var(--good)} .verdict.bad h2{color:var(--bad)}
+.verdict p{margin:0; font-size:.88rem; line-height:1.4; color:var(--muted)}
+.check{display:grid; grid-template-columns:1.5rem minmax(0,1fr); gap:.1rem .3rem; font-size:.86rem; line-height:1.35; margin-top:.3rem}
+.check .ic{font-weight:800; font-size:1rem; text-align:center}
+.check .ic.y{color:var(--good)} .check .ic.n{color:var(--bad)}
+.check b{display:block}
+.opts{padding:.55rem .85rem; display:flex; flex-direction:column; gap:.35rem; font-size:.86rem}
+.tally{display:flex; gap:1rem; align-items:baseline; font-variant-numeric:tabular-nums; flex-wrap:wrap}
+.tally .n{font-family:var(--font-display); font-weight:700; font-size:1.25rem}
+.tally .btn{margin-left:auto}
+.opts label{display:flex; gap:.45rem; align-items:flex-start; cursor:pointer; line-height:1.3}
+.opts input{margin-top:.15rem; accent-color:var(--accent)}
+.opts .note{color:var(--muted); font-size:.75rem; line-height:1.35}
+
+@media (max-width: 900px){
+  body{height:auto}
+  .app{grid-template-columns:minmax(0,1fr)}
+  .eq{grid-template-columns:minmax(0,1fr)}
+  .eq-badge{flex-direction:row; align-items:center; justify-content:flex-start}
+  .chamber{flex:none; aspect-ratio:820/440; min-height:0; max-width:100%}
+  .pe{flex:none; height:18rem}
+  .tabs{margin-left:0}
+}
+@media (prefers-reduced-motion: reduce){ * {scroll-behavior:auto} }
+</style>
+<header class="top">
+  <div class="brand"><h1>Collision Theory Lab</h1><span class="sub">SCH4U · Rates of reaction</span></div>
+  <nav class="tabs" id="tabs" role="tablist" aria-label="Choose a reaction"></nav>
+</header>
+
+<main class="app">
+  <section class="eq panel" aria-label="Chemical reaction">
+    <div><div class="eq-title" id="eqTitle"></div><div class="eq-context" id="eqContext"></div></div>
+    <div class="eq-canvas"><canvas id="eqCanvas" role="img" aria-label="Chemical equation"></canvas></div>
+    <div class="eq-badge"><span class="pill" id="pill"></span><span class="dh" id="dh"></span></div>
+  </section>
+
+  <section class="stage">
+    <div class="chamber panel"><canvas id="chamber" role="img" aria-label="Collision chamber. Drag a molecule to rotate it while paused."></canvas></div>
+    <div class="controls panel">
+      <div class="dial">
+        <canvas id="dialA" tabindex="0" aria-label="Rotate molecule A. Use arrow keys."></canvas>
+        <div class="dial-cap">
+          <span class="who">Molecule A</span><span class="name" id="nameA"></span><span class="ang" id="angA"></span>
+          <div class="mini"><button class="btn" id="aMinus" aria-label="Rotate A 15 degrees counterclockwise">⟲ 15°</button><button class="btn" id="aPlus" aria-label="Rotate A 15 degrees clockwise">15° ⟳</button></div>
+        </div>
+      </div>
+      <div class="dial">
+        <canvas id="dialB" tabindex="0" aria-label="Rotate molecule B. Use arrow keys."></canvas>
+        <div class="dial-cap">
+          <span class="who">Molecule B</span><span class="name" id="nameB"></span><span class="ang" id="angB"></span>
+          <div class="mini"><button class="btn" id="bMinus" aria-label="Rotate B 15 degrees counterclockwise">⟲ 15°</button><button class="btn" id="bPlus" aria-label="Rotate B 15 degrees clockwise">15° ⟳</button></div>
+        </div>
+      </div>
+      <div class="temp">
+        <span class="lbl">Temperature of the surroundings</span>
+        <div class="row"><span class="read" id="tRead"></span></div>
+        <div class="row">
+          <button class="btn" id="tMinus" aria-label="Lower temperature 10 degrees">−10</button>
+          <input type="range" id="temp" min="-50" max="2000" step="5" value="25" aria-label="Temperature in degrees Celsius">
+          <button class="btn" id="tPlus" aria-label="Raise temperature 10 degrees">+10</button>
+        </div>
+        <div class="scale"><span>−50 °C</span><span>1000 °C</span><span>2000 °C</span></div>
+      </div>
+      <div class="run">
+        <button class="primary" id="play">▶ Play</button>
+        <div class="mini"><button class="btn" id="reset">Reset</button><button class="btn" id="shuffle">Random</button></div>
+      </div>
+    </div>
+  </section>
+
+  <aside class="side">
+    <div class="pe panel"><div class="ph">Potential energy diagram</div><div class="pe-box"><canvas id="pe" role="img" aria-label="Potential energy diagram"></canvas></div></div>
+    <div class="verdict panel" id="verdict" aria-live="polite"></div>
+    <div class="opts panel">
+      <div class="tally"><span>Collisions <span class="n" id="nCol">0</span></span><span>Effective <span class="n" id="nEff">0</span></span><span id="pct"></span><button class="btn" id="clearTally">Clear</button></div>
+      <label><input type="checkbox" id="optHint"> <span>Highlight the atoms that must collide</span></label>
+      <label><input type="checkbox" id="optSpread"> <span>Energy varies between collisions <span class="note">(real gases have a range of kinetic energies)</span></span></label>
+      <label><input type="checkbox" id="optRepeat"> <span>Keep colliding (auto-repeat)</span></label>
+      <span class="note">Simplified model: energies are in relative units and the temperatures needed are illustrative.</span>
+    </div>
+  </aside>
+</main>
+
+<script>
+(() => {
+'use strict';
+const root = document.documentElement;
+const $ = id => document.getElementById(id);
+const tok = n => getComputedStyle(root).getPropertyValue(n).trim();
+
+/* ---------- atoms & molecule templates ---------- */
+const ELEM = {
+  C:  { r:25, c:'#3b4148', t:'#ffffff' },
+  N:  { r:24, c:'#2f6fd6', t:'#ffffff' },
+  O:  { r:23, c:'#d8342b', t:'#ffffff' },
+  Br: { r:31, c:'#9c7456', t:'#ffffff' },
+};
+const ART = { C:'a', N:'an', O:'an', Br:'a' };
+const BOND = 0.78;
+function centred(pts){
+  const cx = pts.reduce((s,p)=>s+p.x,0)/pts.length, cy = pts.reduce((s,p)=>s+p.y,0)/pts.length;
+  return pts.map(p => ({ el:p.el, x:p.x-cx, y:p.y-cy }));
+}
+function linear(els){
+  const pts = [{ el:els[0], x:0, y:0 }];
+  for (let i=1;i<els.length;i++) pts.push({ el:els[i], x:pts[i-1].x + BOND*(ELEM[els[i-1]].r+ELEM[els[i]].r), y:0 });
+  return centred(pts);
+}
+function bent(els, deg){ // [outer, centre, outer]; centre atom points toward +x
+  const h = deg/2*Math.PI/180, rc = ELEM[els[1]].r;
+  const d1 = BOND*(ELEM[els[0]].r+rc), d2 = BOND*(ELEM[els[2]].r+rc);
+  return centred([
+    { el:els[0], x:-d1*Math.cos(h), y:-d1*Math.sin(h) },
+    { el:els[1], x:0, y:0 },
+    { el:els[2], x:-d2*Math.cos(h), y: d2*Math.sin(h) },
+  ]);
+}
+const TPL = {
+  NOBr: linear(['O','N','Br']), NO: linear(['O','N']), Br2: linear(['Br','Br']),
+  CO: linear(['O','C']), NO2: bent(['O','N','O'],134), CO2: linear(['O','C','O']),
+  O3: bent(['O','O','O'],117), O2: linear(['O','O']), N2: linear(['N','N']),
+};
+const LABEL = { NOBr:'NOBr', NO:'NO', Br2:'Br₂', CO:'CO', NO2:'NO₂', CO2:'CO₂', O3:'O₃', O2:'O₂', N2:'N₂' };
+
+/* ---------- reactions ---------- */
+const has = (ctx,i,j) => ctx.contacts.some(c => c.i===i && c.j===j);
+const gapOf = (ctx,i,j) => { const c = ctx.contacts.find(c => c.i===i && c.j===j); return c ? c.gap : Infinity; };
+const upright = a => { const d = (((a*180/Math.PI)%180)+180)%180; return Math.abs(d-90) <= 22; };
+const REACTIONS = [
+  { key:'nobr', tab:'2 NOBr', title:'Decomposition of nitrosyl bromide', context:'The example from the lesson.',
+    A:'NOBr', B:'NOBr', lhs:[[2,'NOBr']], rhs:[[2,'NO'],[1,'Br2']], dH:47, Ea:90, thresholdC:100, start:[180,0],
+    hint:[2,5], goal:'The two Br atoms must hit each other so a Br–Br bond can form.',
+    orient(ctx){ const ok = has(ctx,2,5);
+      return { ok, msg: ok ? 'The two Br atoms collided, so a Br–Br bond can form.'
+        : `First contact was ${ctx.firstText}. The Br atoms never touched, so no Br–Br bond can form.` }; },
+    products(){ return [['NO',[0,1]],['NO',[3,4]],['Br2',[2,5]]]; } },
+  { key:'co', tab:'CO + NO₂', title:'Carbon monoxide + nitrogen dioxide', context:'Happens in hot car exhaust, above about 225 °C.',
+    A:'CO', B:'NO2', lhs:[[1,'CO'],[1,'NO2']], rhs:[[1,'CO2'],[1,'NO']], dH:-226, Ea:134, thresholdC:225, start:[180,180],
+    hint:[1,2,4], goal:'The C atom of CO must hit an O atom of NO₂. That O moves over to make CO₂.',
+    orient(ctx){ const hits = [2,4].filter(j => has(ctx,1,j)).sort((a,b) => gapOf(ctx,1,a)-gapOf(ctx,1,b));
+      ctx.ox = hits[0]; const ok = hits.length > 0;
+      return { ok, msg: ok ? 'The C atom hit an O atom of NO₂, so the O can transfer to carbon.'
+        : `First contact was ${ctx.firstText}. The C atom never touched an O of NO₂, so no C–O bond can form.` }; },
+    products(ctx){ const ox = ctx.ox, other = 6-ox; return [['CO2',[0,1,ox]],['NO',[other,3]]]; } },
+  { key:'o3', tab:'NO + O₃', title:'Nitrogen monoxide + ozone', context:'NO from engines and jets breaks down the ozone layer.',
+    A:'NO', B:'O3', lhs:[[1,'NO'],[1,'O3']], rhs:[[1,'NO2'],[1,'O2']], dH:-200, Ea:30, thresholdC:-40, start:[180,180],
+    hint:[1,2,4], goal:'The N atom of NO must hit an O atom on the end of O₃.',
+    orient(ctx){ const hits = [2,4].filter(j => has(ctx,1,j)).sort((a,b) => gapOf(ctx,1,a)-gapOf(ctx,1,b));
+      ctx.ox = hits[0]; const ok = hits.length > 0;
+      return { ok, msg: ok ? 'The N atom hit an end O atom of ozone, so that O can bond to N.'
+        : `First contact was ${ctx.firstText}. The N atom never touched an end O of O₃, so no N–O bond can form.` }; },
+    products(ctx){ const ox = ctx.ox, other = 6-ox; return [['NO2',[0,1,ox]],['O2',[3,other]]]; } },
+  { key:'n2', tab:'N₂ + O₂', title:'Nitrogen + oxygen', context:'Happens in lightning and hot car engines. (Really several steps; shown as one collision.)',
+    A:'N2', B:'O2', lhs:[[1,'N2'],[1,'O2']], rhs:[[2,'NO']], dH:181, Ea:380, thresholdC:1500, start:[0,0],
+    hint:[0,1,2,3], goal:'N₂ and O₂ must meet side by side (both standing upright) so each N can grab an O.',
+    orient(ctx){ const ok = upright(ctx.A.ang) && upright(ctx.B.ang);
+      return { ok, msg: ok ? 'The molecules met side by side, so each N atom could reach an O atom.'
+        : `First contact was ${ctx.firstText}. The molecules were not side by side, so both N atoms could not reach O atoms.` }; },
+    products(ctx){ const p = ctx.pos, d = (a,b) => Math.hypot(p[a].x-p[b].x, p[a].y-p[b].y);
+      const on = d(0,2) <= d(0,3) ? 2 : 3, of = 5-on; return [['NO',[on,0]],['NO',[of,1]]]; } },
+];
+
+/* ---------- state ---------- */
+const W = 820, H = 440, CY = 220, XA = 175, XB = 645, ZONE = 120;
+let R = REACTIONS[0];
+let eqDirty = true;
+const S = {
+  T:25, angA:0, angB:0, playing:false, phase:'ready', t:0, E:0, v:0,
+  bodies:[], flash:null, free:null, outcome:null, tally:{n:0,e:0},
+  pe:{ s:.12, from:.12, to:.12, t:0, dur:1 }, hint:false, spread:false, repeat:false, wait:0,
+};
+const Tk = () => S.T + 273.15;
+const meanE = () => R.Ea * Tk() / (R.thresholdC + 273.15);
+const baseSpeed = () => 190 * Math.sqrt(Tk()/298.15);
+const rad = d => d*Math.PI/180;
+const norm360 = d => ((Math.round(d)%360)+360)%360;
+
+function makeBody(tplKey, idStart, x, y, angDeg){
+  return { tpl:tplKey, x, y, ang:rad(angDeg), vx:0, vy:0, spin:0,
+    atoms: TPL[tplKey].map((a,k) => ({ el:a.el, lx:a.x, ly:a.y, id:idStart+k })) };
+}
+function wp(b, a){ const c = Math.cos(b.ang), s = Math.sin(b.ang); return { x:b.x + a.lx*c - a.ly*s, y:b.y + a.lx*s + a.ly*c }; }
+function extent(b){ return Math.max(...b.atoms.map(a => Math.hypot(a.lx,a.ly) + ELEM[a.el].r)); }
+
+function resetScene(){
+  const nA = TPL[R.A].length;
+  S.bodies = [ makeBody(R.A, 0, XA, CY, S.angA), makeBody(R.B, nA, XB, CY, S.angB) ];
+  S.phase = 'ready'; S.t = 0; S.flash = null; S.free = null; S.outcome = null; S.wait = 0;
+  S.E = meanE();
+  setPe(.12, .12, .01);
+  renderVerdict();
+}
+function setPe(from, to, dur){ S.pe.from = from; S.pe.to = to; S.pe.t = 0; S.pe.dur = dur; S.pe.s = from; }
+
+function sampleE(){
+  const m = meanE();
+  return S.spread ? -m*Math.log(1 - Math.random()*0.9999) : m;
+}
+function startRun(){
+  resetScene();
+  S.E = sampleE();
+  const f = Math.min(2.4, Math.max(.45, Math.sqrt(S.E / meanE())));
+  S.v = baseSpeed() * f;
+  S.bodies[0].vx = S.v; S.bodies[1].vx = -S.v;
+  S.phase = 'approach';
+  S.playing = true;
+  renderVerdict(); syncUI();
+}
+
+/* contacts between body A and body B */
+function contactsAB(){
+  const [A,B] = S.bodies, list = [];
+  for (const a of A.atoms){ const pa = wp(A,a);
+    for (const b of B.atoms){ const pb = wp(B,b);
+      list.push({ i:a.id, j:b.id, ea:a.el, eb:b.el, pa, pb, gap: Math.hypot(pa.x-pb.x, pa.y-pb.y) - ELEM[a.el].r - ELEM[b.el].r });
+    } }
+  return list;
+}
+const minGap = () => Math.min(...contactsAB().map(c => c.gap));
+function unOverlap(){ let n = 0; while (minGap() < 0.5 && n++ < 400){ S.bodies[0].x -= 1; S.bodies[1].x += 1; } }
+
+function onCollide(){
+  const all = contactsAB(); all.sort((a,b) => a.gap - b.gap);
+  const first = all[0];
+  const contacts = all.filter(c => c.gap <= first.gap + 6);
+  const pos = {};
+  for (const b of S.bodies) for (const a of b.atoms) pos[a.id] = wp(b,a);
+  const ctx = { contacts, first, pos, A:S.bodies[0], B:S.bodies[1],
+    firstText: `${ART[first.ea]} ${first.ea} atom hitting ${ART[first.eb]} ${first.eb} atom` };
+  const o = R.orient(ctx);
+  const energyOk = S.E >= R.Ea*(1-1e-9);
+  S.outcome = { orientOk:o.ok, orientMsg:o.msg, energyOk, success:o.ok && energyOk, ctx };
+  S.tally.n++; if (S.outcome.success) S.tally.e++;
+  S.flash = { x:(first.pa.x+first.pb.x)/2, y:(first.pa.y+first.pb.y)/2, t:0, good:S.outcome.success };
+  S.phase = 'impact'; S.t = 0;
+  for (const b of S.bodies){ b.vx = 0; }
+  const climbTo = o.ok ? Math.min(S.E, R.Ea) : Math.min(S.E, R.Ea)*0.45;
+  setPe(S.pe.s, S.outcome.success ? .5 : sForE(climbTo), .55);
+  renderTally();
+}
+
+function beginReact(){
+  const ctx = S.outcome.ctx, specs = R.products(ctx);
+  const start = ctx.pos, free = [];
+  const prods = specs.map(([tpl, ids]) => {
+    const T = TPL[tpl], P = ids.map(id => start[id]);
+    const cx = P.reduce((s,p)=>s+p.x,0)/P.length, cy = P.reduce((s,p)=>s+p.y,0)/P.length;
+    let sn = 0, cs = 0;
+    T.forEach((t,k) => { const px = P[k].x-cx, py = P[k].y-cy; sn += t.x*py - t.y*px; cs += t.x*px + t.y*py; });
+    const th = Math.atan2(sn, cs);
+    const body = { tpl, x:cx, y:cy, ang:th, vx:0, vy:0, spin:(Math.random()-.5)*1.2,
+      atoms: T.map((t,k) => ({ el:t.el, lx:t.x, ly:t.y, id:ids[k] })) };
+    body.atoms.forEach(a => free.push({ el:a.el, id:a.id, from:start[a.id], to:wp(body,a) }));
+    return body;
+  });
+  const fx = S.flash.x, fy = S.flash.y;
+  prods.forEach((b,k) => {
+    let dx = b.x - fx, dy = b.y - fy, L = Math.hypot(dx,dy);
+    if (L < 8){ dx = 0; dy = (k%2 ? 1 : -1); L = 1; }
+    const sp = 150 + 40*Math.sqrt(Tk()/298.15);
+    b.vx = dx/L*sp; b.vy = dy/L*sp;
+  });
+  S.free = free; S.products = prods;
+  S.phase = 'react'; S.t = 0;
+  setPe(.5, .88, .8);
+}
+
+function step(dt){
+  // background particles always reflect temperature
+  if (S.phase === 'approach'){
+    const [A,B] = S.bodies;
+    const n = Math.max(1, Math.ceil(2*Math.abs(S.v)*dt/2));
+    const h = dt/n;
+    const eOk = S.E >= R.Ea*(1-1e-9);
+    for (let k=0;k<n;k++){
+      const p = Math.max(0, Math.min(1, 1 - minGap()/ZONE));
+      const sp = Math.max(.12, 1 - (eOk ? .72 : .88)*Math.pow(p, 1.4));   // repulsion slows them down
+      A.x += A.vx*h*sp; B.x += B.vx*h*sp;
+      if (minGap() <= 0){ onCollide(); break; }
+    }
+    if (S.phase === 'approach'){
+      const p = Math.max(0, Math.min(1, 1 - minGap()/ZONE));
+      S.pe.s = .12 + (sForE(Math.min(S.E, R.Ea)) - .12) * .65 * Math.pow(p, 1.4);
+    }
+    return;
+  }
+  S.t += dt;
+  if (S.flash) S.flash.t += dt;
+  if (S.phase === 'impact'){
+    if (S.t >= .55){
+      renderVerdict();
+      if (S.outcome.success) beginReact();
+      else {
+        const [A,B] = S.bodies;
+        A.vx = -S.v*.8; B.vx = S.v*.8; A.spin = (Math.random()-.5)*2.4; B.spin = (Math.random()-.5)*2.4;
+        S.phase = 'separate'; S.t = 0; setPe(S.pe.s, .12, .8);
+      }
+    }
+  } else if (S.phase === 'react'){
+    if (S.t >= .75){ S.bodies = S.products; S.free = null; S.phase = 'separate'; S.t = 0; }
+  } else if (S.phase === 'separate'){
+    const ramp = S.outcome?.success ? 1 : .2 + .8*Math.min(1, S.t/.6);   // pushed apart: slow at first, then faster
+    for (const b of S.bodies){ b.x += b.vx*dt*ramp; b.y += b.vy*dt*ramp; b.ang += b.spin*dt*ramp; }
+    if (S.t >= 1.5){ S.phase = 'done'; S.t = 0; }
+  } else if (S.phase === 'done'){
+    if (S.repeat){ if (S.t >= .8) startRun(); }
+    else { S.playing = false; syncUI(); }
+  }
+}
+
+/* ---------- PE curve ---------- */
+function peH(s){
+  const Ea = R.Ea, dH = R.dH;
+  if (s <= .25) return 0;
+  if (s <= .5){ const u = (s-.25)/.25; return Ea*(1-Math.cos(Math.PI*u))/2; }
+  if (s <= .75){ const u = (s-.5)/.25; return dH + (Ea-dH)*(1+Math.cos(Math.PI*u))/2; }
+  return dH;
+}
+function sForE(E){ const r = Math.min(1, Math.max(0, E/R.Ea)); return .25 + .25*Math.acos(1-2*r)/Math.PI; }
+
+/* ---------- canvas helpers ---------- */
+function fit(cv){
+  const r = cv.getBoundingClientRect(), d = window.devicePixelRatio || 1;
+  const w = Math.max(1, Math.round(r.width*d)), h = Math.max(1, Math.round(r.height*d));
+  if (cv.width !== w || cv.height !== h){ cv.width = w; cv.height = h; }
+  return { w, h, d, cw:r.width, ch:r.height };
+}
+function shade(hex, k){ // k>0 lighten, k<0 darken
+  const n = parseInt(hex.slice(1),16); let r = n>>16, g = (n>>8)&255, b = n&255;
+  const f = v => Math.round(k>0 ? v + (255-v)*k : v*(1+k));
+  return `rgb(${f(r)},${f(g)},${f(b)})`;
+}
+function sphere(c, x, y, el, alpha=1){
+  const E = ELEM[el], r = E.r;
+  c.globalAlpha = alpha;
+  const g = c.createRadialGradient(x-r*.35, y-r*.4, r*.1, x, y, r);
+  g.addColorStop(0, shade(E.c, .55)); g.addColorStop(.55, E.c); g.addColorStop(1, shade(E.c, -.35));
+  c.beginPath(); c.arc(x, y, r, 0, Math.PI*2); c.fillStyle = g; c.fill();
+  c.lineWidth = 1.5; c.strokeStyle = 'rgba(0,0,0,.35)'; c.stroke();
+  c.globalAlpha = 1;
+}
+function label(c, x, y, el, alpha=1){
+  const E = ELEM[el];
+  c.globalAlpha = alpha;
+  c.fillStyle = E.t; c.font = `700 ${Math.round(E.r*.78)}px Inter, system-ui, sans-serif`;
+  c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(el, x, y+1);
+  c.globalAlpha = 1;
+}
+function drawAtoms(c, pts, alpha=1){ pts.forEach(p => sphere(c,p.x,p.y,p.el,alpha)); pts.forEach(p => label(c,p.x,p.y,p.el,alpha)); }
+function bodyPts(b){ return b.atoms.map(a => ({ ...wp(b,a), el:a.el, id:a.id })); }
+
+/* ---------- ambient particles (show the temperature) ---------- */
+const dots = Array.from({length:34}, () => ({ x:Math.random()*W, y:Math.random()*H, a:Math.random()*Math.PI*2 }));
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function moveDots(dt){
+  if (reduceMotion) return;
+  const sp = 55*Math.sqrt(Tk()/298.15);
+  for (const p of dots){
+    p.x += Math.cos(p.a)*sp*dt; p.y += Math.sin(p.a)*sp*dt;
+    if (p.x < 0 || p.x > W){ p.a = Math.PI - p.a; p.x = Math.min(W, Math.max(0, p.x)); }
+    if (p.y < 0 || p.y > H){ p.a = -p.a; p.y = Math.min(H, Math.max(0, p.y)); }
+  }
+}
+
+/* ---------- chamber drawing ---------- */
+const cvC = $('chamber');
+let view = { s:1, ox:0, oy:0, d:1 };
+function drawChamber(){
+  const { w, h, d } = fit(cvC), c = cvC.getContext('2d');
+  const s = Math.min(w/W, h/H), ox = (w-W*s)/2, oy = (h-H*s)/2;
+  view = { s, ox, oy, d };
+  c.setTransform(1,0,0,1,0,0);
+  c.fillStyle = tok('--chamber'); c.fillRect(0,0,w,h);
+  // temperature tint of the surroundings
+  const T = S.T;
+  c.fillStyle = T < 25 ? `rgba(60,130,230,${Math.min(.2,(25-T)/75*.2)})` : `rgba(230,80,40,${Math.min(.24, .02+(T-25)/1975*.24)})`;
+  c.fillRect(0,0,w,h);
+  c.setTransform(s,0,0,s,ox,oy);
+  // axis of approach
+  c.strokeStyle = tok('--line'); c.lineWidth = 2; c.setLineDash([10,12]);
+  c.beginPath(); c.moveTo(20,CY); c.lineTo(W-20,CY); c.stroke(); c.setLineDash([]);
+  // ambient particles
+  c.fillStyle = tok('--muted'); c.globalAlpha = .28;
+  for (const p of dots){ c.beginPath(); c.arc(p.x,p.y,3,0,Math.PI*2); c.fill(); }
+  c.globalAlpha = 1;
+  // motion lines while approaching
+  if (S.phase === 'approach' || (S.phase === 'separate' && !S.outcome?.success)){
+    c.strokeStyle = tok('--muted'); c.lineWidth = 3; c.lineCap = 'round'; c.globalAlpha = .55;
+    const len = 18 + 26*Math.min(2.5, Math.abs(S.v)/190);
+    for (const b of S.bodies){
+      const dir = Math.sign(b.vx) || 0; if (!dir) continue;
+      const e = extent(b), x0 = b.x - dir*(e+10);
+      for (const dy of [-18,0,18]){ c.beginPath(); c.moveTo(x0, b.y+dy); c.lineTo(x0 - dir*len*(dy?0.75:1), b.y+dy); c.stroke(); }
+    }
+    c.globalAlpha = 1;
+  }
+  // collision flash
+  if (S.flash && S.flash.t < .9){
+    const f = S.flash, k = f.t/.9;
+    c.strokeStyle = f.good ? tok('--gold') : tok('--muted'); c.lineWidth = 6*(1-k)+1; c.globalAlpha = 1-k;
+    c.beginPath(); c.arc(f.x, f.y, 14 + 70*k, 0, Math.PI*2); c.stroke();
+    if (f.good){ c.fillStyle = tok('--gold'); c.globalAlpha = .35*(1-k); c.beginPath(); c.arc(f.x,f.y,50*(1-k)+10,0,Math.PI*2); c.fill(); }
+    c.globalAlpha = 1;
+  }
+  // repulsion: electron clouds and force arrows
+  if (!S.free && S.bodies.length === 2 && !(S.phase === 'separate' && S.outcome?.success)) drawRepulsion(c);
+  // molecules
+  if (S.free){
+    const k = Math.min(1, S.t/.75), e = k<.5 ? 2*k*k : 1-Math.pow(-2*k+2,2)/2;
+    drawAtoms(c, S.free.map(a => ({ el:a.el, x:a.from.x + (a.to.x-a.from.x)*e, y:a.from.y + (a.to.y-a.from.y)*e })));
+  } else {
+    const fade = (S.phase === 'separate' && S.outcome?.success) ? Math.max(.25, 1 - S.t/1.8) : 1;
+    for (const b of S.bodies) drawAtoms(c, bodyPts(b), fade);
+    if (S.hint && (S.phase === 'ready' || S.phase === 'approach')){
+      c.strokeStyle = tok('--gold'); c.lineWidth = 4; c.setLineDash([7,6]);
+      for (const b of S.bodies) for (const p of bodyPts(b)) if (R.hint.includes(p.id)){
+        c.beginPath(); c.arc(p.x, p.y, ELEM[p.el].r + 6, 0, Math.PI*2); c.stroke();
+      }
+      c.setLineDash([]);
+    }
+  }
+  // labels: A and B under molecules when ready
+  if (S.phase === 'ready' || S.phase === 'approach'){
+    c.fillStyle = tok('--muted'); c.font = '600 20px Inter, system-ui, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'top';
+    S.bodies.forEach((b,k) => c.fillText(`${k ? 'B' : 'A'} · ${LABEL[b.tpl]}`, b.x, CY + 105));
+  }
+  // overlays
+  c.textBaseline = 'top'; c.textAlign = 'right'; c.fillStyle = tok('--ink'); c.font = '700 26px "Space Grotesk", system-ui, sans-serif';
+  c.fillText(`${S.T} °C`, W-20, 16);
+  c.font = '500 16px Inter, system-ui, sans-serif'; c.fillStyle = tok('--muted');
+  c.fillText('surroundings', W-20, 46);
+  c.textAlign = 'left';
+  if (S.hint){ c.fillStyle = tok('--ink'); c.font = '600 19px Inter, system-ui, sans-serif'; wrapText(c, 'Goal: ' + R.goal, 20, 18, 520, 25); }
+  if (!S.playing && S.phase === 'ready'){
+    c.fillStyle = tok('--muted'); c.font = '500 17px Inter, system-ui, sans-serif'; c.textAlign = 'center';
+    c.fillText('Drag a molecule (or its dial) to rotate it, then press Play', W/2, H-36);
+  }
+  if (!S.playing && S.phase !== 'ready' && S.phase !== 'done'){
+    c.fillStyle = tok('--ink'); c.font = '700 22px "Space Grotesk", system-ui, sans-serif'; c.textAlign = 'center';
+    c.fillText('❚❚  Paused', W/2, H-40);
+  }
+}
+function drawRepulsion(c){
+  const [A,B] = S.bodies, all = contactsAB();
+  const pm = Math.max(0, Math.min(1, 1 - Math.min(...all.map(x => x.gap))/ZONE));
+  const near = {};
+  for (const x of all){ near[x.i] = Math.min(near[x.i] ?? 1e9, x.gap); near[x.j] = Math.min(near[x.j] ?? 1e9, x.gap); }
+  // electron clouds: faint around every atom, glowing red where the clouds are pushed together
+  for (const b of S.bodies) for (const pt of bodyPts(b)){
+    const r = ELEM[pt.el].r, q = Math.max(0, Math.min(1, 1 - near[pt.id]/ZONE)), qq = q*q;
+    const R2 = r + 14 + 10*qq;
+    const g = c.createRadialGradient(pt.x, pt.y, r*.8, pt.x, pt.y, R2);
+    g.addColorStop(0, qq > .02 ? `rgba(235,70,50,${.12 + .5*qq})` : 'rgba(120,150,230,.16)');
+    g.addColorStop(1, 'rgba(120,150,230,0)');
+    c.fillStyle = g; c.beginPath(); c.arc(pt.x, pt.y, R2, 0, Math.PI*2); c.fill();
+  }
+  if (pm < .04) return;
+  const k = pm*pm, col = tok('--bad');
+  c.globalAlpha = Math.min(1, pm*1.6);
+  // force arrows pushing each molecule back the way it came
+  const arrowY = CY - 112, len = 24 + 90*k;
+  [[A,-1],[B,1]].forEach(([b,dir]) => {
+    const x0 = b.x, x1 = b.x + dir*len;
+    c.strokeStyle = col; c.fillStyle = col; c.lineWidth = 4 + 4*k; c.lineCap = 'round';
+    c.beginPath(); c.moveTo(x0, arrowY); c.lineTo(x1 - dir*10, arrowY); c.stroke();
+    c.beginPath(); c.moveTo(x1 + dir*6, arrowY); c.lineTo(x1 - dir*(14+6*k), arrowY - 10 - 4*k); c.lineTo(x1 - dir*(14+6*k), arrowY + 10 + 4*k); c.closePath(); c.fill();
+  });
+  // label + negative charges between the clouds
+  const mx = (A.x + B.x)/2;
+  c.fillStyle = col; c.textAlign = 'center'; c.textBaseline = 'bottom';
+  c.font = `700 ${18 + 6*k}px Inter, system-ui, sans-serif`;
+  c.fillText('Repulsion', mx, arrowY - 24);
+  c.font = '600 15px Inter, system-ui, sans-serif';
+  c.fillText('electron clouds push apart', mx, arrowY - 4);
+  c.globalAlpha = 1;
+}
+function wrapText(c, text, x, y, maxW, lh){
+  const words = text.split(' '); let line = '';
+  for (const w of words){ const t = line ? line + ' ' + w : w;
+    if (c.measureText(t).width > maxW && line){ c.fillText(line, x, y); y += lh; line = w; } else line = t; }
+  if (line) c.fillText(line, x, y);
+}
+
+/* ---------- PE diagram ---------- */
+const cvP = $('pe');
+function drawPE(){
+  const { w, h, d } = fit(cvP), c = cvP.getContext('2d');
+  c.setTransform(d,0,0,d,0,0);
+  const cw = w/d, ch = h/d;
+  c.clearRect(0,0,cw,ch);
+  const L = 34, Rr = 12, Tp = 14, Bt = 30, PW = cw-L-Rr, PH = ch-Tp-Bt;
+  const lo = Math.min(0, R.dH), hi = R.Ea, span = hi-lo;
+  const top = hi + .34*span, bot = lo - .16*span;
+  const X = s => L + s*PW, Y = e => Tp + (top-e)/(top-bot)*PH;
+  const ink = tok('--ink'), muted = tok('--muted'), fs = Math.max(11, Math.min(22, cw/26));
+  // axes
+  c.strokeStyle = muted; c.lineWidth = 1.5;
+  c.beginPath(); c.moveTo(L, Tp); c.lineTo(L, Tp+PH); c.lineTo(L+PW, Tp+PH); c.stroke();
+  c.fillStyle = muted; c.font = `500 ${fs*.9}px Inter, system-ui, sans-serif`;
+  c.textAlign = 'center'; c.textBaseline = 'top'; c.fillText('Reaction progress →', L+PW/2, Tp+PH+8);
+  c.save(); c.translate(14, Tp+PH/2); c.rotate(-Math.PI/2); c.textBaseline = 'middle'; c.fillText('Potential energy →', 0, 0); c.restore();
+  // reactant reference line
+  c.strokeStyle = muted; c.lineWidth = 1; c.setLineDash([4,4]);
+  c.beginPath(); c.moveTo(X(.25), Y(0)); c.lineTo(X(.97), Y(0)); c.stroke(); c.setLineDash([]);
+  // KE line
+  const showE = (S.phase === 'ready') ? meanE() : S.E;
+  const eOk = showE >= R.Ea*(1-1e-9);
+  const eY = Y(Math.min(showE, top - .02*span));
+  c.strokeStyle = eOk ? tok('--good') : tok('--warn'); c.lineWidth = 2.5; c.setLineDash([8,5]);
+  c.beginPath(); c.moveTo(X(.02), eY); c.lineTo(X(.62), eY); c.stroke(); c.setLineDash([]);
+  c.fillStyle = eOk ? tok('--good') : tok('--warn'); c.font = `700 ${fs*.9}px Inter, system-ui, sans-serif`;
+  c.textAlign = 'left'; c.textBaseline = 'bottom';
+  const keLbl = (S.spread && S.phase === 'ready' ? 'Average collision KE' : 'Collision KE') + (showE > top ? ' ↑ off scale' : '');
+  c.fillText(keLbl, X(.02), eY-3);
+  // curve
+  c.strokeStyle = tok('--curve'); c.lineWidth = 3; c.beginPath();
+  for (let i=0;i<=200;i++){ const s = i/200; const x = X(s), y = Y(peH(s)); i ? c.lineTo(x,y) : c.moveTo(x,y); }
+  c.stroke();
+  // Ea arrow
+  const arrow = (x, y1, y2, col) => {
+    c.strokeStyle = col; c.fillStyle = col; c.lineWidth = 2;
+    c.beginPath(); c.moveTo(x, y1); c.lineTo(x, y2); c.stroke();
+    const dir = Math.sign(y2-y1) || 1;
+    c.beginPath(); c.moveTo(x, y2); c.lineTo(x-5, y2-dir*9); c.lineTo(x+5, y2-dir*9); c.closePath(); c.fill();
+  };
+  arrow(X(.5), Y(0), Y(R.Ea)+2, tok('--accent'));
+  c.fillStyle = tok('--accent'); c.font = `700 ${fs}px Inter, system-ui, sans-serif`; c.textAlign = 'left'; c.textBaseline = 'middle';
+  c.fillText('Eₐ', X(.5)+7, (Y(0)+Y(R.Ea))/2);
+  // dH arrow
+  arrow(X(.95), Y(0), Y(R.dH) + (R.dH>0 ? 2 : -2), ink);
+  c.fillStyle = ink; c.textAlign = 'right'; c.font = `700 ${fs}px Inter, system-ui, sans-serif`;
+  const my = (Y(0)+Y(R.dH))/2;
+  c.fillText('ΔH', X(.95)-6, my - fs*.6);
+  c.font = `600 ${fs*.9}px Inter, system-ui, sans-serif`;
+  c.fillText(`${R.dH>0?'+':'−'}${Math.abs(R.dH)} kJ`, X(.95)-6, my + fs*.6);
+  // species labels under plateaus
+  c.fillStyle = muted; c.font = `600 ${fs*.88}px Inter, system-ui, sans-serif`; c.textAlign = 'center'; c.textBaseline = 'top';
+  c.fillText(side(R.lhs), X(.13), Y(0)+6);
+  c.textAlign = 'right';
+  if (R.dH > 0){ c.textBaseline = 'bottom'; c.fillText(side(R.rhs), X(.995), Y(R.dH)-5); }
+  else c.fillText(side(R.rhs), X(.93), Y(R.dH)+6);
+  // ball
+  const bx = X(S.pe.s), by = Y(peH(S.pe.s)) - 9;
+  c.fillStyle = tok('--gold'); c.strokeStyle = tok('--curve'); c.lineWidth = 2;
+  c.beginPath(); c.arc(bx, by, 8, 0, Math.PI*2); c.fill(); c.stroke();
+}
+const side = arr => arr.map(([n,k]) => (n>1 ? n+' ' : '') + LABEL[k]).join(' + ');
+
+/* ---------- equation strip ---------- */
+const cvE = $('eqCanvas');
+function drawEq(){
+  const { w, h, d } = fit(cvE), c = cvE.getContext('2d');
+  c.setTransform(1,0,0,1,0,0); c.clearRect(0,0,w,h);
+  const items = [];
+  const push = arr => arr.forEach(([n,k],i) => { if (i) items.push({ t:'+' }); if (n>1) items.push({ t:String(n), coef:true }); items.push({ m:k }); });
+  push(R.lhs); items.push({ t:'→', arrow:true }); push(R.rhs);
+  const m = .62, gap = 16, font = '600 30px "Space Grotesk", system-ui, sans-serif';
+  c.font = font;
+  const widthOf = it => {
+    if (it.m){ const T = TPL[it.m]; return (Math.max(...T.map(a => a.x+ELEM[a.el].r)) - Math.min(...T.map(a => a.x-ELEM[a.el].r)))*m; }
+    return it.arrow ? 60 : c.measureText(it.t).width;
+  };
+  const ws = items.map(widthOf), total = ws.reduce((s,x)=>s+x,0) + gap*(items.length-1);
+  const sc = Math.min(d*1.15, (w - 8*d)/total, h/(100));
+  c.setTransform(sc,0,0,sc,(w - total*sc)/2, 0);
+  const midY = (h/sc)*.42;
+  let x = 0;
+  items.forEach((it,i) => {
+    const iw = ws[i];
+    if (it.m){
+      const T = TPL[it.m], minX = Math.min(...T.map(a => a.x-ELEM[a.el].r));
+      c.save(); c.translate(x - minX*m, midY); c.scale(m,m);
+      drawAtoms(c, T.map(a => ({ el:a.el, x:a.x, y:a.y })));
+      c.restore();
+      c.fillStyle = tok('--muted'); c.font = '600 17px Inter, system-ui, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'top';
+      c.fillText(LABEL[it.m], x + iw/2, midY + 30);
+    } else {
+      c.fillStyle = tok('--ink'); c.font = font; c.textAlign = 'left'; c.textBaseline = 'middle';
+      if (it.arrow){ c.strokeStyle = tok('--ink'); c.lineWidth = 3; c.beginPath(); c.moveTo(x+6, midY); c.lineTo(x+iw-6, midY); c.stroke();
+        c.beginPath(); c.moveTo(x+iw-4, midY); c.lineTo(x+iw-16, midY-8); c.lineTo(x+iw-16, midY+8); c.closePath(); c.fillStyle = tok('--ink'); c.fill(); }
+      else c.fillText(it.t, x, midY);
+    }
+    x += iw + gap;
+  });
+}
+
+/* ---------- dials ---------- */
+const dials = { A:$('dialA'), B:$('dialB') };
+function drawDial(which){
+  const cv = dials[which], { w, h, d } = fit(cv), c = cv.getContext('2d');
+  c.setTransform(d,0,0,d,0,0);
+  const cw = w/d, ch = h/d, cx = cw/2, cy = ch/2, R0 = Math.min(cw,ch)/2 - 4;
+  c.clearRect(0,0,cw,ch);
+  const locked = S.playing;
+  c.globalAlpha = locked ? .5 : 1;
+  c.fillStyle = tok('--chamber'); c.beginPath(); c.arc(cx,cy,R0,0,Math.PI*2); c.fill();
+  c.strokeStyle = tok('--line'); c.lineWidth = 2; c.stroke();
+  for (let a=0;a<360;a+=30){ const r = rad(a), long = a%90===0;
+    c.beginPath(); c.moveTo(cx+Math.cos(r)*(R0-(long?9:5)), cy+Math.sin(r)*(R0-(long?9:5))); c.lineTo(cx+Math.cos(r)*R0, cy+Math.sin(r)*R0);
+    c.strokeStyle = tok('--muted'); c.lineWidth = long ? 2 : 1; c.stroke(); }
+  // partner direction marker
+  const pd = which === 'A' ? 0 : Math.PI;
+  c.fillStyle = tok('--accent');
+  c.beginPath(); const tx = cx+Math.cos(pd)*(R0+1), ty = cy;
+  c.moveTo(tx, ty); c.lineTo(tx - Math.cos(pd)*10, ty-6); c.lineTo(tx - Math.cos(pd)*10, ty+6); c.closePath(); c.fill();
+  // mini molecule
+  const key = which === 'A' ? R.A : R.B, T = TPL[key];
+  const ang = rad(which === 'A' ? S.angA : S.angB);
+  const ext = Math.max(...T.map(a => Math.hypot(a.x,a.y)+ELEM[a.el].r));
+  const sc = (R0-12)/ext;
+  c.save(); c.translate(cx,cy); c.rotate(ang); c.scale(sc,sc);
+  drawAtoms(c, T.map(a => ({ el:a.el, x:a.x, y:a.y })));
+  c.restore();
+  // handle
+  const hx = cx+Math.cos(ang)*R0, hy = cy+Math.sin(ang)*R0;
+  c.fillStyle = tok('--gold'); c.strokeStyle = tok('--ink'); c.lineWidth = 1.5;
+  c.beginPath(); c.arc(hx,hy,6,0,Math.PI*2); c.fill(); c.stroke();
+  c.globalAlpha = 1;
+}
+
+/* ---------- UI ---------- */
+function setAngle(which, deg){
+  if (S.playing) return;
+  deg = norm360(deg);
+  if (which === 'A') S.angA = deg; else S.angB = deg;
+  conditionsChanged(() => { const b = S.bodies[which === 'A' ? 0 : 1]; b.ang = rad(deg); unOverlap(); });
+  syncUI();
+}
+function setTemp(T){
+  if (S.playing) return;
+  S.T = Math.max(-50, Math.min(2000, Math.round(T/5)*5));
+  conditionsChanged(() => { S.E = sampleE(); const f = Math.min(2.4, Math.max(.45, Math.sqrt(S.E/meanE()))); S.v = baseSpeed()*f; S.bodies[0].vx = S.v; S.bodies[1].vx = -S.v; });
+  syncUI();
+}
+/* while paused mid-approach, keep positions; otherwise start over from the start positions */
+function conditionsChanged(midFlight){
+  if (S.phase === 'approach') midFlight(); else resetScene();
+}
+function syncUI(){
+  $('tRead').innerHTML = `${S.T} °C<small>${(S.T+273.15).toFixed(0)} K</small>`;
+  $('temp').value = S.T;
+  $('angA').textContent = `${S.angA}°`; $('angB').textContent = `${S.angB}°`;
+  $('nameA').textContent = LABEL[R.A]; $('nameB').textContent = LABEL[R.B];
+  const lock = S.playing;
+  ['temp','tMinus','tPlus','aMinus','aPlus','bMinus','bPlus','shuffle'].forEach(id => $(id).disabled = lock);
+  cvC.classList.toggle('locked', lock);
+  const pb = $('play');
+  pb.textContent = S.playing ? '❚❚ Pause' : (S.phase === 'approach' || S.phase === 'impact' || S.phase === 'react' || S.phase === 'separate' ? '▶ Resume' : (S.phase === 'done' ? '▶ Play again' : '▶ Play'));
+}
+function renderTally(){
+  $('nCol').textContent = S.tally.n; $('nEff').textContent = S.tally.e;
+  $('pct').textContent = S.tally.n ? `${Math.round(100*S.tally.e/S.tally.n)}% effective` : '';
+}
+function renderVerdict(){
+  const v = $('verdict'); v.className = 'verdict panel';
+  const o = S.outcome;
+  if (!o || S.phase === 'impact' && S.t < .55){
+    if (S.phase === 'ready') v.innerHTML = `<h2>Ready</h2><p>Rotate each molecule and set the temperature, then press Play. A collision only works with the right orientation <em>and</em> enough kinetic energy.</p>`;
+    else v.innerHTML = `<h2>Molecules approaching…</h2><p>Watch the potential energy diagram as they collide.</p>`;
+    return;
+  }
+  v.classList.add(o.success ? 'good' : 'bad');
+  const row = (ok, head, msg) => `<div class="check"><span class="ic ${ok?'y':'n'}">${ok?'✓':'✗'}</span><span><b>${head}</b>${msg}</span></div>`;
+  v.innerHTML = `<h2>${o.success ? 'Effective collision: products formed!' : 'Ineffective collision: no reaction'}</h2>`
+    + row(o.orientOk, o.orientOk ? 'Correct orientation' : 'Wrong orientation', o.orientMsg)
+    + row(o.energyOk, o.energyOk ? 'Enough kinetic energy' : 'Not enough kinetic energy',
+        o.energyOk ? 'The collision energy reached the activation energy (Eₐ).' : 'The collision energy was below Eₐ, so bonds could not break. Try a higher temperature.');
+}
+function loadReaction(i){
+  R = REACTIONS[i];
+  S.playing = false; S.tally = { n:0, e:0 };
+  S.angA = R.start[0]; S.angB = R.start[1];
+  document.querySelectorAll('#tabs button').forEach((b,k) => b.setAttribute('aria-selected', k===i ? 'true' : 'false'));
+  $('eqTitle').textContent = R.title; $('eqContext').textContent = R.context;
+  const pill = $('pill'); pill.textContent = R.dH < 0 ? 'Exothermic' : 'Endothermic'; pill.className = 'pill ' + (R.dH < 0 ? 'exo' : 'endo');
+  $('dh').textContent = `ΔH = ${R.dH>0?'+':'−'}${Math.abs(R.dH)} kJ`;
+  resetScene(); renderTally(); syncUI(); eqDirty = true;
+}
+
+REACTIONS.forEach((r,i) => {
+  const b = document.createElement('button'); b.type = 'button'; b.role = 'tab'; b.textContent = r.tab;
+  b.addEventListener('click', () => loadReaction(i)); $('tabs').appendChild(b);
+});
+$('play').addEventListener('click', () => {
+  if (S.phase === 'ready' || S.phase === 'done') startRun();
+  else S.playing = !S.playing;
+  syncUI();
+});
+$('reset').addEventListener('click', () => { S.playing = false; resetScene(); syncUI(); });
+$('shuffle').addEventListener('click', () => { S.angA = ((Math.random()*24)|0)*15; S.angB = ((Math.random()*24)|0)*15; resetScene(); syncUI(); });
+$('aMinus').addEventListener('click', () => setAngle('A', S.angA-15));
+$('aPlus').addEventListener('click', () => setAngle('A', S.angA+15));
+$('bMinus').addEventListener('click', () => setAngle('B', S.angB-15));
+$('bPlus').addEventListener('click', () => setAngle('B', S.angB+15));
+$('temp').addEventListener('input', e => setTemp(+e.target.value));
+$('tMinus').addEventListener('click', () => setTemp(S.T-10));
+$('tPlus').addEventListener('click', () => setTemp(S.T+10));
+$('clearTally').addEventListener('click', () => { S.tally = { n:0, e:0 }; renderTally(); });
+$('optHint').addEventListener('change', e => { S.hint = e.target.checked; });
+$('optSpread').addEventListener('change', e => { S.spread = e.target.checked; if (!S.playing && S.phase === 'ready') S.E = meanE(); });
+$('optRepeat').addEventListener('change', e => { S.repeat = e.target.checked; });
+
+// dial dragging + keys
+for (const which of ['A','B']){
+  const cv = dials[which]; let drag = false;
+  const angAt = e => { const r = cv.getBoundingClientRect(); return Math.atan2(e.clientY - (r.top+r.height/2), e.clientX - (r.left+r.width/2))*180/Math.PI; };
+  cv.addEventListener('pointerdown', e => { if (S.playing) return; drag = true; cv.setPointerCapture(e.pointerId); setAngle(which, angAt(e)); });
+  cv.addEventListener('pointermove', e => { if (drag) setAngle(which, angAt(e)); });
+  cv.addEventListener('pointerup', () => drag = false);
+  cv.addEventListener('pointercancel', () => drag = false);
+  cv.addEventListener('keydown', e => {
+    const cur = which === 'A' ? S.angA : S.angB, st = e.shiftKey ? 15 : 5;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown'){ setAngle(which, cur+st); e.preventDefault(); }
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp'){ setAngle(which, cur-st); e.preventDefault(); }
+  });
+  cv.addEventListener('wheel', e => { if (S.playing) return; e.preventDefault(); setAngle(which, (which==='A'?S.angA:S.angB) + (e.deltaY>0?5:-5)); }, { passive:false });
+}
+// drag molecules directly in the chamber
+let cDrag = null;
+const toWorld = e => { const r = cvC.getBoundingClientRect(); return { x:((e.clientX-r.left)*view.d - view.ox)/view.s, y:((e.clientY-r.top)*view.d - view.oy)/view.s }; };
+cvC.addEventListener('pointerdown', e => {
+  if (S.playing) return;
+  if (S.phase !== 'ready' && S.phase !== 'approach') { resetScene(); }
+  const p = toWorld(e);
+  let best = null, bd = 1e9;
+  S.bodies.forEach((b,k) => { const dd = Math.hypot(p.x-b.x, p.y-b.y); if (dd < bd){ bd = dd; best = k; } });
+  if (best === null || bd > 140) return;
+  const which = best ? 'B' : 'A', b = S.bodies[best];
+  cDrag = { which, start: Math.atan2(p.y-b.y, p.x-b.x)*180/Math.PI, ang0: which === 'A' ? S.angA : S.angB };
+  cvC.setPointerCapture(e.pointerId); cvC.style.cursor = 'grabbing';
+});
+cvC.addEventListener('pointermove', e => {
+  if (!cDrag) return;
+  const p = toWorld(e), b = S.bodies[cDrag.which === 'A' ? 0 : 1];
+  const now = Math.atan2(p.y-b.y, p.x-b.x)*180/Math.PI;
+  setAngle(cDrag.which, cDrag.ang0 + (now - cDrag.start));
+});
+const endDrag = () => { cDrag = null; cvC.style.cursor = ''; };
+cvC.addEventListener('pointerup', endDrag); cvC.addEventListener('pointercancel', endDrag);
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space' && !['BUTTON','INPUT'].includes(e.target.tagName)){ e.preventDefault(); $('play').click(); }
+});
+
+/* ---------- loop ---------- */
+let last = performance.now();
+function frame(now){
+  const dt = Math.min(.05, (now-last)/1000); last = now;
+  if (S.playing){
+    step(dt); moveDots(dt);
+    const p = S.pe; if (S.phase !== 'approach'){ p.t += dt; const k = Math.min(1, p.t/p.dur), e = k<.5 ? 2*k*k : 1-Math.pow(-2*k+2,2)/2;
+    p.s = p.from + (p.to-p.from)*e; }
+  } else if (S.phase === 'ready' || S.phase === 'done') moveDots(dt);
+  drawChamber(); drawPE(); drawDial('A'); drawDial('B');
+  if (eqDirty){ drawEq(); eqDirty = false; }
+  requestAnimationFrame(frame);
+}
+new ResizeObserver(() => { eqDirty = true; }).observe(cvE);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => eqDirty = true);
+new MutationObserver(() => eqDirty = true).observe(root, { attributes:true, attributeFilter:['data-theme'] });
+if (document.fonts) document.fonts.ready.then(() => eqDirty = true);
+loadReaction(0);
+requestAnimationFrame(frame);
+})();
+</script>
+
+</body></html>
