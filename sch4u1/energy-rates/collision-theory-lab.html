@@ -333,7 +333,7 @@ function onCollide(){
   S.flash = { x:(first.pa.x+first.pb.x)/2, y:(first.pa.y+first.pb.y)/2, t:0, good:S.outcome.success };
   S.phase = 'impact'; S.t = 0;
   for (const b of S.bodies){ b.vx = 0; }
-  const climbTo = o.ok ? Math.min(S.E, R.Ea) : Math.min(S.E, R.Ea)*0.45;
+  const climbTo = Math.min(S.E, R.Ea);   // energy alone decides how high it climbs; orientation decides whether it goes over
   setPe(S.pe.s, S.outcome.success ? .5 : sForE(climbTo), .55);
   renderTally();
 }
@@ -763,7 +763,7 @@ function renderVerdict(){
   v.innerHTML = `<h2>${o.success ? 'Effective collision: products formed!' : 'Ineffective collision: no reaction'}</h2>`
     + row(o.orientOk, o.orientOk ? 'Correct orientation' : 'Wrong orientation', o.orientMsg)
     + row(o.energyOk, o.energyOk ? 'Enough kinetic energy' : 'Not enough kinetic energy',
-        o.energyOk ? 'The collision energy reached the activation energy (Eₐ).' : 'The collision energy was below Eₐ, so bonds could not break. Try a higher temperature.');
+        o.energyOk ? (o.orientOk ? 'The collision energy reached the activation energy (Eₐ).' : 'The collision energy reached Eₐ, but with the wrong orientation the bonds could not rearrange, so the molecules bounced back to reactants.') : 'The collision energy was below Eₐ, so bonds could not break. Try a higher temperature.');
 }
 function loadReaction(i){
   R = REACTIONS[i];
