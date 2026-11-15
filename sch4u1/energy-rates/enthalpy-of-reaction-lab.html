@@ -408,8 +408,16 @@ function renderRxn(){
   $("lblN").innerHTML = `3. Moles of ${nr.per}, n`;
   $("lblH").innerHTML = `4. Molar enthalpy of reaction, ΔH<sub>x</sub> (per mole of ${nr.per})`;
 }
-rxnSel.onchange = () => { renderRxn(); renderCyl("A"); renderCyl("B"); };
-nbRxn.onchange = renderRxn;
+rxnSel.onchange = () => { nbRxn.value = rxnSel.value; renderRxn(); renderCyl("A"); renderCyl("B"); };
+// keep the bench reaction and the notebook reaction in step
+nbRxn.onchange = () => {
+  if(nbRxn.value && nbRxn.value !== rxnSel.value){
+    if(!rxnSel.disabled){ rxnSel.value = nbRxn.value; renderCyl("A"); renderCyl("B"); }
+    else alertRxn();
+  }
+  renderRxn();
+};
+function alertRxn(){ const t=$("msgA"); if(t){ t.className="msg warn"; t.innerHTML=`Careful: the reaction on your bench is <b>${curRxn().title}</b>. Your notebook should record the reaction you actually ran.`; } }
 
 // =============== GRADUATED CYLINDERS ===============
 const CYL = {top:20, bottom:310, x:22, w:44};

@@ -1,4 +1,8 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Enthalpy of Solution Lab</title>
 <style>
 :root{
@@ -44,7 +48,7 @@ canvas{width:100%;display:block;border:1px solid var(--line);border-radius:8px;b
 .measgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 @media (max-width:760px){.measgrid{grid-template-columns:1fr}}
 .lcd{font-family:"Courier New",monospace}
-.notebook{background:#fff;border:1px solid #ddd}
+.notebook{background:#fffdf3;border:1px solid #e7dfb8;background-image:repeating-linear-gradient(#fffdf3 0 27px,#e8e4cf 27px 28px)}
 .notebook label{display:block;font-size:13px;margin-top:10px;color:#4a4230}
 .notebook input,.notebook select,.notebook textarea{width:100%;font-size:15px;padding:6px 8px;border:1px solid #cfc6a0;border-radius:5px;background:#fff;font-family:inherit}
 .fieldrow{display:flex;gap:6px;align-items:center}
@@ -65,6 +69,7 @@ th{background:#f3f5f9}
 #lidGroup{transition:transform .6s ease}
 #lidGroup.off{transform:translate(120px,40px) rotate(8deg)}
 .small{font-size:12px}
+.jarpick{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:15px;margin-bottom:6px}.jarpick select{font-size:15px;padding:6px;border:2px solid var(--accent);border-radius:6px}
 .nbjump{display:none;text-decoration:none}
 @media (max-width:900px){.nbjump{display:inline-block}}
 .notebook input:disabled,.notebook select:disabled,.notebook textarea:disabled,.calc input:disabled{background:#f1efe6;color:#555}
@@ -74,6 +79,8 @@ table.rep td:nth-child(4){min-width:220px}
 tr.r-good td:last-child{color:var(--good)} tr.r-bad td:last-child{color:var(--bad)} tr.r-warn td:last-child{color:var(--warn)}
 @media print{header,aside,#tab-cal,#tab-meas,.btnrow{display:none!important} .tab{display:block!important} .wrap{display:block}}
 </style>
+</head>
+<body>
 <header>
   <h1>Enthalpy of Solution: Coffee-Cup Calorimetry</h1>
   <nav>
@@ -143,7 +150,7 @@ tr.r-good td:last-child{color:var(--good)} tr.r-bad td:last-child{color:var(--ba
           <g id="boatOnBench" style="display:none">
             <path d="M20 255 L70 255 L62 262 L28 262 Z" fill="#eef3f8" stroke="#9aa6b2"/>
             <ellipse cx="45" cy="254" rx="14" ry="4" fill="#fdfdfd" stroke="#ccc"/>
-            <text x="45" y="282" text-anchor="middle" font-size="10" fill="#ddd">weighed salt</text>
+            <text x="45" y="282" text-anchor="middle" font-size="10" fill="#ddd" id="boatLabel">weighed salt</text>
           </g>
           <g id="cylOnBench" style="display:none">
             <rect x="236" y="150" width="20" height="112" fill="#e8f3ff" stroke="#8aa" opacity=".9"/>
@@ -183,7 +190,7 @@ tr.r-good td:last-child{color:var(--good)} tr.r-bad td:last-child{color:var(--ba
     <div class="measgrid">
       <div>
         <h2>Centigram balance (±0.01 g)</h2>
-        <label class="small">Salt jar:
+        <label class="jarpick"><b>Choose the salt jar:</b>
           <select id="saltSel"></select>
         </label>
         <svg id="balSvg" viewBox="0 0 340 230" width="100%" aria-label="Digital balance">
@@ -301,7 +308,7 @@ const SALTS = [
   {id:"LiCl", name:"lithium chloride", f:"LiCl", M:42.39, dH:-37.0},
 ];
 for(let i=SALTS.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [SALTS[i],SALTS[j]]=[SALTS[j],SALTS[i]]; } // shuffle salt menus each time the app opens
-const C_WATER = 4.18, CUP_HEAT_CAP = 10, MAX_CAL = 75;
+const C_WATER = 4.18, CUP_HEAT_CAP = 10, MAX_CAL = 75, TAU_H = 6; // TAU_H: hydration lags lattice breaking by ~6 s
 const $ = id => document.getElementById(id);
 const rand = (a,b) => a + Math.random()*(b-a);
 let gaussSpare = null;
@@ -386,7 +393,13 @@ function addSalt(dm){
 $("btnScoopBig").onclick = () => addSalt(rand(0.7,1.4));
 $("btnScoopSmall").onclick = () => addSalt(rand(0.03,0.12));
 $("btnScoopOut").onclick = () => addSalt(-Math.min(S.saltMass, rand(0.05,0.3)));
-saltSel.onchange = renderBalance;
+saltSel.onchange = () => { nbSalt.value = saltSel.value; renderBalance(); };
+// keep the jar and the notebook salt in step: picking a salt in either menu changes the other
+nbSalt.onchange = () => {
+  if(!nbSalt.value) return;
+  if(!saltSel.disabled){ saltSel.value = nbSalt.value; renderBalance(); }
+  else if(nbSalt.value !== saltSel.value) msg("balMsg", `Careful: the salt on your balance is <b>${saltById(saltSel.value).f}</b>, not ${saltById(nbSalt.value).f}. Your notebook should record the salt you actually used.`, "warn");
+};
 $("btnTakeSalt").onclick = () => {
   if(Math.abs(S.tare - S.boatMass) > 0.005 && S.tare===0){
     msg("balMsg","Careful: you never tared the weigh boat, so the reading includes the boat.","warn");
@@ -423,7 +436,7 @@ function renderCylinder(){
     if(v%10===0) g += `<text x="${40+L+6}" y="${y+5}" font-size="14" fill="#223">${v}</text>`; }
   g += `<rect x="40" y="0" width="140" height="300" fill="none" stroke="#7c94a8" stroke-width="2"/>`;
   g += `<line x1="0" y1="${cy}" x2="30" y2="${cy}" stroke="#d43" stroke-dasharray="3 3"/><text x="2" y="${cy-5}" font-size="10" fill="#d43">eye</text>`;
-  if(V<=0) g += `<text x="110" y="150" text-anchor="middle" font-size="13" fill="#889">empty</text>`;
+  if(V<=0) g += `<text x="150" y="110" text-anchor="middle" font-size="13" fill="#889">empty</text>`;
   z.innerHTML = g;
   const lock = S.cylTaken;
   ["btnPourBig","btnPourSmall","btnDropper","btnPourOut","btnTakeWater"].forEach(id=>$(id).disabled = lock);
@@ -445,6 +458,7 @@ $("btnTakeWater").onclick = () => { S.cylTaken = true; renderCylinder(); updateC
 
 // =============== CALORIMETER ===============
 function updateCal(){
+  if(S.salt) $("boatLabel").textContent = saltById(S.salt).f;
   $("boatOnBench").style.display = (S.saltTaken && !S.saltAdded) ? "" : "none";
   $("cylOnBench").style.display = (S.cylTaken && S.cylV>0) ? "" : "none";
   $("lidGroup").classList.toggle("off", !S.lidOn);
@@ -505,7 +519,18 @@ $("btnAddSalt").onclick = () => {
   S.TiTrue = S.Tw; S.TiProbeSettled = Math.abs(S.Tp - S.Tw) < 0.15;
   S.dHtrue = s.dH * 1000 * (1 + 0.015*gauss());
   // lattice-breaking "overshoot" energy so the curve dips first (like the real SPARKvue trace)
-  S.X = 1000*(s.dH < 0 ? Math.abs(s.dH)*1.6 + 35 : s.dH*0.3 + 4);
+  // lattice-breaking dip: pick the extra bond-breaking energy X so the probe trace (with steady swirling)
+  // dips 4–6 °C below Ti for exothermic salts, or undershoots the final temperature by 1–2 °C for endothermic ones
+  {
+    const nS0 = S.saltMass / s.M, Cw0 = (S.calV + S.residual)*C_WATER + CUP_HEAT_CAP;
+    const target = s.dH < 0 ? rand(4, 6) : rand(1, 2);
+    const dipFor = X => { let f=0, h=0, T=0, Tp=0, lo=0; const dt=0.05;
+      for(let i=0;i<4000;i++){ const df=0.085*(1-f)*dt, dh=(f-h)*dt/TAU_H; f+=df; h+=dh;
+        T -= nS0*((S.dHtrue+X)*df - X*dh)/Cw0; Tp += (T-Tp)*dt/1.5; lo = Math.min(lo, Tp); }
+      return s.dH < 0 ? -lo : (T - lo); };
+    let a1 = 0, b1 = 3e6; for(let i=0;i<40;i++){ const mid=(a1+b1)/2; if(dipFor(mid) < target) a1 = mid; else b1 = mid; }
+    S.X = (a1+b1)/2;
+  }
   S.lidOffAtSalt = S.lidOffSince;
   // too much salt for the water: limit how much dissolves so the solution stays between ~2 °C and ~85 °C
   const nS = S.saltInCal / s.M, Cw0 = (S.calV + S.residual)*C_WATER + CUP_HEAT_CAP;
@@ -513,7 +538,7 @@ $("btnAddSalt").onclick = () => {
   S.fMax = Math.abs(dTfull) > room ? room/Math.abs(dTfull) : 1;
   S.saturated = S.fMax < 1;
   updateCal();
-  msg("calMsg","Salt added! Put the lid back on quickly and hold <b>Swirl</b>.","warn");
+  msg("calMsg",`${s.f} added! Put the lid back on quickly and hold <b>Swirl</b>.`,"warn");
 };
 function setSwirl(on){ S.swirl = on && S.waterAdded && !S.stopped; $("cupGroup").classList.toggle("swirling", S.swirl); }
 const sw = $("btnSwirl");
@@ -537,7 +562,7 @@ function step(dt){
   if(S.saltAdded){
     const s = saltById(S.salt), n = S.saltInCal / s.M;
     const r = S.swirl ? 0.085 : 0.03;
-    const df = r*(S.fMax-S.f)*dt, dh = (S.f - S.h)*dt/9.0;
+    const df = r*(S.fMax-S.f)*dt, dh = (S.f - S.h)*dt*(r/0.085)/TAU_H; // hydration keeps pace with dissolving, so the dip shows whether or not they swirl
     S.f += df; S.h += dh;
     P -= (n*(S.dHtrue + S.X)*df - n*S.X*dh)/dt;
   }
@@ -644,7 +669,7 @@ function expected(){
   const mol = n.mass.v / s.M;
   const H = -m*C_WATER*dT/mol; // J/mol
   const sfH = sfMin(sigFigs(n.vol.s), sfDT, sigFigs(n.mass.s), 3);
-  return {s, m, sfM: Math.min(sigFigs(n.vol.s), 3), dT, sfDT, mol, sfN: Math.min(sigFigs(n.mass.s), 4), H, sfH, pe: Math.abs(H/1000 - s.dH)/Math.abs(s.dH)*100};
+  return {s, m, sfM: Math.min(sigFigs(n.vol.s), 3), dT, sfDT, mol, sfN: Math.min(sigFigs(n.mass.s), 4), H, Hset:[H], sfH, pe: Math.abs(H/1000 - s.dH)/Math.abs(s.dH)*100};
 }
 function refreshCalc(){
   const n = nb(); const miss = [];
@@ -661,7 +686,8 @@ function lockInputs(on){
   $("btnSubmit").disabled = on;
 }
 function fmt(x,d){ return (x>0?"":"") + x.toFixed(d); }
-function sigRound(x, n){ if(!isFinite(x)||x===0) return "0"; const r = Number(x.toPrecision(n)); const d = n - 1 - Math.floor(Math.log10(Math.abs(r))); return d>0 ? r.toFixed(d) : String(r) + (d===0 && /0$/.test(String(r)) ? "." : ""); }
+function sfRange(s){ const m = s.replace(/^[+-]/,"").split(/e/i)[0]; if(m.includes(".")) { const k = sigFigs(s); return [k,k]; } const d = m.replace(/^0+/,""); return [Math.max(1, d.replace(/0+$/,"").length), Math.max(1, d.length)]; }
+function sigRound(x, n){ if(!isFinite(x)||x===0) return "0"; const r = Number(x.toPrecision(n)); const d = n - 1 - Math.floor(Math.log10(Math.abs(r))); return d>0 ? r.toFixed(d) : String(r); }
 function buildReport(){
   const R = []; const n = nb(); const add = (item, yours, correct, kind, comment) => R.push({item, yours, correct, kind, comment});
   const raw = id => $(id).value.trim() || "—";
@@ -733,33 +759,41 @@ function buildReport(){
   if(!E){ addC("Calculations","—","—","bad","Your notebook was missing values, so the calculations couldn't be checked."); }
   else {
     const chk = (id, label, target, unit, sfWant, rel, extra) => {
-      const x = parseNum($(id).value); const corr = sigRound(target, sfWant)+" "+unit;
+      const x = parseNum($(id).value); const corr = String(+target.toPrecision(4))+" "+unit;
       if(!x) return addC(label,"—",corr,"bad","Not answered.");
       const sf = sigFigs(x.s);
       if(extra){ const e = extra(x); if(e) return addC(label, x.s+" "+unit, corr, "bad", e); }
-      if(!closeTo(x.v,target,rel)) return addC(label, x.s+" "+unit, corr, "bad", "Incorrect value.");
-      addC(label, x.s+" "+unit, corr, sf===sfWant?"good":"warn", sf===sfWant ? "Correct." : `Correct value, but it should have ${sfWant} significant digits (you have ${sf}).`);
+      const roundTol = 0.5*Math.pow(10, Math.floor(Math.log10(Math.abs(target)||1)) - sfWant + 1)*1.01;
+      if(!closeTo(x.v,target,rel) && Math.abs(x.v-target) > roundTol) return addC(label, x.s+" "+unit, corr, "bad", "Incorrect value.");
+      addC(label, x.s+" "+unit, corr, "good", "Correct.");
     };
     chk("cM","Mass of water, m",E.m,"g",E.sfM,0.001, x => closeTo(x.v,E.m+ +($("nbMass").value||0),0.002) ? "m is the mass of the water only, not water + salt." : "");
-    chk("cDT","ΔT",E.dT,"°C",E.sfDT,0.01, x => (E.dT!==0 && closeTo(x.v,-E.dT,0.01)) ? "Wrong order: ΔT = T<sub>f</sub> − T<sub>i</sub>." : "");
+    (() => { const x = parseNum($("cDT").value), corr = (Math.round(E.dT*10)/10).toFixed(1)+" °C";
+      if(!x) return addC("ΔT","—",corr,"bad","Not answered.");
+      if(E.dT!==0 && Math.abs(x.v + E.dT) <= 0.051 && Math.abs(x.v - E.dT) > 0.051) return addC("ΔT", x.s+" °C", corr, "bad", "Wrong order: ΔT = T<sub>f</sub> − T<sub>i</sub>.");
+      if(Math.abs(x.v - E.dT) > 0.051) return addC("ΔT", x.s+" °C", corr, "bad", "Incorrect value.");
+      addC("ΔT", x.s+" °C", corr, decimals(x.s)===1 ? "good" : "warn", decimals(x.s)===1 ? "Correct." : "Temperatures (and temperature changes) have one decimal place, the precision of the thermometer."); })();
     chk("cN","n (salt)",E.mol,"mol",E.sfN,0.006);
-    const u = $("cHU").value; const x = parseNum($("cH").value);
-    const corr = sigRound(E.H/1000, E.sfH)+" kJ/mol";
+    const u = $("cHU").value, x = parseNum($("cH").value), corr = sigRound(E.H/1000, E.sfH)+" kJ/mol";
+    // follow-through marking: ΔHx worked out correctly from the student's own m, ΔT and n
+    const sm = parseNum($("cM").value), sdt = parseNum($("cDT").value), sn = parseNum($("cN").value);
+    const Hown = (sm && sdt && sn && sn.v!==0) ? -sm.v*C_WATER*sdt.v/sn.v : null;
+    const sfOk = str => { const r2 = sfRange(str); return r2[1] >= E.sfH-1 && r2[0] <= E.sfH+1; };
     if(!x || !u) addC("ΔHₓ", x? x.s+" "+(u||"(no unit)") : "—", corr, "bad", !x?"Not answered.":"No unit chosen.");
     else if(u!=="J/mol" && u!=="kJ/mol") addC("ΔHₓ", x.s+" "+u, corr, "bad","Molar enthalpy is energy per mole (J/mol or kJ/mol).");
-    else { const t = u==="kJ/mol"? E.H/1000 : E.H; const sf = sigFigs(x.s);
-      if(closeTo(x.v,-t,0.02)) addC("ΔHₓ", x.s+" "+u, corr, "bad","Sign error. If the water cooled, the dissolving was endothermic (ΔHₓ > 0). Use nΔHₓ = −mcΔT.");
-      else if(closeTo(x.v*1000,t,0.02)||closeTo(x.v/1000,t,0.02)) addC("ΔHₓ", x.s+" "+u, corr, "bad","Off by a factor of 1000. Check J vs kJ.");
-      else if(!closeTo(x.v,t,0.02)) addC("ΔHₓ", x.s+" "+u, corr, "bad","Incorrect value. Rearrange nΔHₓ = −mcΔT.");
-      else addC("ΔHₓ", x.s+" "+u, corr, sf===E.sfH?"good":"warn", sf===E.sfH?"Correct value, sign, unit and significant digits.":`Correct value, sign and unit, but it should have ${E.sfH} significant digits (you have ${sf}). Your least precise measurement limits the answer.`);
-    }
+    else { const v = u==="kJ/mol" ? x.v*1000 : x.v, hit = h => h!==null && closeTo(v, h, 0.02);
+      if(E.Hset.some(hit)) addC("ΔHₓ", x.s+" "+u, corr, sfOk(x.s)?"good":"warn", sfOk(x.s) ? "Correct." : `Correct value, sign and unit. Round to about ${E.sfH} significant digits.`);
+      else if(hit(-E.H) && !hit(Hown)) addC("ΔHₓ", x.s+" "+u, corr, "bad", "Sign error. If the water cooled, the dissolving was endothermic (ΔHₓ > 0). Use nΔHₓ = −mcΔT.");
+      else if(closeTo(v*1000,E.H,0.02)||closeTo(v/1000,E.H,0.02)) addC("ΔHₓ", x.s+" "+u, corr, "bad","Off by a factor of 1000. Check J vs kJ.");
+      else if(hit(Hown)) addC("ΔHₓ", x.s+" "+u, corr, "warn","You calculated this correctly from your own earlier answers, but one of those steps was wrong (see above).");
+      else addC("ΔHₓ", x.s+" "+u, corr, "bad","Incorrect value. Rearrange nΔHₓ = −mcΔT."); }
+    // % error: also accept it worked out from the student's own ΔHx, and accept a negative sign
     const pe = parseNum($("cP").value);
-    // accept % error from the unrounded ΔHx or from the student's own rounded ΔHx (if that ΔHx was right)
-    const hx = parseNum($("cH").value), hu = $("cHU").value;
-    const peOwn = (hx && (hu==="kJ/mol"||hu==="J/mol") && closeTo((hu==="J/mol"? hx.v/1000 : hx.v), E.H/1000, 0.02)) ? Math.abs((hu==="J/mol"? hx.v/1000 : hx.v) - E.s.dH)/Math.abs(E.s.dH)*100 : null;
-    const okPe = v => [E.pe, peOwn].some(t => t!==null && (closeTo(v,t,0.03) || Math.abs(v-t)<=0.15));
-    if(!pe) addC("% error","—",E.pe.toFixed(1)+" %","bad","Not answered.");
-    else addC("% error", pe.s+" %", (peOwn!==null && Math.abs(peOwn-E.pe)>0.15 ? peOwn.toFixed(1)+" %" : E.pe.toFixed(1)+" %"), okPe(pe.v)?"good":"bad", okPe(pe.v)?"Correct.":`Compare your ΔHₓ to the accepted ${E.s.dH>0?"+":""}${E.s.dH} kJ/mol.`);
+    const own = (x && (u==="kJ/mol"||u==="J/mol")) ? Math.abs((u==="J/mol"? x.v/1000 : x.v) - E.s.dH)/Math.abs(E.s.dH)*100 : null;
+    const okPe = p2 => [E.pe, own].some(t => t!==null && (closeTo(Math.abs(p2),t,0.03) || Math.abs(Math.abs(p2)-t)<=0.15));
+    const peShow = (own!==null ? own : E.pe).toFixed(1)+" %";
+    if(!pe) addC("% error","—",peShow,"bad","Not answered.");
+    else addC("% error", pe.s+" %", peShow, okPe(pe.v)?"good":"bad", okPe(pe.v) ? "Correct." : `Compare your ΔHₓ to the accepted ${E.s.dH>0?"+":""}${E.s.dH} kJ/mol.`);
   }
   // best possible from this run
   let best = "";
@@ -771,7 +805,7 @@ function buildReport(){
   const row = r => `<tr class="r-${r.kind}"><td>${r.item}</td><td>${r.yours}</td><td>${r.correct}</td><td>${{good:"✓",warn:"△",bad:"✗",info:"•"}[r.kind]} ${r.comment}</td></tr>`;
   $("report").innerHTML = `<h3>Lab summary</h3><div class="msg ${good===score?"good":"info"}">${good} of ${score} items fully correct. Submitted at run time ${Math.floor(S.t)} s, ${new Date().toLocaleString()}.</div>
     <h3>Measurements and technique</h3><div class="tscroll"><table class="rep"><thead><tr><th>Item</th><th>You</th><th>Should be</th><th>Feedback</th></tr></thead><tbody>${R.map(row).join("")}</tbody></table></div>
-    <h3>Calculations</h3><p class="muted">Checked against your own notebook data, so a measurement mistake isn't counted twice.</p><div class="tscroll"><table class="rep"><thead><tr><th>Item</th><th>You</th><th>Should be</th><th>Feedback</th></tr></thead><tbody>${C.map(row).join("")}</tbody></table></div>${best}
+    <h3>Calculations</h3><p class="muted">Checked against your own notebook data, so a measurement mistake isn't counted twice. Significant digits are only checked loosely on the final ΔH<sub>x</sub> (within one digit); keep unrounded values until then. Scientific notation is optional. Temperatures always have one decimal place (thermometer precision).</p><div class="tscroll"><table class="rep"><thead><tr><th>Item</th><th>You</th><th>Should be</th><th>Feedback</th></tr></thead><tbody>${C.map(row).join("")}</tbody></table></div>${best}
     ${window.self===window.top ? '<div class="btnrow"><button class="btn secondary" onclick="window.print()">Print / save as PDF</button></div>' : '<p class="muted">Take a screenshot of this summary to hand in.</p>'}`;
   $("report").scrollIntoView({behavior:"smooth"});
 }
@@ -807,5 +841,5 @@ window.addEventListener("resize", () => drawGraph());
 window.__sim = () => S; // for testing
 })();
 </script>
-
-</body></html>
+</body>
+</html>
