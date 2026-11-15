@@ -199,7 +199,7 @@
     { id: "Fg",   lab: ["F", "g"],     desc: "force of gravity",      modes: "v"  },
     { id: "Fnet", lab: ["F", "net"],   desc: "net force",             modes: "hvc" },
   ];
-  const show = { F: true, dx: true, v: true, a: true, Fg: true, Fnet: false };
+  const show = { F: false, dx: false, v: false, a: false, Fg: false, Fnet: false };
   const vecList = document.getElementById("vecList");
   for (const V of VECTORS) {
     const row = document.createElement("label");
@@ -727,8 +727,8 @@
       : hz
       ? "Drag the block left or right to compress or stretch the spring, then let go. It is released from rest."
       : "Drag the block up or down, then let go. It oscillates about the equilibrium line, where kΔx = mg.";
-    // start displaced so it is moving when the tab opens
-    S.s = eqS() + (hz ? 0.25 : 0.15);
+    // start at rest at equilibrium; the student drags the block to begin
+    S.s = eqS();
     if (mode === "c") { S.tilt = 0; S.tiltTarget = null; syncTilt(); } S.v = 0; S.t = 0; S.Emax = 0;
     clearTrace();
     setRunning(true);
