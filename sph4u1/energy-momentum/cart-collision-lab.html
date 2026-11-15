@@ -1,0 +1,852 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cart Collision Lab</title>
+<style>
+  :root {
+    --bg: #f4f3fb;
+    --panel: #ffffff;
+    --ink: #1d1d2b;
+    --muted: #61617a;
+    --line: #dcdbea;
+    --accent: #4b47c9;
+    --scene: #eeeefa;
+    --c-v: #d61fd0;
+    --c-p: #0b8a8a;
+    --c-pT: #064e4e;
+    --c-E: #c27700;
+    --blue: #2a52d6;
+    --red: #d8262b;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font: 15px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    padding: 16px;
+  }
+  .wrap { max-width: 1320px; margin: 0 auto; }
+  header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 18px; margin-bottom: 12px; }
+  h1 { font-size: 20px; margin: 0; font-weight: 650; }
+  header p { margin: 0; color: var(--muted); font-size: 14px; }
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 14px; align-items: start; }
+  @media (max-width: 820px) { .layout { grid-template-columns: 1fr; } }
+  .main { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  .stage { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px; }
+  canvas#scene { width: 100%; display: block; border-radius: 8px; background: var(--scene); touch-action: none; }
+  .bar { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; align-items: center; }
+  .btn {
+    border: 1px solid var(--line); background: var(--panel); color: var(--ink);
+    padding: 7px 14px; border-radius: 8px; font: inherit; font-weight: 600; cursor: pointer;
+  }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; min-width: 92px; }
+  .btn:hover { filter: brightness(0.97); }
+  .btn:disabled { opacity: .45; cursor: default; }
+  .btn.small { padding: 3px 10px; font-size: 13px; }
+  select { font: inherit; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); }
+  .status { margin-left: auto; color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; }
+  .msg { margin: 8px 4px 0; font-size: 14px; min-height: 20px; }
+  .msg.warn { color: #a3470b; }
+  .msg.ok { color: #18794e; }
+  aside { display: flex; flex-direction: column; gap: 14px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .card h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 8px; display: flex; align-items: center; gap: 8px; }
+  .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+  .massrow { display: flex; align-items: center; gap: 8px; margin: 2px 0 6px; font-size: 14px; }
+  .massrow .n { min-width: 18px; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .massrow .lbl { flex: 1; }
+  .mtot { font-size: 14px; margin-bottom: 4px; }
+  .mtot b { font-variant-numeric: tabular-nums; }
+  .slider { margin: 6px 0 4px; }
+  .slider label { display: flex; justify-content: space-between; font-size: 14px; }
+  .slider output { font-variant-numeric: tabular-nums; font-weight: 600; }
+  .slider input { width: 100%; accent-color: var(--accent); }
+  .seg { display: grid; grid-template-columns: repeat(3, 1fr); background: #f0eff7; border-radius: 9px; padding: 3px; gap: 3px; }
+  .seg button { border: 0; background: transparent; padding: 6px 4px; border-radius: 7px; font: inherit; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; }
+  .seg button.on { background: var(--panel); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+  .desc { font-size: 13px; color: var(--muted); margin: 8px 0 0; }
+  .chk { display: flex; align-items: center; gap: 10px; padding: 4px 0; cursor: pointer; user-select: none; font-size: 14px; }
+  .chk input { width: 17px; height: 17px; accent-color: var(--accent); }
+  .sw { width: 22px; height: 0; border-top: 3px solid; }
+  table.res { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 14px; }
+  table.res th, table.res td { padding: 5px 8px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  table.res th:first-child, table.res td:first-child { text-align: left; }
+  table.res thead th { font-size: 12px; color: var(--muted); font-weight: 600; }
+  table.res thead tr.grp th { border-bottom: 0; padding-bottom: 0; text-align: center; }
+  table.res tr.tot td { font-weight: 700; border-bottom: 0; }
+  td.hid { color: #b5b4c8; }
+  .scroll { overflow-x: auto; }
+  .summary { display: flex; flex-wrap: wrap; gap: 8px 24px; margin-top: 10px; font-size: 14px; }
+  .summary b { font-variant-numeric: tabular-nums; }
+  .charts { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; }
+  @media (max-width: 600px) { .charts { grid-template-columns: 1fr; } }
+  .chart h3 { margin: 0 0 6px; font-size: 13px; color: var(--muted); font-weight: 600; }
+  .cbar { display: grid; grid-template-columns: 50px 1fr 112px; gap: 8px; align-items: center; font-size: 13px; margin: 5px 0; font-variant-numeric: tabular-nums; }
+  .cbar .tr { height: 16px; background: #f0eff7; border-radius: 4px; position: relative; overflow: hidden; }
+  .cbar .tr.mid::before { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; border-left: 1px solid #b9b8cc; }
+  .cbar .fill { position: absolute; top: 0; bottom: 0; border-radius: 3px; }
+  .cbar span:last-child { text-align: right; }
+  .hidden { display: none !important; }
+  /* guide */
+  .guide ol.steps { margin: 0; padding-left: 20px; font-size: 14px; columns: 2 300px; column-gap: 28px; }
+  .guide ol.steps li { margin: 0 0 4px; break-inside: avoid; }
+  .trials { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
+  .trial { border: 1px solid var(--line); border-radius: 9px; padding: 8px 10px; cursor: pointer; background: var(--panel); text-align: left; font: inherit; color: inherit; }
+  .trial:hover { border-color: #b9b7e6; }
+  .trial.on { border-color: var(--accent); background: #f3f2fd; }
+  .trial b { display: block; font-size: 14px; }
+  .trial span { font-size: 13px; color: var(--muted); }
+  .trial .done { float: right; color: #18794e; font-weight: 700; font-size: 13px; }
+  @media (max-width: 700px) { .trials { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 460px) { .trials { grid-template-columns: 1fr; } }
+  .tinstr { margin-top: 12px; border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; background: #faf9ff; }
+  .tinstr h3 { margin: 0 0 2px; font-size: 15px; }
+  .tinstr .why { margin: 0 0 8px; font-size: 13px; color: var(--muted); }
+  .tinstr ul { list-style: none; margin: 0; padding: 0; }
+  .tinstr li { display: grid; grid-template-columns: 22px 1fr; gap: 6px; padding: 4px 0; font-size: 14px; border-top: 1px dashed var(--line); }
+  .tinstr li:first-child { border-top: 0; }
+  .tinstr .ck { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #c9c8db; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; color: #fff; margin-top: 1px; }
+  .tinstr li.ok .ck { background: #18794e; border-color: #18794e; }
+  .tinstr li.ok > span:last-child { color: var(--muted); }
+  .tinstr li.rec .ck { border-style: dotted; }
+  .tinstr .state { margin-top: 8px; font-size: 14px; font-weight: 600; }
+  .tinstr .state.go { color: #18794e; }
+  .tinstr .state.wait { color: #a3470b; }
+  .tip { font-size: 13px; color: var(--muted); margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--line); }
+  table.log { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+  table.log th, table.log td { padding: 4px 6px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+  table.log th:nth-child(-n+2), table.log td:nth-child(-n+2) { text-align: left; }
+  table.log th { color: var(--muted); font-weight: 600; font-size: 12px; }
+  .logbar { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .logbar h2 { margin: 0 auto 0 0; }
+  sub { font-size: 75%; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Cart Collision Lab</h1>
+    <p>Two dynamics carts on a low-friction track. Right is positive (+).</p>
+  </header>
+
+  <div class="layout">
+    <!-- Stage + results -->
+    <div class="main">
+      <div class="stage">
+        <canvas id="scene" aria-label="Two carts on a track"></canvas>
+        <div class="bar">
+          <button class="btn primary" id="play">▶ Play</button>
+          <button class="btn" id="reset">↺ Reset</button>
+          <label style="font-size:14px;color:var(--muted)">Speed
+            <select id="speed">
+              <option value="1">Real time</option>
+              <option value="0.5" selected>½ (slow)</option>
+              <option value="0.25">¼ (slower)</option>
+            </select>
+          </label>
+          <span class="status" id="status">t = 0.00 s</span>
+        </div>
+        <div class="msg" id="msg"></div>
+      </div>
+
+      <!-- Lab guide -->
+      <div class="card guide">
+          <h2>Lab guide</h2>
+          <p style="margin:0;font-size:14px">Click a trial. Its instructions appear below, and each setting gets a ✓ once you have it right. Set the masses, collision type and velocities yourself using the controls on the right.</p>
+          <div class="trials" id="trials"></div>
+          <div class="tinstr" id="tinstr"></div>
+          <div class="tip">After the six trials, try your own: add or remove bar masses, change velocities, or drag the carts to new starting spots.</div>
+      </div>
+
+      <div class="card">
+        <h2>Results</h2>
+        <div class="scroll">
+          <table class="res">
+            <thead>
+              <tr class="grp"><th></th><th></th><th colspan="2">Velocity (m/s)</th><th colspan="2">Momentum (kg·m/s)</th><th colspan="2">Kinetic energy (J)</th></tr>
+              <tr><th></th><th>m (kg)</th><th>before</th><th>after</th><th>before</th><th>after</th><th>before</th><th>after</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><span class="dot" style="background:var(--blue)"></span> Cart 1</td><td id="r-m1"></td><td id="r-vi1"></td><td id="r-vf1"></td><td id="r-pi1"></td><td id="r-pf1"></td><td id="r-Ei1"></td><td id="r-Ef1"></td></tr>
+              <tr><td><span class="dot" style="background:var(--red)"></span> Cart 2</td><td id="r-m2"></td><td id="r-vi2"></td><td id="r-vf2"></td><td id="r-pi2"></td><td id="r-pf2"></td><td id="r-Ei2"></td><td id="r-Ef2"></td></tr>
+              <tr class="tot"><td>Total</td><td id="r-mT"></td><td></td><td></td><td id="r-piT"></td><td id="r-pfT"></td><td id="r-EiT"></td><td id="r-EfT"></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="summary" id="summary"></div>
+        <div class="charts" id="charts">
+          <div class="chart">
+            <h3>Total momentum</h3>
+            <div class="cbar"><span>before</span><div class="tr mid"><div class="fill" id="cb-pi" style="background:var(--c-p)"></div></div><span id="cv-pi"></span></div>
+            <div class="cbar"><span>after</span><div class="tr mid"><div class="fill" id="cb-pf" style="background:var(--c-p)"></div></div><span id="cv-pf"></span></div>
+          </div>
+          <div class="chart">
+            <h3>Total kinetic energy</h3>
+            <div class="cbar"><span>before</span><div class="tr"><div class="fill" id="cb-Ei" style="background:var(--c-E)"></div></div><span id="cv-Ei"></span></div>
+            <div class="cbar"><span>after</span><div class="tr"><div class="fill" id="cb-Ef" style="background:var(--c-E)"></div></div><span id="cv-Ef"></span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="logbar">
+          <h2>Trial log</h2>
+          <button class="btn small" id="copy">Copy for spreadsheet</button>
+          <button class="btn small" id="clear">Clear</button>
+        </div>
+        <div class="scroll">
+          <table class="log">
+            <thead><tr><th>#</th><th>Collision</th><th>m<sub>1</sub> (kg)</th><th>m<sub>2</sub> (kg)</th><th>v<sub>i1</sub></th><th>v<sub>i2</sub></th><th>v<sub>f1</sub></th><th>v<sub>f2</sub></th></tr></thead>
+            <tbody id="logbody"><tr><td colspan="8" style="text-align:left;color:var(--muted)">Each collision you run is added here.</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <aside>
+      <div class="card" id="card0">
+        <h2><span class="dot" style="background:var(--blue)"></span>Cart 1 (blue)</h2>
+        <div class="massrow"><span class="lbl">250 g bar masses</span><button class="btn small" data-c="0" data-d="-1">−</button><span class="n" id="bars0"></span><button class="btn small" data-c="0" data-d="1">+</button></div>
+        <div class="mtot">m<sub>1</sub> = <b id="m0"></b> <span style="color:var(--muted);font-size:13px">(cart 0.250 kg + bars)</span></div>
+        <div class="slider"><label><span>Initial velocity v<sub>i1</sub></span><output id="vo0"></output></label><input type="range" id="v0" min="-1" max="1" step="0.05"></div>
+      </div>
+      <div class="card" id="card1">
+        <h2><span class="dot" style="background:var(--red)"></span>Cart 2 (red)</h2>
+        <div class="massrow"><span class="lbl">250 g bar masses</span><button class="btn small" data-c="1" data-d="-1">−</button><span class="n" id="bars1"></span><button class="btn small" data-c="1" data-d="1">+</button></div>
+        <div class="mtot">m<sub>2</sub> = <b id="m1"></b> <span style="color:var(--muted);font-size:13px">(cart 0.250 kg + bars)</span></div>
+        <div class="slider"><label><span>Initial velocity v<sub>i2</sub></span><output id="vo1"></output></label><input type="range" id="v1" min="-1" max="1" step="0.05"></div>
+      </div>
+      <div class="card">
+        <h2>Collision type</h2>
+        <div class="seg" role="tablist">
+          <button data-mode="elastic">Magnets</button>
+          <button data-mode="partial">Bumper</button>
+          <button data-mode="sticky">Velcro</button>
+        </div>
+        <div class="slider" id="ewrap"><label><span>Elasticity (bounciness)</span><output id="eo"></output></label><input type="range" id="e" min="0" max="1" step="0.05"></div>
+        <p class="desc" id="mdesc"></p>
+      </div>
+      <div class="card">
+        <h2>Display</h2>
+        <label class="chk"><input type="checkbox" id="showV" checked><span class="sw" style="border-color:var(--c-v)"></span>Velocity arrows (v)</label>
+        <label class="chk"><input type="checkbox" id="showP"><span class="sw" style="border-color:var(--c-p)"></span>Momentum arrows (p)</label>
+        <label class="chk"><input type="checkbox" id="showPT"><span class="sw" style="border-color:var(--c-pT);border-top-width:6px"></span>Total momentum (p<sub>T</sub>)</label>
+        <label class="chk"><input type="checkbox" id="showCalc"><span>Show p and E<sub>k</sub> values</span></label>
+        <label class="chk"><input type="checkbox" id="pauseHit">Pause right after the collision</label>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script>
+(() => {
+  // ---------- constants (SI units) ----------
+  const TRACK = 1.2;      // m, track length between end stops
+  const L = 0.175;        // m, cart length
+  const M_CART = 0.250;   // kg
+  const M_BAR = 0.250;    // kg
+  const MAXB = 3;
+
+  const MODES = {
+    elastic: { name: 'Magnets (elastic)', desc: 'Magnetic bumpers push the carts apart without touching. No kinetic energy is lost: an elastic collision (elasticity = 1).' },
+    partial: { name: 'Bumper', desc: 'Rubber bumpers. Some kinetic energy turns into heat and sound. Elasticity 1 is a perfect bounce; 0 means the carts do not bounce apart at all.' },
+    sticky:  { name: 'Velcro (sticks)', desc: 'Velcro pads. The carts stick together and move as one object: a perfectly inelastic collision (elasticity = 0).' }
+  };
+
+  const TRIALS = [
+    { t: 'Equal masses, head on', s: 'Elastic · equal masses', why: 'Two equal carts at equal speeds meet head on and bounce off magnetically.', bars: [1, 1], v: [0.40, -0.40], mode: 'elastic', e: 1 },
+    { t: 'Unequal masses, head on', s: 'Elastic · unequal masses', why: 'Same speeds as Trial 1, but cart 1 is heavier.', bars: [2, 1], v: [0.40, -0.40], mode: 'elastic', e: 1 },
+    { t: 'Hitting a cart at rest', s: 'Elastic · one cart at rest', why: 'Cart 1 runs into a heavier cart that is not moving.', bars: [1, 2], v: [0.40, 0], mode: 'elastic', e: 1 },
+    { t: 'Partly elastic', s: 'Partly elastic · equal masses', why: 'Rubber bumpers: the carts bounce, but not perfectly.', bars: [1, 1], v: [0.40, -0.40], mode: 'partial', e: 0.7 },
+    { t: 'Sticking together', s: 'Inelastic · equal masses', why: 'Velcro pads: the carts stick and move as one object.', bars: [1, 1], v: [0.40, -0.40], mode: 'sticky', e: 0 },
+    { t: 'Sticking, unequal masses', s: 'Inelastic · unequal masses', why: 'Velcro again, with a heavy cart and a light cart.', bars: [2, 0], v: [0.40, -0.40], mode: 'sticky', e: 0 }
+  ];
+
+  const cfg = {
+    bars: [0, 0], v0: [0.20, -0.20], x0: [0.25, 0.95],
+    mode: 'elastic', e: 0.5, speed: 0.5,
+    showV: true, showP: false, showPT: false, showCalc: false, pauseHit: false,
+    trial: -1
+  };
+  const doneTrials = new Set();
+  const log = [];
+  let sim;
+
+  const $ = id => document.getElementById(id);
+  const mass = i => M_CART + cfg.bars[i] * M_BAR;
+  const elasticity = () => cfg.mode === 'elastic' ? 1 : cfg.mode === 'sticky' ? 0 : cfg.e;
+
+  // ---------- formatting ----------
+  const sgn = (x, d) => { const r = Number(x.toFixed(d)); return (r > 0 ? '+' : r < 0 ? '−' : '') + Math.abs(r).toFixed(d); };
+  const f3 = x => x.toFixed(3);
+  const fE = x => x.toFixed(4);
+
+  // ---------- simulation ----------
+  function resetSim() {
+    sim = { x: [...cfg.x0], v: [...cfg.v0], t: 0, phase: 'ready', stuck: false, inter: false, preV: null, after: null, flash: 0, contactX: 0, msg: '', msgKind: '' };
+    if (gapNow() < minGap()) {
+      sim.x[1] = Math.min(TRACK - L / 2, sim.x[0] + L + minGap());
+      sim.x[0] = Math.min(sim.x[0], sim.x[1] - L - minGap());
+      cfg.x0 = [...sim.x];
+    }
+    refresh();
+  }
+
+  function setMsg(text, kind) { sim.msg = text; sim.msgKind = kind || ''; }
+
+  function advance(h) {
+    sim.x[0] += sim.v[0] * h;
+    sim.x[1] += sim.v[1] * h;
+    sim.t += h;
+  }
+
+  // ---- magnetic (elastic) interaction: repulsion across a gap, the carts never touch ----
+  const MAG_R = 0.06;      // m, gap at which the magnets start to push
+  const MAG_K = 0.0016;    // N·m², strength of the repulsion
+  const magnetic = () => cfg.mode === 'elastic';
+  const gapNow = () => sim.x[1] - sim.x[0] - L;
+  const magForce = g => g < MAG_R ? MAG_K * (1 / (g * g) - 1 / (MAG_R * MAG_R)) : 0;
+  const minGap = () => magnetic() ? MAG_R + 0.002 : 0.01;
+
+  function magStep(h) { // velocity Verlet; +F pushes cart 2 right and cart 1 left
+    const m1 = mass(0), m2 = mass(1);
+    let F = magForce(Math.max(1e-4, gapNow()));
+    sim.v[0] -= F / m1 * h / 2; sim.v[1] += F / m2 * h / 2;
+    advance(h);
+    F = magForce(Math.max(1e-4, gapNow()));
+    sim.v[0] -= F / m1 * h / 2; sim.v[1] += F / m2 * h / 2;
+  }
+  function magDt(rem) {
+    const g = Math.max(1e-4, gapNow()), vr = Math.abs(sim.v[1] - sim.v[0]);
+    const ar = magForce(g) * (1 / mass(0) + 1 / mass(1));
+    return Math.max(1e-6, Math.min(rem, 0.0005, 0.02 * g / Math.max(vr, 1e-3), Math.sqrt(0.04 * g / Math.max(ar, 1e-9))));
+  }
+
+  function exactAfter(u1, u2) {
+    const m1 = mass(0), m2 = mass(1), e = elasticity();
+    const P = m1 * u1 + m2 * u2, M = m1 + m2;
+    if (e === 0) return [P / M, P / M];
+    return [(P + m2 * e * (u2 - u1)) / M, (P + m1 * e * (u1 - u2)) / M];
+  }
+
+  function collide() {
+    const e = elasticity();
+    const [v1, v2] = magnetic() ? exactAfter(...sim.preV) : exactAfter(...sim.v);
+    if (e === 0) sim.stuck = true;
+    sim.v = [v1, v2];
+    if (!magnetic()) {
+      sim.x[1] = sim.x[0] + L;
+      sim.flash = 0.35;
+      sim.contactX = sim.x[0] + L / 2;
+    }
+    sim.inter = false;
+    sim.after = { v: [v1, v2] };
+    log.push({ mode: cfg.mode === 'partial' ? 'Bumper e=' + e.toFixed(2) : MODES[cfg.mode].name,
+               m: [mass(0), mass(1)], vi: [...cfg.v0], vf: [v1, v2] });
+    if (cfg.trial >= 0 && sameAsTrial(cfg.trial)) doneTrials.add(cfg.trial);
+    renderLog(); renderTrials();
+    setMsg(magnetic() ? 'The magnets pushed the carts apart without touching. The "after" velocities are now in the results table.'
+                      : 'Collision! The "after" velocities are now in the results table.', 'ok');
+    if (cfg.pauseHit) { sim.phase = 'paused'; setMsg('Paused right after the collision. Press Play to continue.', 'ok'); }
+  }
+
+  function endRun(i) {
+    sim.phase = 'done';
+    if (sim.after) setMsg('Run finished: cart ' + (i + 1) + ' reached the end stop. Press Reset to run it again.', 'ok');
+    else setMsg('The carts never collided: cart ' + (i + 1) + ' reached the end of the track first. Change the velocities so the carts move toward each other.', 'warn');
+  }
+
+  function step(dt) {
+    let rem = dt, guard = 0;
+    while (rem > 1e-12 && sim.phase === 'running' && guard++ < 50000) {
+      const [x1, x2] = sim.x, [v1, v2] = sim.v;
+      let tc = Infinity;
+      if (!sim.after && v1 > v2) tc = Math.max(0, (x2 - x1 - L - (magnetic() ? MAG_R : 0)) / (v1 - v2));
+      let te = Infinity, who = -1;
+      for (let i = 0; i < 2; i++) {
+        const v = sim.v[i]; let t = Infinity;
+        if (v < 0) t = (sim.x[i] - L / 2) / -v;
+        else if (v > 0) t = (TRACK - L / 2 - sim.x[i]) / v;
+        if (t < te) { te = t; who = i; }
+      }
+      if (sim.after && sim.v[0] === 0 && sim.v[1] === 0) { sim.phase = 'done'; setMsg('Run finished: the carts came to rest. Press Reset to run it again.', 'ok'); break; }
+      if (sim.inter) { // magnets pushing: small steps until the carts are out of range and separating
+        const h = magDt(rem); magStep(h); rem -= h;
+        if (gapNow() >= MAG_R && sim.v[1] >= sim.v[0]) collide();
+        for (let i = 0; i < 2; i++) if (sim.x[i] - L / 2 <= 0 || sim.x[i] + L / 2 >= TRACK) { sim.x[i] = Math.max(L / 2, Math.min(TRACK - L / 2, sim.x[i])); endRun(i); break; }
+        continue;
+      }
+      if (tc <= rem && tc <= te) {
+        advance(tc); rem -= tc;
+        if (magnetic()) { sim.inter = true; sim.preV = [...sim.v]; } else collide();
+      }
+      else if (te <= rem) { advance(Math.max(0, te)); rem -= te; endRun(who); }
+      else { advance(rem); rem = 0; }
+    }
+  }
+
+  function play() {
+    if (sim.phase === 'running') { sim.phase = 'paused'; refresh(); return; }
+    if (sim.phase === 'done') resetSim();
+    if (sim.v[0] === 0 && sim.v[1] === 0) { setMsg('Both carts are at rest. Give at least one cart an initial velocity.', 'warn'); refresh(); return; }
+    sim.phase = 'running';
+    if (!sim.after) setMsg(cfg.trial >= 0 && !sameAsTrial(cfg.trial) ? 'Your settings do not match Trial ' + (cfg.trial + 1) + ' yet, so this run will not count for it.' : '', 'warn');
+    refresh();
+  }
+
+  // ---------- trials ----------
+  function sameAsTrial(k) {
+    const T = TRIALS[k];
+    return T.bars[0] === cfg.bars[0] && T.bars[1] === cfg.bars[1] && T.v[0] === cfg.v0[0] && T.v[1] === cfg.v0[1]
+      && T.mode === cfg.mode && (T.mode !== 'partial' || Math.abs(T.e - cfg.e) < 1e-9);
+  }
+  // Selecting a trial only shows its instructions; students change the settings themselves.
+  function trialChecks(k) {
+    const T = TRIALS[k];
+    return {
+      m1: cfg.bars[0] === T.bars[0], m2: cfg.bars[1] === T.bars[1],
+      mode: cfg.mode === T.mode && (T.mode !== 'partial' || Math.abs(cfg.e - T.e) < 1e-9),
+      v: cfg.v0[0] === T.v[0] && cfg.v0[1] === T.v[1]
+    };
+  }
+  function loadTrial(k) {
+    const T = TRIALS[k];
+    cfg.trial = k;
+    cfg.x0 = T.v[1] === 0 ? [0.25, 0.62] : [0.25, 0.95];
+    resetSim();
+    setMsg('Follow the Trial ' + (k + 1) + ' instructions under the trial buttons.', ''); refresh();
+    $('tinstr').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+  const barsTxt = n => n === 0 ? 'no bar masses' : n + ' bar mass' + (n > 1 ? 'es' : '');
+  const modeTxt = T => T.mode === 'elastic' ? 'click <b>Magnets</b>'
+    : T.mode === 'sticky' ? 'click <b>Velcro</b>'
+    : 'click <b>Bumper</b> and slide the elasticity to <b>' + T.e.toFixed(2) + '</b>';
+  function renderInstr() {
+    const box = $('tinstr');
+    if (cfg.trial < 0) { box.innerHTML = '<p class="why" style="margin:0">Pick a trial above to see what to set up.</p>'; return; }
+    const k = cfg.trial, T = TRIALS[k], c = trialChecks(k);
+    const ready = c.m1 && c.m2 && c.mode && c.v, n = [c.m1, c.m2, c.mode, c.v].filter(Boolean).length;
+    const ran = doneTrials.has(k);
+    const li = (ok, html, rec) => '<li class="' + (ok ? 'ok' : '') + (rec ? ' rec' : '') + '"><span class="ck">' + (ok ? '✓' : '') + '</span><span>' + html + '</span></li>';
+    const m = i => (M_CART + T.bars[i] * M_BAR).toFixed(3);
+    box.innerHTML = '<h3>Trial ' + (k + 1) + ': ' + T.t + '</h3><p class="why">' + T.why + '</p><ul>'
+      + li(c.m1, '<b>Cart 1 (blue):</b> give it ' + barsTxt(T.bars[0]) + ', so m<sub>1</sub> = ' + m(0) + ' kg.')
+      + li(c.m2, '<b>Cart 2 (red):</b> give it ' + barsTxt(T.bars[1]) + ', so m<sub>2</sub> = ' + m(1) + ' kg.')
+      + li(c.mode, '<b>Collision type:</b> ' + modeTxt(T) + '.')
+      + li(c.v, '<b>Velocities:</b> set v<sub>i1</sub> = ' + sgn(T.v[0], 2) + ' m/s and v<sub>i2</sub> = ' + (T.v[1] === 0 ? '0 m/s (at rest)' : sgn(T.v[1], 2) + ' m/s') + '.')
+      + li(false, 'Write m<sub>1</sub>, m<sub>2</sub>, v<sub>i1</sub> and v<sub>i2</sub> in Part A of your handout.', true)
+      + li(ran, 'Press <b>Play</b>.')
+      + li(false, 'Copy v<sub>f1</sub> and v<sub>f2</sub> from the Results table, calculate p and E<sub>k</sub>, then tick <b>Show p and E<sub>k</sub> values</b> to check.', true)
+      + '</ul><div class="state ' + (ready ? 'go' : 'wait') + '">'
+      + (ran && ready ? 'Trial ' + (k + 1) + ' done. Pick the next trial when you have recorded your data.'
+        : ready ? 'Setup is correct. Press Play!' : n + ' of 4 settings done.') + '</div>';
+  }
+  function renderTrials() {
+    const box = $('trials'); box.innerHTML = '';
+    TRIALS.forEach((T, k) => {
+      const b = document.createElement('button');
+      b.className = 'trial' + (cfg.trial === k ? ' on' : '');
+      b.innerHTML = (doneTrials.has(k) ? '<span class="done">✓ done</span>' : '') + '<b>Trial ' + (k + 1) + ': ' + T.t + '</b><span>' + T.s + '</span>';
+      b.onclick = () => loadTrial(k);
+      box.appendChild(b);
+    });
+    renderInstr();
+  }
+
+  // ---------- controls ----------
+  function syncControls() {
+    for (let i = 0; i < 2; i++) {
+      $('bars' + i).textContent = cfg.bars[i];
+      $('m' + i).textContent = mass(i).toFixed(3) + ' kg';
+      $('v' + i).value = cfg.v0[i];
+      $('vo' + i).textContent = sgn(cfg.v0[i], 2) + ' m/s';
+    }
+    document.querySelectorAll('.seg button').forEach(b => b.classList.toggle('on', b.dataset.mode === cfg.mode));
+    $('ewrap').classList.toggle('hidden', cfg.mode !== 'partial');
+    $('e').value = cfg.e; $('eo').textContent = cfg.e.toFixed(2);
+    $('mdesc').textContent = MODES[cfg.mode].desc;
+  }
+  function changed() { syncControls(); resetSim(); renderTrials(); }
+
+  document.querySelectorAll('.massrow button').forEach(b => b.addEventListener('click', () => {
+    const c = +b.dataset.c, d = +b.dataset.d;
+    cfg.bars[c] = Math.max(0, Math.min(MAXB, cfg.bars[c] + d)); changed();
+  }));
+  for (let i = 0; i < 2; i++) $('v' + i).addEventListener('input', e => { cfg.v0[i] = Math.round(+e.target.value * 100) / 100; changed(); });
+  document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => { cfg.mode = b.dataset.mode; changed(); }));
+  $('e').addEventListener('input', e => { cfg.e = Math.round(+e.target.value * 100) / 100; changed(); });
+  $('play').addEventListener('click', play);
+  $('reset').addEventListener('click', () => { resetSim(); });
+  $('speed').addEventListener('change', e => { cfg.speed = +e.target.value; });
+  $('showPT').addEventListener('change', e => { cfg.showPT = e.target.checked; layout(); draw(); });
+  [['showV', 'showV'], ['showP', 'showP'], ['showCalc', 'showCalc'], ['pauseHit', 'pauseHit']].forEach(([id, k]) =>
+    $(id).addEventListener('change', e => { cfg[k] = e.target.checked; refresh(); }));
+
+  // ---------- results ----------
+  function refresh() {
+    const m = [mass(0), mass(1)], vi = cfg.v0, vf = sim.after ? sim.after.v : null, show = cfg.showCalc;
+    const pi = [m[0] * vi[0], m[1] * vi[1]], Ei = [0.5 * m[0] * vi[0] ** 2, 0.5 * m[1] * vi[1] ** 2];
+    const pf = vf ? [m[0] * vf[0], m[1] * vf[1]] : null, Ef = vf ? [0.5 * m[0] * vf[0] ** 2, 0.5 * m[1] * vf[1] ** 2] : null;
+    const set = (id, txt, hid) => { const el = $(id); el.textContent = txt; el.classList.toggle('hid', !!hid); };
+    for (let i = 0; i < 2; i++) {
+      const n = i + 1;
+      set('r-m' + n, f3(m[i]));
+      set('r-vi' + n, sgn(vi[i], 3));
+      set('r-vf' + n, vf ? sgn(vf[i], 3) : '—', !vf);
+      set('r-pi' + n, show ? sgn(pi[i], 3) : '?', !show);
+      set('r-pf' + n, show && pf ? sgn(pf[i], 3) : (pf ? '?' : '—'), !(show && pf));
+      set('r-Ei' + n, show ? fE(Ei[i]) : '?', !show);
+      set('r-Ef' + n, show && Ef ? fE(Ef[i]) : (Ef ? '?' : '—'), !(show && Ef));
+    }
+    const piT = pi[0] + pi[1], EiT = Ei[0] + Ei[1];
+    const pfT = pf ? pf[0] + pf[1] : null, EfT = Ef ? Ef[0] + Ef[1] : null;
+    set('r-mT', f3(m[0] + m[1]));
+    set('r-piT', show ? sgn(piT, 3) : '?', !show);
+    set('r-pfT', show && pf ? sgn(pfT, 3) : (pf ? '?' : '—'), !(show && pf));
+    set('r-EiT', show ? fE(EiT) : '?', !show);
+    set('r-EfT', show && Ef ? fE(EfT) : (Ef ? '?' : '—'), !(show && Ef));
+
+    const sum = $('summary');
+    if (show && pf) {
+      const dp = Math.abs(piT) < 1e-12 ? null : (pfT - piT) / Math.abs(piT) * 100;
+      const dE = EiT < 1e-12 ? 0 : (EiT - EfT) / EiT * 100;
+      sum.innerHTML = '<span>% difference in total momentum: <b>' + (dp === null ? (Math.abs(pfT) < 1e-9 ? '0 (total p is zero before and after)' : 'n/a') : Math.abs(dp).toFixed(1) + ' %') + '</b></span>'
+        + '<span>% of kinetic energy lost: <b>' + (Math.abs(dE) < 0.05 ? '0.0' : dE.toFixed(1)) + ' %</b></span>';
+    } else if (!show) {
+      sum.innerHTML = '<span style="color:var(--muted)">Momentum and kinetic energy are hidden so you can calculate them yourself. Tick “Show p and E<sub>k</sub> values” to check.</span>';
+    } else sum.innerHTML = '<span style="color:var(--muted)">Run the collision to see the “after” values.</span>';
+
+    $('charts').classList.toggle('hidden', !show);
+    if (show) {
+      const pmax = Math.max(Math.abs(piT), Math.abs(pfT || 0), 0.05), Emax = Math.max(EiT, EfT || 0, 0.01);
+      const pbar = (id, val) => {
+        const el = $(id);
+        if (val === null) { el.style.width = '0'; return; }
+        const w = Math.abs(val) / pmax * 50;
+        el.style.width = w + '%'; el.style.left = (val >= 0 ? 50 : 50 - w) + '%';
+      };
+      pbar('cb-pi', piT); pbar('cb-pf', pfT);
+      $('cv-pi').textContent = sgn(piT, 3) + ' kg·m/s'; $('cv-pf').textContent = pf ? sgn(pfT, 3) + ' kg·m/s' : '—';
+      $('cb-Ei').style.cssText = 'background:var(--c-E);left:0;width:' + (EiT / Emax * 100) + '%';
+      $('cb-Ef').style.cssText = 'background:var(--c-E);left:0;width:' + (Ef ? EfT / Emax * 100 : 0) + '%';
+      $('cv-Ei').textContent = fE(EiT) + ' J'; $('cv-Ef').textContent = Ef ? fE(EfT) + ' J' : '—';
+    }
+
+    $('play').textContent = sim.phase === 'running' ? '❚❚ Pause' : '▶ Play';
+    $('status').textContent = 't = ' + sim.t.toFixed(2) + ' s';
+    const msg = $('msg'); msg.textContent = sim.msg; msg.className = 'msg ' + sim.msgKind;
+    renderTrials();
+  }
+
+  function renderLog() {
+    const tb = $('logbody');
+    if (!log.length) { tb.innerHTML = '<tr><td colspan="8" style="text-align:left;color:var(--muted)">Each collision you run is added here.</td></tr>'; return; }
+    tb.innerHTML = log.map((r, k) => '<tr><td>' + (k + 1) + '</td><td>' + r.mode + '</td><td>' + f3(r.m[0]) + '</td><td>' + f3(r.m[1]) + '</td><td>'
+      + sgn(r.vi[0], 3) + '</td><td>' + sgn(r.vi[1], 3) + '</td><td>' + sgn(r.vf[0], 3) + '</td><td>' + sgn(r.vf[1], 3) + '</td></tr>').join('');
+  }
+  $('clear').addEventListener('click', () => { log.length = 0; renderLog(); });
+  $('copy').addEventListener('click', () => {
+    const rows = [['Trial', 'Collision', 'm1 (kg)', 'm2 (kg)', 'vi1 (m/s)', 'vi2 (m/s)', 'vf1 (m/s)', 'vf2 (m/s)']]
+      .concat(log.map((r, k) => [k + 1, r.mode, f3(r.m[0]), f3(r.m[1]), r.vi[0].toFixed(3), r.vi[1].toFixed(3), r.vf[0].toFixed(3), r.vf[1].toFixed(3)]));
+    const text = rows.map(r => r.join('\t')).join('\n');
+    const done = () => { $('copy').textContent = 'Copied ✓'; setTimeout(() => $('copy').textContent = 'Copy for spreadsheet', 1500); };
+    const fallback = () => { const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); done(); } catch (e) {} ta.remove(); };
+    if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(done, fallback); else fallback();
+  });
+
+  // ---------- drawing ----------
+  const cv = $('scene'), ctx = cv.getContext('2d');
+  let W = 800, H = 300, G = {};
+
+  function layout() {
+    const dpr = window.devicePixelRatio || 1;
+    W = cv.clientWidth || 800;
+    const pad = Math.max(18, W * 0.03);
+    const ppm = (W - 2 * pad) / TRACK;
+    const cl = L * ppm;
+    const wr = cl * 0.085, bodyH = cl * 0.30, barH = cl * 0.135;
+    const arrowsH = 64 + (cfg.showPT ? 66 : 0);
+    const railTop = arrowsH + 3 * barH + bodyH + 2 * wr + 14;
+    H = Math.round(railTop + 62);
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    cv.style.height = H + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    G = { pad, ppm, cl, wr, bodyH, barH, railTop, X: m => pad + m * ppm };
+  }
+
+  function rr(x, y, w, h, r) {
+    ctx.beginPath(); ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y); ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r); ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h); ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r); ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y); ctx.closePath();
+  }
+
+  function drawTrack() {
+    const { X, railTop, ppm } = G, x0 = X(0), x1 = X(TRACK), bh = 20;
+    // bench
+    ctx.fillStyle = '#dcd8cc'; ctx.fillRect(0, railTop + bh + 20, W, H);
+    ctx.fillStyle = '#c9c3b3'; ctx.fillRect(0, railTop + bh + 20, W, 3);
+    // feet
+    [0.12, 0.88].forEach(f => {
+      const fx = X(TRACK * f);
+      ctx.fillStyle = '#7d848c'; ctx.fillRect(fx - 3, railTop + bh, 6, 14);
+      ctx.fillStyle = '#26282b'; rr(fx - 13, railTop + bh + 12, 26, 9, 3); ctx.fill();
+    });
+    // aluminium beam
+    const g = ctx.createLinearGradient(0, railTop, 0, railTop + bh);
+    g.addColorStop(0, '#f4f6f8'); g.addColorStop(0.18, '#c9ced4'); g.addColorStop(0.55, '#dfe3e7'); g.addColorStop(1, '#9ca3ab');
+    ctx.fillStyle = g; ctx.fillRect(x0 - 8, railTop, x1 - x0 + 16, bh);
+    ctx.strokeStyle = '#8a9198'; ctx.lineWidth = 1; ctx.strokeRect(x0 - 8 + .5, railTop + .5, x1 - x0 + 15, bh - 1);
+    ctx.strokeStyle = 'rgba(0,0,0,.18)';
+    ctx.beginPath(); ctx.moveTo(x0 - 8, railTop + 4.5); ctx.lineTo(x1 + 8, railTop + 4.5); ctx.stroke();
+    // yellow measuring tape on the front face
+    ctx.fillStyle = '#f2d23c'; ctx.fillRect(x0, railTop + 7, x1 - x0, 9);
+    ctx.strokeStyle = '#3a3420'; ctx.lineWidth = 1;
+    for (let cm = 0; cm <= TRACK * 100; cm++) {
+      const x = Math.round(X(cm / 100)) + .5, len = cm % 10 === 0 ? 9 : cm % 5 === 0 ? 6 : 3;
+      if (ppm < 400 && cm % 5 !== 0 && cm % 10 !== 0) continue;
+      ctx.beginPath(); ctx.moveTo(x, railTop + 7); ctx.lineTo(x, railTop + 7 + len); ctx.stroke();
+    }
+    ctx.fillStyle = '#4b4f57'; ctx.font = '11px system-ui, sans-serif'; ctx.textAlign = 'center';
+    const step = ppm < 300 ? 20 : 10;
+    for (let cm = 0; cm <= TRACK * 100; cm += step) ctx.fillText(cm, X(cm / 100), railTop + bh + 12);
+    ctx.textAlign = 'right'; ctx.fillText('cm', x1 + 6, railTop + bh + 24);
+    // end stops
+    [x0, x1].forEach((x, k) => {
+      ctx.fillStyle = '#3b3f45'; rr(k ? x : x - 10, railTop - 16, 10, 18, 2); ctx.fill();
+      ctx.fillStyle = '#5a6068'; ctx.fillRect(k ? x + 2 : x - 8, railTop - 13, 6, 3);
+    });
+  }
+
+  function drawBar(cx, yb, len, h, top) {
+    const x = cx - len / 2, y = yb - h;
+    const g = ctx.createLinearGradient(0, y, 0, yb);
+    g.addColorStop(0, '#f7f8fa'); g.addColorStop(0.35, '#cfd4da'); g.addColorStop(1, '#8e959d');
+    ctx.fillStyle = g; rr(x, y, len, h, 2); ctx.fill();
+    ctx.strokeStyle = '#7c838b'; ctx.lineWidth = 1; ctx.stroke();
+    // pegs that let the bars stack
+    ctx.fillStyle = '#b7bdc4';
+    [x + len * 0.06, x + len * 0.94 - h * 0.45].forEach(px => { ctx.fillRect(px, y - h * 0.35, h * 0.45, h * 0.35); ctx.strokeRect(px + .5, y - h * 0.35 + .5, h * 0.45 - 1, h * 0.35); });
+    if (top && h > 8) {
+      ctx.fillStyle = 'rgba(70,76,84,.65)'; ctx.font = '600 ' + Math.round(h * 0.75) + 'px system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('250 g', cx, y + h * 0.55); ctx.textBaseline = 'alphabetic';
+    }
+  }
+
+  function bumper(x, yTop, h, dir, type) {
+    // x = end face of the cart; dir = +1 bumper faces right, -1 faces left
+    const w = Math.max(4, G.cl * 0.035), bx = dir > 0 ? x - 1 : x - w + 1;
+    if (type === 'elastic') {
+      // magnet bumper set flush into the end of the cart (like poles face each other)
+      const mx = dir > 0 ? x - w - 1 : x + 1;
+      ctx.fillStyle = '#4c535b'; rr(mx, yTop, w, h, 2); ctx.fill();
+      ctx.fillStyle = '#9aa1a8'; ctx.fillRect(mx + 1, yTop + 2, w - 2, h - 4);
+    } else if (type === 'sticky') {
+      ctx.fillStyle = '#2b2b2b'; ctx.fillRect(bx, yTop, w, h);
+      ctx.fillStyle = 'rgba(255,255,255,.35)';
+      for (let i = 0; i < 14; i++) ctx.fillRect(bx + ((i * 37) % 10) / 10 * (w - 1), yTop + (i * 53 % 100) / 100 * (h - 1), 1, 1);
+    } else {
+      ctx.fillStyle = '#1e1e1e'; rr(bx, yTop + h * 0.1, w, h * 0.8, w / 2); ctx.fill();
+    }
+  }
+
+  function drawCart(i, xm) {
+    const { X, cl, wr, bodyH, barH, railTop } = G;
+    const cx = X(xm), xl = cx - cl / 2;
+    const blue = i === 0;
+    const base = blue ? ['#5d82f0', '#2a52d6', '#1a3596'] : ['#f0585c', '#d8262b', '#951216'];
+    const wy = railTop - wr, bodyBot = wy + wr * 0.15, bodyTop = bodyBot - bodyH;
+    // plunger on the rear of cart 1
+    if (blue) {
+      const py = bodyTop + bodyH * 0.45, pl = cl * 0.13, ph = bodyH * 0.22;
+      ctx.fillStyle = 'rgba(225,238,248,.85)'; ctx.strokeStyle = 'rgba(120,140,160,.8)'; ctx.lineWidth = 1;
+      rr(xl - pl, py, pl + 2, ph, ph / 2); ctx.fill(); ctx.stroke();
+    }
+    // wheels
+    [0.2, 0.8].forEach(f => {
+      const wx = xl + cl * f;
+      ctx.fillStyle = '#16302a'; ctx.beginPath(); ctx.arc(wx, wy, wr, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#c9cdd1'; ctx.beginPath(); ctx.arc(wx, wy, wr * 0.42, 0, Math.PI * 2); ctx.fill();
+      const ang = xm / (wr / G.ppm);
+      ctx.strokeStyle = '#6d757c'; ctx.lineWidth = 1.2;
+      for (let k = 0; k < 3; k++) { const a = ang + k * 2.094; ctx.beginPath(); ctx.moveTo(wx, wy); ctx.lineTo(wx + Math.cos(a) * wr * 0.42, wy + Math.sin(a) * wr * 0.42); ctx.stroke(); }
+    });
+    // body (translucent moulded plastic)
+    const g = ctx.createLinearGradient(0, bodyTop, 0, bodyBot);
+    g.addColorStop(0, base[0]); g.addColorStop(0.45, base[1]); g.addColorStop(1, base[2]);
+    ctx.globalAlpha = 0.92; ctx.fillStyle = g; rr(xl, bodyTop, cl, bodyH, Math.min(7, bodyH * 0.3)); ctx.fill(); ctx.globalAlpha = 1;
+    // wheel wells
+    ctx.fillStyle = 'rgba(0,0,0,.28)';
+    [0.2, 0.8].forEach(f => { ctx.beginPath(); ctx.arc(xl + cl * f, wy, wr * 1.25, Math.PI, 0); ctx.lineTo(xl + cl * f + wr * 1.25, bodyBot); ctx.lineTo(xl + cl * f - wr * 1.25, bodyBot); ctx.fill(); });
+    // side panel + highlight
+    ctx.fillStyle = 'rgba(255,255,255,.14)'; rr(xl + cl * 0.33, bodyTop + bodyH * 0.25, cl * 0.34, bodyH * 0.5, 3); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.28)'; ctx.fillRect(xl + 4, bodyTop + 2, cl - 8, Math.max(2, bodyH * 0.12));
+    ctx.strokeStyle = base[2]; ctx.lineWidth = 1; rr(xl + .5, bodyTop + .5, cl - 1, bodyH - 1, Math.min(7, bodyH * 0.3)); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,.9)'; ctx.font = '700 ' + Math.round(Math.max(9, bodyH * 0.32)) + 'px system-ui, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(String(i + 1), cx, bodyTop + bodyH * 0.52); ctx.textBaseline = 'alphabetic';
+    // bumper on the face that points at the other cart
+    const faceX = blue ? xl + cl : xl;
+    bumper(faceX, bodyTop + bodyH * 0.18, bodyH * 0.62, blue ? 1 : -1, cfg.mode);
+    // stacked bar masses: first bar sits in the cart's tray
+    const barLen = cl * 0.78;
+    let yb = bodyTop + barH * 0.3;
+    for (let k = 0; k < cfg.bars[i]; k++) { drawBar(cx, yb, barLen, barH, k === cfg.bars[i] - 1); yb -= barH; }
+    if (cfg.bars[i] > 0) { // tray lip in front of the bottom bar
+      ctx.globalAlpha = 0.92; ctx.fillStyle = base[0]; ctx.fillRect(xl + cl * 0.08, bodyTop, cl * 0.84, barH * 0.3 + 1); ctx.globalAlpha = 1;
+      ctx.fillStyle = 'rgba(255,255,255,.28)'; ctx.fillRect(xl + cl * 0.08, bodyTop + 1, cl * 0.84, Math.max(2, bodyH * 0.1));
+    }
+    return { cx, top: bodyTop - 3 * barH };
+  }
+
+  function arrow(x, y, dx, color, label) {
+    ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = 3;
+    if (Math.abs(dx) < 2) { ctx.beginPath(); ctx.arc(x, y, 3.5, 0, Math.PI * 2); ctx.fill(); }
+    else {
+      const d = Math.sign(dx), hl = Math.min(10, Math.abs(dx));
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + dx - d * hl * 0.8, y); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x + dx, y); ctx.lineTo(x + dx - d * hl, y - 6); ctx.lineTo(x + dx - d * hl, y + 6); ctx.closePath(); ctx.fill();
+    }
+    ctx.font = '600 12px system-ui, sans-serif'; ctx.textAlign = dx >= 0 ? 'left' : 'right';
+    ctx.fillText(label, x + (dx >= 0 ? -2 : 2) + (Math.abs(dx) < 2 ? (dx >= 0 ? 8 : -8) : 0), y - 8);
+  }
+
+  // Bold total-momentum arrow drawn from the centre of mass of the two carts
+  function bigArrow(x, y, dx, color, dashed) {
+    ctx.save();
+    ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = 8; ctx.lineCap = 'butt';
+    if (dashed) { ctx.globalAlpha = 0.45; ctx.setLineDash([7, 5]); ctx.lineWidth = 3; }
+    if (Math.abs(dx) < 3) {
+      ctx.beginPath(); ctx.arc(x, y, 7, 0, Math.PI * 2); dashed ? ctx.stroke() : ctx.fill();
+    } else {
+      const d = Math.sign(dx), hl = Math.min(20, Math.abs(dx) * 0.6);
+      if (dashed) {
+        ctx.beginPath(); ctx.moveTo(x, y - 6); ctx.lineTo(x + dx - d * hl, y - 6); ctx.lineTo(x + dx - d * hl, y - 13);
+        ctx.lineTo(x + dx, y); ctx.lineTo(x + dx - d * hl, y + 13); ctx.lineTo(x + dx - d * hl, y + 6); ctx.lineTo(x, y + 6); ctx.closePath(); ctx.stroke();
+      } else {
+        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + dx - d * hl * 0.9, y); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x + dx, y); ctx.lineTo(x + dx - d * hl, y - 13); ctx.lineTo(x + dx - d * hl, y + 13); ctx.closePath(); ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
+  function drawTotal(y, sp) {
+    const m1 = mass(0), m2 = mass(1), M = m1 + m2;
+    const xc = G.X((m1 * sim.x[0] + m2 * sim.x[1]) / M);
+    const pi = m1 * cfg.v0[0] + m2 * cfg.v0[1];
+    const pNow = m1 * sim.v[0] + m2 * sim.v[1];
+    const col = getCss('--c-pT');
+    // highlighted band so the system's total momentum stands out
+    ctx.fillStyle = 'rgba(6,78,78,.07)'; rr(8, y - 30, W - 16, 60, 8); ctx.fill();
+    ctx.fillStyle = 'rgba(6,78,78,.8)'; ctx.font = '700 11px system-ui, sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText('TOTAL MOMENTUM OF BOTH CARTS', 18, y - 15);
+    const after = !!sim.after, during = sim.inter;
+    if (after || during) bigArrow(xc, y, pi * sp, col, true);
+    bigArrow(xc, y, pNow * sp, col, false);
+    const subTxt = after ? 'Tf' : during ? 'T' : 'Ti';
+    const val = cfg.showCalc || Math.abs(pNow) < 1e-9 ? ' = ' + (Math.abs(pNow) < 1e-9 ? '0' : sgn(pNow, 3) + ' kg·m/s') : '';
+    const dx = pNow * sp, right = dx >= 0, ly = y - 16;
+    ctx.fillStyle = col; ctx.textAlign = 'left';
+    ctx.font = '700 15px system-ui, sans-serif'; const pw = ctx.measureText('p').width, vw = ctx.measureText(val).width;
+    ctx.font = '700 11px system-ui, sans-serif'; const sw = ctx.measureText(subTxt).width;
+    const tw = pw + sw + 1 + vw;
+    const startX = Math.abs(dx) < 3 ? xc + 12 : right ? xc - 2 : xc + 2 - tw;
+    ctx.font = '700 15px system-ui, sans-serif'; ctx.fillText('p', startX, ly);
+    ctx.font = '700 11px system-ui, sans-serif'; ctx.fillText(subTxt, startX + pw, ly + 4);
+    ctx.font = '700 15px system-ui, sans-serif'; ctx.fillText(val, startX + pw + sw + 1, ly);
+    if (after || during) {
+      ctx.font = '12px system-ui, sans-serif'; ctx.fillStyle = 'rgba(6,78,78,.75)'; ctx.textAlign = right ? 'left' : 'right';
+      ctx.fillText('dashed outline = total momentum before', xc, y + 25);
+    }
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, '#f3f2fb'); g.addColorStop(1, '#e6e5f4');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    drawTrack();
+    const c = [drawCart(0, sim.x[0]), drawCart(1, sim.x[1])];
+    if (sim.flash > 0) {
+      const fx = G.X(sim.contactX), fy = G.railTop - G.wr - G.bodyH * 0.5, r = 10 + (0.35 - sim.flash) * 60;
+      ctx.strokeStyle = 'rgba(240,170,0,' + (sim.flash / 0.35) + ')'; ctx.lineWidth = 2.5;
+      for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4; ctx.beginPath(); ctx.moveTo(fx + Math.cos(a) * r * 0.5, fy + Math.sin(a) * r * 0.5); ctx.lineTo(fx + Math.cos(a) * r, fy + Math.sin(a) * r); ctx.stroke(); }
+    }
+    const off = cfg.showPT ? 66 : 0, yV = 20 + off, yP = 50 + off, sv = G.ppm * 0.35, sp = G.ppm * 0.45;
+    if (cfg.showPT) drawTotal(36, sp);
+    for (let i = 0; i < 2; i++) {
+      const v = sim.v[i], n = i + 1;
+      if (cfg.showV) arrow(c[i].cx, yV + (i ? 0 : 0), v * sv, getCss('--c-v'), 'v' + sub(n) + ' = ' + sgn(v, 2) + ' m/s');
+      if (cfg.showP) { const p = mass(i) * v; arrow(c[i].cx, yP, p * sp, getCss('--c-p'), 'p' + sub(n) + (cfg.showCalc ? ' = ' + sgn(p, 3) + ' kg·m/s' : '')); }
+      // cart labels when arrows are off
+      if (!cfg.showV && !cfg.showP) { ctx.fillStyle = '#61617a'; ctx.font = '600 12px system-ui'; ctx.textAlign = 'center'; ctx.fillText('Cart ' + n, c[i].cx, yP); }
+    }
+    if (sim.phase === 'ready') {
+      ctx.fillStyle = 'rgba(97,97,122,.85)'; ctx.font = '12px system-ui, sans-serif'; ctx.textAlign = 'right';
+      ctx.fillText('Drag a cart to move its starting spot', W - 10, H - 8);
+    }
+  }
+  const sub = n => n === 1 ? '₁' : '₂';
+  const cssCache = {};
+  function getCss(v) { return cssCache[v] || (cssCache[v] = getComputedStyle(document.documentElement).getPropertyValue(v).trim()); }
+
+  // ---------- dragging ----------
+  let drag = null;
+  function hitCart(px, py) {
+    for (let i = 0; i < 2; i++) {
+      const cx = G.X(sim.x[i]);
+      if (Math.abs(px - cx) <= G.cl / 2 + 4 && py > G.railTop - G.bodyH - 3 * G.barH - 2 * G.wr - 6 && py < G.railTop + 4) return i;
+    }
+    return -1;
+  }
+  function ptr(e) { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; }
+  cv.addEventListener('pointerdown', e => {
+    const [px, py] = ptr(e), i = hitCart(px, py);
+    if (i < 0) return;
+    if (sim.phase !== 'ready') { resetSim(); }
+    drag = { i, off: px - G.X(sim.x[i]) }; cv.setPointerCapture(e.pointerId);
+  });
+  cv.addEventListener('pointermove', e => {
+    const [px, py] = ptr(e);
+    if (!drag) { cv.style.cursor = hitCart(px, py) >= 0 && sim.phase === 'ready' ? 'grab' : 'default'; return; }
+    cv.style.cursor = 'grabbing';
+    let xm = (px - drag.off - G.pad) / G.ppm;
+    const gap = minGap();
+    if (drag.i === 0) xm = Math.max(L / 2, Math.min(sim.x[1] - L - gap, xm));
+    else xm = Math.max(sim.x[0] + L + gap, Math.min(TRACK - L / 2, xm));
+    xm = Math.round(xm * 1000) / 1000;
+    sim.x[drag.i] = xm; cfg.x0[drag.i] = xm;
+  });
+  const endDrag = () => { drag = null; };
+  cv.addEventListener('pointerup', endDrag); cv.addEventListener('pointercancel', endDrag);
+
+  // ---------- loop ----------
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    if (sim.flash > 0) sim.flash = Math.max(0, sim.flash - dt);
+    if (sim.phase === 'running') {
+      const before = sim.phase, hadAfter = !!sim.after;
+      step(dt * cfg.speed);
+      if (sim.phase !== before || !!sim.after !== hadAfter) refresh();
+      else $('status').textContent = 't = ' + sim.t.toFixed(2) + ' s';
+    }
+    draw();
+    requestAnimationFrame(frame);
+  }
+
+  window.addEventListener('resize', () => { layout(); draw(); });
+  syncControls(); renderTrials(); renderLog(); resetSim(); layout();
+  requestAnimationFrame(frame);
+
+  // expose for testing
+  window.__lab = { cfg, get sim() { return sim; }, step, play, loadTrial, collide };
+})();
+</script>
+</body>
+</html>
+
+</body></html>

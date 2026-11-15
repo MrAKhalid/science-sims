@@ -1,0 +1,1527 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Impulse Simulator</title>
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #f4f3fb;
+    --panel: #ffffff;
+    --ink: #1d1d2b;
+    --muted: #61617a;
+    --line: #dcdbea;
+    --accent: #4b47c9;
+    --c-pi: #1f3fe0;
+    --c-dp: #d97a00;
+    --c-pf: #d61fd0;
+    --c-F: #138a2c;
+    --good: #138a2c;
+    --bad: #c81e1e;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font: 15px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    padding: 16px;
+  }
+  .wrap { max-width: 1320px; margin: 0 auto; }
+  header { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; margin-bottom: 12px; }
+  h1 { font-size: 20px; margin: 0; font-weight: 650; }
+  .tabs { display: inline-flex; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 3px; }
+  .tabs button {
+    border: 0; background: transparent; padding: 7px 16px; border-radius: 7px;
+    font: inherit; font-weight: 600; color: var(--muted); cursor: pointer;
+  }
+  .tabs button.on { background: var(--accent); color: #fff; }
+  .pane.hidden { display: none; }
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 14px; align-items: start; }
+  @media (max-width: 960px) { .layout { grid-template-columns: 1fr; } }
+  .stage { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px; position: relative; }
+  .canvwrap { position: relative; }
+  canvas.scene { width: 100%; display: block; border-radius: 8px; }
+  .hint { color: var(--muted); font-size: 13px; margin: 8px 4px 0; }
+  .bar { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; align-items: center; }
+  .btn {
+    border: 1px solid var(--line); background: var(--panel); color: var(--ink);
+    padding: 7px 14px; border-radius: 8px; font: inherit; font-weight: 600; cursor: pointer;
+  }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn:disabled { opacity: .5; cursor: default; }
+  .btn:hover:not(:disabled) { filter: brightness(0.97); }
+  select { font: inherit; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); }
+  aside { display: flex; flex-direction: column; gap: 14px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .card h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 8px; }
+  details.card > summary { cursor: pointer; list-style: none; }
+  details.card > summary::-webkit-details-marker { display: none; }
+  details.card > summary h2 { display: inline; }
+  details.card > summary::after { content: "▾"; float: right; color: var(--muted); }
+  details.card:not([open]) > summary::after { content: "▸"; }
+  .vec { display: flex; align-items: center; gap: 10px; padding: 4px 0; cursor: pointer; user-select: none; }
+  .vec input { width: 17px; height: 17px; accent-color: var(--accent); }
+  .sw { width: 26px; height: 0; border-top: 3px solid; position: relative; }
+  .sw::after { content: ""; position: absolute; right: -2px; top: -7px; border: 5.5px solid transparent; border-left: 8px solid; border-left-color: inherit; border-right: 0; }
+  .vec .nm { font-weight: 650; }
+  .vec .ds { color: var(--muted); font-size: 13px; }
+  .slider { margin: 6px 0 12px; }
+  .slider label { display: flex; justify-content: space-between; font-size: 14px; gap: 8px; }
+  .slider output { font-variant-numeric: tabular-nums; font-weight: 600; text-align: right; }
+  .slider input[type=range] { width: 100%; accent-color: var(--accent); }
+  .chk { display: flex; gap: 8px; align-items: center; font-size: 14px; margin-top: 4px; }
+  .chk input { accent-color: var(--accent); width: 16px; height: 16px; }
+  table.read { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 14px; }
+  table.read td { padding: 2.5px 0; vertical-align: top; }
+  table.read td:last-child { text-align: right; font-weight: 600; }
+  table.read tr.sep td { border-top: 1px solid var(--line); padding-top: 5px; }
+  sub { font-size: 75%; }
+  .v { position: relative; display: inline-block; }
+  .v::before { content: "→"; position: absolute; left: 50%; transform: translateX(-50%) scaleX(1.1); top: -0.85em; font-size: 0.75em; }
+  .eq { font-size: 28px; font-weight: 700; color: var(--accent); text-align: center; padding: 12px 8px; margin: 2px 0 6px; background: #eeedfb; border: 2px solid var(--accent); border-radius: 10px; line-height: 1.2; }
+  .eq sub { font-size: 60%; }
+  .small { font-size: 13px; color: var(--muted); margin: 6px 0 0; }
+  canvas#vecdiag { width: 100%; height: 210px; display: block; background: #fbfbff; border: 1px solid var(--line); border-radius: 8px; }
+  canvas#fgraph { width: 100%; height: 230px; display: block; margin-top: 10px; background: #fbfbff; border: 1px solid var(--line); border-radius: 8px; }
+  .banner {
+    position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%);
+    background: rgba(255,255,255,.95); border: 2px solid var(--line); border-radius: 12px;
+    padding: 10px 16px; max-width: min(560px, 92%); text-align: center; box-shadow: 0 6px 20px rgba(20,20,60,.15);
+    font-size: 15px; pointer-events: none;
+  }
+  .banner.hidden { display: none; }
+  .banner b.title { display: block; font-size: 18px; margin-bottom: 2px; }
+  .banner.bad { border-color: var(--bad); }
+  .banner.bad b.title { color: var(--bad); }
+  .banner.good { border-color: var(--good); }
+  .banner.good b.title { color: var(--good); }
+  .surfaces { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 10px; }
+  .surfaces button {
+    border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: 6px 8px;
+    font: inherit; font-size: 13.5px; cursor: pointer; text-align: left; display: flex; gap: 7px; align-items: center;
+  }
+  .surfaces button .chip { width: 14px; height: 14px; border-radius: 3px; flex: none; border: 1px solid rgba(0,0,0,.2); }
+  .surfaces button.on { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent) inset; font-weight: 600; }
+  .trials { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; margin-top: 8px; }
+  .trials th { text-align: right; color: var(--muted); font-weight: 600; padding: 2px 4px; }
+  .trials th:first-child, .trials td:first-child { text-align: left; }
+  .trials td { text-align: right; padding: 2px 4px; border-top: 1px solid var(--line); }
+  .trials .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
+  .ok { color: var(--good); font-weight: 600; }
+  .meter { margin: 8px 0 12px; }
+  .meter .lab { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 3px; }
+  .meter .lab span:last-child { color: var(--muted); font-size: 13px; }
+  .meter .track { position: relative; height: 16px; background: #f0eff7; border-radius: 5px; overflow: visible; }
+  .meter .fill { height: 100%; border-radius: 5px; transition: width .12s; }
+  .meter .mark { position: absolute; top: -4px; bottom: -4px; width: 0; border-left: 2px dashed var(--bad); }
+  .seg-label { font-size: 14px; margin: 6px 0 4px; }
+  .seg { display: flex; flex-wrap: wrap; gap: 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; margin-bottom: 8px; }
+  .seg button { flex: 1 1 auto; border: 0; border-right: 1px solid var(--line); background: var(--panel); font: inherit; font-size: 13.5px; padding: 7px 8px; cursor: pointer; color: var(--ink); }
+  .seg button:last-child { border-right: 0; }
+  .seg button.on { background: var(--accent); color: #fff; font-weight: 600; }
+  canvas#ggraph { width: 100%; height: 230px; display: block; background: #fbfbff; border: 1px solid var(--line); border-radius: 8px; }
+  .op { text-align: center; color: var(--muted); font-weight: 700; margin: -4px 0 -4px; }
+  .no { color: var(--bad); font-weight: 600; }
+</style>
+<div class="wrap">
+  <header>
+    <h1>Impulse</h1>
+    <div class="tabs" role="tablist">
+      <button id="tabShip" class="on" role="tab" aria-selected="true">Dodge the iceberg</button>
+      <button id="tabEgg" role="tab" aria-selected="false">Egg drop</button>
+      <button id="tabGolf" role="tab" aria-selected="false">Golf follow-through</button>
+    </div>
+  </header>
+
+  <!-- ============ TAB 1: SHIP ============ -->
+  <section class="pane" id="paneShip">
+    <div class="layout">
+      <div class="stage">
+        <div class="canvwrap">
+          <canvas class="scene" id="ship"></canvas>
+          <div class="banner hidden" id="shipBanner"></div>
+        </div>
+        <p class="hint">An ocean liner is heading straight for an iceberg. When you press Go, a sideways push acts on the ship for a while. You choose how hard the push is and how long it lasts. Can you change the ship's momentum enough to steer clear?</p>
+        <div class="bar">
+          <button class="btn primary" id="shipGo">Go</button>
+          <button class="btn" id="shipReset">Reset</button>
+          <label>Playback
+            <select id="shipSpeed">
+              <option value="1">1×</option>
+              <option value="2" selected>2×</option>
+              <option value="5">5×</option>
+            </select>
+          </label>
+          <span id="shipClock" hidden></span>
+        </div>
+      </div>
+
+      <aside>
+        <div class="card">
+          <h2>Controls</h2>
+          <div class="slider">
+            <label for="sF"><span>How hard: size of the force</span><output id="oF"></output></label>
+            <input type="range" id="sF" min="0" max="40" step="0.5" value="10">
+          </div>
+          <div class="slider">
+            <label for="sT"><span>How long: time the force acts</span><output id="oT"></output></label>
+            <input type="range" id="sT" min="0" max="10" step="0.1" value="4">
+          </div>
+          <label class="chk"><input type="checkbox" id="lockJ"> Keep the impulse the same (trade force for time)</label>
+        </div>
+
+        <div class="card">
+          <h2>Momentum vectors</h2>
+          <canvas id="vecdiag"></canvas>
+          <p class="small" style="color:var(--ink)">The impulse arrow points the same way as the force. Add it to the momentum before (tip to tail) and you get the momentum after. A bigger impulse turns the ship more.</p>
+        </div>
+
+        <div class="card">
+          <h2>Impulse</h2>
+          <div class="eq">Impulse = F&Delta;t = &Delta;p</div>
+          <div id="shipRead"></div>
+        </div>
+
+        <details class="card">
+          <summary><h2>Show on ship</h2></summary>
+          <label class="vec"><input type="checkbox" data-v="pi" checked><span class="sw" style="border-color:var(--c-pi)"></span><span class="nm">Momentum before</span></label>
+          <label class="vec"><input type="checkbox" data-v="dp" checked><span class="sw" style="border-color:var(--c-dp)"></span><span class="nm">Impulse</span><span class="ds">change in momentum</span></label>
+          <label class="vec"><input type="checkbox" data-v="pf" checked><span class="sw" style="border-color:var(--c-pf)"></span><span class="nm">Momentum now</span></label>
+          <label class="vec"><input type="checkbox" data-v="F" checked><span class="sw" style="border-color:var(--c-F)"></span><span class="nm">Force</span></label>
+          <label class="vec"><input type="checkbox" data-v="path" checked><span class="sw" style="border-color:#7aa6c9"></span><span class="nm">Wake</span></label>
+        </details>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============ TAB 2: EGG ============ -->
+  <section class="pane hidden" id="paneEgg">
+    <div class="layout">
+      <div class="stage">
+        <div class="canvwrap">
+          <canvas class="scene" id="egg"></canvas>
+          <div class="banner hidden" id="eggBanner" style="top:40px;bottom:auto"></div>
+        </div>
+        <p class="hint">From a given height, every drop ends the same way: the egg goes from moving to stopped, so its change in momentum is the same. What changes is how long the stop takes. A soft surface makes the stop last longer, so the force on the egg is smaller.</p>
+        <div class="bar">
+          <button class="btn primary" id="eggGo">Drop</button>
+          <button class="btn" id="eggReset">New egg</button>
+          <button class="btn" id="eggClear">Clear graph</button>
+          <span class="small" id="eggSlow" style="margin:0 0 0 auto"></span>
+        </div>
+        <label class="chk" style="margin-top:10px;justify-content:flex-end"><input type="checkbox" id="zoomG"> Zoom in on the small forces</label>
+        <canvas id="fgraph" style="margin-top:6px"></canvas>
+        <table class="trials" id="trials"></table>
+      </div>
+
+      <aside>
+        <div class="card">
+          <h2>Landing surface</h2>
+          <div class="surfaces" id="surfaces"></div>
+          <div class="slider">
+            <label for="sDt"><span>Time to stop the egg</span><output id="oDt"></output></label>
+            <input type="range" id="sDt" min="1" max="80" step="1" value="1">
+          </div>
+          <div class="slider">
+            <label for="sH"><span>Drop height, h</span><output id="oH"></output></label>
+            <input type="range" id="sH" min="0.25" max="2" step="0.05" value="1">
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Same impulse, different force</h2>
+          <div id="eggRead"></div>
+        </div>
+
+        <div class="card">
+          <h2>Key idea</h2>
+          <div class="eq">F<sub>avg</sub> = <span style="display:inline-block;vertical-align:middle;text-align:center"><span style="display:block;border-bottom:3px solid;padding:0 6px">&Delta;p</span><span style="display:block">&Delta;t</span></span></div>
+          <p class="small" style="color:var(--ink)">From a given height, the egg needs the same impulse to stop no matter what it lands on. A big force for a short time or a small force for a long time can give the same impulse. Stretch out the time and the force goes down. The same idea is behind air bags, crumple zones, helmets and bending your knees when you land.</p>
+        </div>
+      </aside>
+    </div>
+  </section>
+  <!-- ============ TAB 3: GOLF ============ -->
+  <section class="pane hidden" id="paneGolf">
+    <div class="layout">
+      <div class="stage">
+        <div class="canvwrap">
+          <canvas class="scene" id="golf"></canvas>
+          <div class="banner hidden" id="golfBanner" style="top:14px;bottom:auto;left:74%;max-width:46%"></div>
+        </div>
+        <p class="hint">A golfer can only swing so hard, but they can change how long the club stays on the ball. A full follow-through and a springy club face keep them in contact longer. More contact time means a bigger impulse, so the ball leaves with more momentum and flies farther.</p>
+        <div class="bar">
+          <button class="btn primary" id="golfGo">Swing</button>
+          <button class="btn" id="golfClear">Clear drives</button>
+          <span class="small" id="golfSlow" style="margin:0 0 0 auto"></span>
+        </div>
+        <canvas id="ggraph" style="margin-top:10px"></canvas>
+        <table class="trials" id="gtrials"></table>
+      </div>
+
+      <aside>
+        <div class="card">
+          <h2>Swing</h2>
+          <div class="slider">
+            <label for="sGF"><span>Average force on the ball, F</span><output id="oGF"></output></label>
+            <input type="range" id="sGF" min="3000" max="10000" step="100" value="3000">
+          </div>
+          <div class="seg-label">Follow-through</div>
+          <div class="seg" id="segFollow">
+            <button data-v="none" class="on">Stop at the ball</button>
+            <button data-v="half">Half</button>
+            <button data-v="full">Full</button>
+          </div>
+          <div class="seg-label">Club face material</div>
+          <div class="seg" id="segFace">
+            <button data-v="steel" class="on">Stiff steel</button>
+            <button data-v="ti">Thin titanium</button>
+          </div>
+          <div class="slider" style="margin-top:12px">
+            <label><span>Contact time, &Delta;t</span><output id="oGT"></output></label>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Numbers</h2>
+          <table class="read" id="golfRead"></table>
+        </div>
+
+        <div class="card">
+          <h2>Key idea</h2>
+          <div class="eq"><span style="white-space:nowrap">F&Delta;t = &Delta;p</span><br><span style="white-space:nowrap;font-size:80%">= mv<sub>f</sub> − mv<sub>i</sub></span></div>
+          <p class="small" style="color:var(--ink)">The ball starts at rest, so its final momentum equals the impulse from the club. With the force capped by how hard you can swing, the way to a bigger impulse is a longer contact time. That is why coaches teach follow-through in golf, tennis, baseball and hockey, and why a flexing stick or a springy club face helps.</p>
+          <p class="small">Contact times are about half a millisecond. Real follow-through only stretches them a little, so the differences here are exaggerated to make them easy to see. Carry distance uses a launch-monitor rule of thumb (about 3.1 m of carry per m/s of ball speed).</p>
+        </div>
+      </aside>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+
+  // ---------- shared helpers ----------
+  const SUP = { "-": "⁻", "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹" };
+  function sci(v, sig = 3) {
+    if (!isFinite(v)) return "—";
+    if (v === 0) return "0";
+    const neg = v < 0; v = Math.abs(v);
+    let e = Math.floor(Math.log10(v));
+    let m = v / Math.pow(10, e);
+    let ms = m.toFixed(sig - 1);
+    if (parseFloat(ms) >= 10) { e += 1; ms = (m / 10).toFixed(sig - 1); }
+    if (e === 0) return (neg ? "−" : "") + ms;
+    return (neg ? "−" : "") + ms + " × 10" + String(e).split("").map(c => SUP[c]).join("");
+  }
+  const fix = (v, d) => v.toFixed(d);
+
+  function setupCanvas(cv, w, h) {
+    const dpr = window.devicePixelRatio || 1;
+    cv.style.height = h + "px";
+    cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+    const c = cv.getContext("2d");
+    c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return c;
+  }
+
+  function arrow(c, x1, y1, x2, y2, color, width = 3, dashed = false, head = 11) {
+    const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy);
+    if (len < 0.5) return;
+    const ux = dx / len, uy = dy / len;
+    const h = Math.min(head, len * 0.6);
+    c.save();
+    c.strokeStyle = color; c.fillStyle = color; c.lineWidth = width; c.lineCap = "round";
+    if (dashed) c.setLineDash([6, 5]);
+    c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2 - ux * h * 0.8, y2 - uy * h * 0.8); c.stroke();
+    c.setLineDash([]);
+    c.beginPath();
+    c.moveTo(x2, y2);
+    c.lineTo(x2 - ux * h - uy * h * 0.5, y2 - uy * h + ux * h * 0.5);
+    c.lineTo(x2 - ux * h + uy * h * 0.5, y2 - uy * h - ux * h * 0.5);
+    c.closePath();
+    if (dashed) { c.globalAlpha = 0.6; }
+    c.fill();
+    c.restore();
+  }
+
+  // vector label: letter(s) with arrow over, optional subscript, optional prefix (e.g. Δ)
+  function vlabel(c, x, y, prefix, letter, sub, color, size = 15, bg = true) {
+    c.save();
+    c.font = `italic 600 ${size}px system-ui, sans-serif`;
+    const pw = prefix ? (c.font = `600 ${size}px system-ui, sans-serif`, c.measureText(prefix).width) : 0;
+    c.font = `italic 600 ${size}px system-ui, sans-serif`;
+    const lw = c.measureText(letter).width;
+    c.font = `600 ${size * 0.7}px system-ui, sans-serif`;
+    const sw = sub ? c.measureText(sub).width + 1 : 0;
+    const total = pw + lw + sw;
+    const x0 = x - total / 2;
+    if (bg) {
+      c.fillStyle = "rgba(255,255,255,.82)";
+      c.beginPath();
+      c.roundRect ? c.roundRect(x0 - 4, y - size * 1.05, total + 8, size * 1.45, 4) : c.rect(x0 - 4, y - size * 1.05, total + 8, size * 1.45);
+      c.fill();
+    }
+    c.fillStyle = color; c.strokeStyle = color; c.textBaseline = "alphabetic";
+    let cx = x0;
+    if (prefix) { c.font = `600 ${size}px system-ui, sans-serif`; c.fillText(prefix, cx, y); cx += pw; }
+    c.font = `italic 600 ${size}px system-ui, sans-serif`; c.fillText(letter, cx, y);
+    // arrow over letter
+    const ay = y - size * 0.82, ax1 = cx + 1, ax2 = cx + lw + 1;
+    c.lineWidth = 1.3; c.beginPath(); c.moveTo(ax1, ay); c.lineTo(ax2, ay); c.stroke();
+    c.beginPath(); c.moveTo(ax2 + 1, ay); c.lineTo(ax2 - 3, ay - 2.5); c.lineTo(ax2 - 3, ay + 2.5); c.closePath(); c.fill();
+    cx += lw;
+    if (sub) { c.font = `600 ${size * 0.7}px system-ui, sans-serif`; c.fillText(sub, cx + 1, y + size * 0.25); }
+    c.restore();
+  }
+
+  function tlabel(c, x, y, text, color, size = 13, bg = true) {
+    c.save();
+    c.font = `600 ${size}px system-ui, sans-serif`;
+    const w = c.measureText(text).width;
+    if (bg) { c.fillStyle = "rgba(255,255,255,.85)"; c.beginPath(); c.roundRect ? c.roundRect(x - w / 2 - 4, y - size, w + 8, size * 1.4, 4) : c.rect(x - w / 2 - 4, y - size, w + 8, size * 1.4); c.fill(); }
+    c.fillStyle = color; c.textAlign = "center"; c.fillText(text, x, y);
+    c.restore();
+  }
+
+  // ---------- tabs ----------
+  let tab = "ship";
+  function setTab(t) {
+    tab = t;
+    for (const [b, p, k] of [["tabShip", "paneShip", "ship"], ["tabEgg", "paneEgg", "egg"], ["tabGolf", "paneGolf", "golf"]]) {
+      $(b).classList.toggle("on", t === k); $(b).setAttribute("aria-selected", t === k);
+      $(p).classList.toggle("hidden", t !== k);
+    }
+    resizeAll();
+  }
+  $("tabShip").onclick = () => setTab("ship");
+  $("tabEgg").onclick = () => setTab("egg");
+  $("tabGolf").onclick = () => setTab("golf");
+
+  // =====================================================================
+  //  TAB 1: SHIP AND ICEBERG
+  // =====================================================================
+  const M = 5.0e7;          // kg
+  const V0 = 10.0;          // m/s east
+  const PI0 = M * V0;       // kg·m/s
+  const L = 270, B = 28;    // ship length, beam (m)
+  const ICE = { x: 240, y: 0, r: 40 };
+  const X0 = -L / 2;        // ship centre start (bow at x = 0)
+  const VIEW = { x: -285, y: -115, w: 760, aspect: 0.56 };
+  VIEW.h = VIEW.w * VIEW.aspect;
+
+  const HULL = [[135,0],[118,6],[95,12],[60,14],[-110,14],[-125,12],[-133,7],[-135,0],[-133,-7],[-125,-12],[-110,-14],[60,-14],[95,-12],[118,-6]];
+
+  // irregular iceberg outline (fixed)
+  const ICE_PTS = (() => {
+    const pts = [], n = 15;
+    const rr = [1.05,0.92,1.0,0.86,0.97,1.08,0.95,0.88,1.02,0.93,1.07,0.9,0.98,1.04,0.91];
+    for (let i = 0; i < n; i++) {
+      const a = i / n * Math.PI * 2 + 0.2;
+      pts.push([Math.cos(a) * ICE.r * rr[i], Math.sin(a) * ICE.r * rr[i]]);
+    }
+    return pts;
+  })();
+  const ICE_HIT_R = ICE.r * 0.93;
+
+  const S = {
+    F: 10e6, dt: 4, J: 4e7,
+    phase: "idle", t: 0, result: null,
+    trail: [], boats: [], crashAt: null, crashReal: 0,
+    show: { pi: true, dp: true, pf: true, F: true, path: true },
+    speed: 2,
+  };
+
+  function shipState(F, dt, t) {
+    const a = F / M;
+    let vy, y;
+    if (t <= dt) { vy = a * t; y = 0.5 * a * t * t; }
+    else { vy = a * dt; y = 0.5 * a * dt * dt + a * dt * (t - dt); }
+    const x = X0 + V0 * t;
+    return { x, y, vx: V0, vy, th: Math.atan2(vy, V0) };
+  }
+  function hullWorld(st) {
+    const c = Math.cos(st.th), s = Math.sin(st.th);
+    return HULL.map(([px, py]) => [st.x + px * c - py * s, st.y + px * s + py * c]);
+  }
+  function pointInPoly(px, py, poly) {
+    let inside = false;
+    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+      const [xi, yi] = poly[i], [xj, yj] = poly[j];
+      if (((yi > py) !== (yj > py)) && (px < (xj - xi) * (py - yi) / (yj - yi) + xi)) inside = !inside;
+    }
+    return inside;
+  }
+  function distToPoly(px, py, poly) {
+    if (pointInPoly(px, py, poly)) return -1;
+    let best = Infinity, bp = null;
+    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+      const [ax, ay] = poly[j], [bx, by] = poly[i];
+      const dx = bx - ax, dy = by - ay;
+      let u = ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy);
+      u = Math.max(0, Math.min(1, u));
+      const qx = ax + u * dx, qy = ay + u * dy;
+      const d = Math.hypot(px - qx, py - qy);
+      if (d < best) { best = d; bp = [qx, qy]; }
+    }
+    distToPoly.last = bp;
+    return best;
+  }
+  function simulate(F, dt) {
+    let minGap = Infinity;
+    const step = 0.02;
+    for (let t = 0; t < 200; t += step) {
+      const st = shipState(F, dt, t);
+      const gap = distToPoly(ICE.x, ICE.y, hullWorld(st)) - ICE_HIT_R;
+      if (gap < minGap) minGap = gap;
+      if (gap <= 0) return { crash: true, t, at: distToPoly.last || [ICE.x - ICE_HIT_R, ICE.y], minGap: 0 };
+      const sternX = st.x - L / 2 * Math.cos(st.th);
+      const offscreen = st.y - 150 > VIEW.y + VIEW.h || st.x - 150 > VIEW.x + VIEW.w;
+      if ((sternX > ICE.x + ICE.r + 10 && st.x > VIEW.x + VIEW.w - 60) || offscreen) return { crash: false, t, minGap };
+    }
+    return { crash: false, t: 200, minGap };
+  }
+  function minForceNeeded(dt) {
+    if (dt <= 0) return null;
+    const FMAX = 40e6;
+    if (simulate(FMAX, dt).crash) return null;
+    let lo = 0, hi = FMAX;
+    for (let i = 0; i < 22; i++) {
+      const mid = (lo + hi) / 2;
+      if (simulate(mid, dt).crash) lo = mid; else hi = mid;
+    }
+    return hi;
+  }
+
+  // --- controls
+  const sF = $("sF"), sT = $("sT"), lockJ = $("lockJ");
+  function readShipControls(src) {
+    let F = parseFloat(sF.value) * 1e6, dt = parseFloat(sT.value);
+    if (lockJ.checked && S.J > 0) {
+      if (src === "F" && F > 0) {
+        dt = Math.min(10, Math.max(0.1, S.J / F));
+        sT.value = dt.toFixed(1); dt = parseFloat(sT.value);
+      } else if (src === "T" && dt > 0) {
+        F = Math.min(40e6, Math.max(0.5e6, S.J / dt));
+        sF.value = (Math.round(F / 0.5e6) * 0.5).toFixed(1); F = parseFloat(sF.value) * 1e6;
+      }
+    }
+    S.F = F; S.dt = dt;
+    if (!lockJ.checked) S.J = F * dt;
+    $("oF").textContent = F === 0 ? "none" : F < 8e6 ? "gentle" : F < 18e6 ? "medium" : F < 30e6 ? "strong" : "very strong";
+    $("oT").textContent = dt === 0 ? "none" : dt < 2.5 ? "very short" : dt < 5 ? "short" : dt < 7.5 ? "medium" : "long";
+    if (S.phase !== "idle") shipReset();
+    updateShipReadouts();
+  }
+  sF.oninput = () => readShipControls("F");
+  sT.oninput = () => readShipControls("T");
+  lockJ.onchange = () => { S.J = S.F * S.dt; readShipControls(); };
+  document.querySelectorAll('#paneShip [data-v]').forEach(cb => {
+    cb.onchange = () => { S.show[cb.dataset.v] = cb.checked; };
+  });
+  $("shipSpeed").onchange = e => { S.speed = parseFloat(e.target.value); };
+
+  function shipReset() {
+    S.phase = "idle"; S.t = 0; S.result = null; S.trail = []; S.boats = []; S.crashAt = null; S.splash = 0;
+    $("shipBanner").classList.add("hidden");
+    $("shipGo").disabled = false;
+    sF.disabled = sT.disabled = false;
+    updateShipReadouts();
+  }
+  function shipGo() {
+    if (S.phase !== "idle") shipReset();
+    S.result = simulate(S.F, S.dt);
+    S.phase = "run"; S.t = 0; S.trail = [];
+    $("shipGo").disabled = true;
+  }
+  $("shipGo").onclick = shipGo;
+  $("shipReset").onclick = shipReset;
+
+  // impulse applied so far
+  const dpNow = () => S.phase === "idle" ? 0 : S.F * Math.min(S.t, S.dt);
+
+  function updateShipReadouts() {
+    const J = S.F * S.dt;
+    const pf = Math.hypot(PI0, J), ang = Math.atan2(J, PI0) * 180 / Math.PI;
+    const dpn = dpNow(), pn = Math.hypot(PI0, dpn), angn = Math.atan2(dpn, PI0) * 180 / Math.PI;
+    const live = S.phase !== "idle";
+    const forceOn = S.phase === "run" && S.t < S.dt && S.F > 0;
+    $("shipRead").innerHTML =
+      meter("Force", S.F / 40e6, "#36b158", "") +
+      `<div class="op">×</div>` +
+      meter("Time", S.dt / 10, "#7a8aa8", "") +
+      `<div class="op">=</div>` +
+      meter("Impulse", J / 4e8, "#f09a2b", live ? "" : "planned") +
+      `<p class="small">Change in momentum = impulse, so this bar is also how much the momentum changes.</p>`;
+  }
+
+  function meter(name, frac, col, note, mark) {
+    frac = Math.max(0, Math.min(1, frac));
+    return `<div class="meter"><div class="lab"><span>${name}</span><span>${note || ""}</span></div><div class="track"><div class="fill" style="width:${(frac * 100).toFixed(1)}%;background:${col}"></div>${mark !== undefined ? `<div class="mark" style="left:${(mark * 100).toFixed(1)}%"></div>` : ""}</div></div>`;
+  }
+  function finishShip() {
+    const r = S.result;
+    const b = $("shipBanner");
+    b.classList.remove("hidden", "good", "bad");
+    if (r.crash) {
+      b.classList.add("bad");
+      const need = minForceNeeded(S.dt);
+      let tip;
+      if (S.dt <= 0 || S.F <= 0) tip = "No impulse means no change in momentum. The ship kept going straight.";
+      else if (need === null) tip = "The push didn't last long enough. Try a longer time.";
+      else tip = "The impulse was too small. Try a bigger force, a longer time, or both.";
+      b.innerHTML = `<b class="title">Iceberg!</b>Don't worry: this ship carried enough lifeboats for everyone. 🛟<br><span class="small" style="display:block;margin-top:4px">${tip}</span>`;
+      launchBoats();
+    } else {
+      b.classList.add("good");
+      b.innerHTML = `<b class="title">Clear!</b>The impulse changed the ship's momentum enough to miss the iceberg.`;
+    }
+  }
+
+  function launchBoats() {
+    const st = shipState(S.F, S.dt, S.t);
+    const c = Math.cos(st.th), s = Math.sin(st.th);
+    S.boats = [];
+    for (let i = 0; i < 12; i++) {
+      for (const side of [-1, 1]) {
+        const lx = -78 + i * 12, ly = side * 11.5;
+        const wx = st.x + lx * c - ly * s, wy = st.y + lx * s + ly * c;
+        const nx = -s * side, ny = c * side;          // outward normal
+        const spread = (Math.random() - 0.5) * 0.9;
+        const dirx = nx * Math.cos(spread) - ny * Math.sin(spread);
+        const diry = nx * Math.sin(spread) + ny * Math.cos(spread);
+        S.boats.push({ x: wx, y: wy, dx: dirx, dy: diry, dist: 45 + Math.random() * 55, th: Math.atan2(diry, dirx) + Math.PI / 2, delay: Math.random() * 0.8 + i * 0.05 });
+      }
+    }
+    S.crashReal = performance.now();
+  }
+
+  // --- rendering
+  const shipCv = $("ship"); let sc, sW = 0, sH = 0, k = 1;
+  const wx = x => (x - VIEW.x) * k, wy = y => (y - VIEW.y) * k;
+
+  function resizeShip() {
+    sW = shipCv.clientWidth; if (!sW) return;
+    sH = Math.round(sW * VIEW.aspect);
+    sc = setupCanvas(shipCv, sW, sH);
+    k = sW / VIEW.w;
+    const vd = $("vecdiag");
+    vd._c = setupCanvas(vd, vd.clientWidth, 210);
+  }
+
+  function drawOcean(time) {
+    const g = sc.createLinearGradient(0, 0, 0, sH);
+    g.addColorStop(0, "#1f5f8b"); g.addColorStop(1, "#174a6e");
+    sc.fillStyle = g; sc.fillRect(0, 0, sW, sH);
+    // gentle wave marks
+    sc.strokeStyle = "rgba(255,255,255,.08)"; sc.lineWidth = 1.2;
+    const sp = 46 * k;
+    for (let row = 0; row * sp * 0.7 < sH + sp; row++) {
+      for (let col = -1; col * sp < sW + sp; col++) {
+        const ox = (col + (row % 2) * 0.5) * sp + Math.sin(time * 0.0006 + row) * 6;
+        const oy = row * sp * 0.7;
+        sc.beginPath(); sc.arc(ox, oy, sp * 0.22, Math.PI * 1.15, Math.PI * 1.85); sc.stroke();
+      }
+    }
+    // scale bar
+
+    sc.fillStyle = "rgba(255,255,255,.9)"; sc.font = "12px system-ui, sans-serif"; sc.textAlign = "left";
+
+    // compass
+    const cx = sW - 30, cy = sH - 34;
+    sc.fillStyle = "rgba(255,255,255,.9)"; sc.textAlign = "center"; sc.font = "600 11px system-ui, sans-serif";
+    sc.fillText("N", cx, cy - 16); sc.fillText("S", cx, cy + 24); sc.fillText("E", cx + 20, cy + 4); sc.fillText("W", cx - 20, cy + 4);
+    sc.strokeStyle = "rgba(255,255,255,.7)"; sc.lineWidth = 1.2;
+    sc.beginPath(); sc.moveTo(cx, cy - 12); sc.lineTo(cx, cy + 12); sc.moveTo(cx - 12, cy); sc.lineTo(cx + 12, cy); sc.stroke();
+  }
+
+  function drawIceberg() {
+    sc.save();
+    sc.translate(wx(ICE.x), wy(ICE.y)); sc.scale(k, k);
+    // foam ring
+    sc.beginPath();
+    ICE_PTS.forEach(([x, y], i) => i ? sc.lineTo(x * 1.12, y * 1.12) : sc.moveTo(x * 1.12, y * 1.12));
+    sc.closePath(); sc.fillStyle = "rgba(220,240,255,.25)"; sc.fill();
+    sc.beginPath();
+    ICE_PTS.forEach(([x, y], i) => i ? sc.lineTo(x, y) : sc.moveTo(x, y));
+    sc.closePath();
+    const g = sc.createRadialGradient(-12, -14, 4, 0, 0, ICE.r * 1.1);
+    g.addColorStop(0, "#ffffff"); g.addColorStop(0.6, "#e3f2fb"); g.addColorStop(1, "#a9d3ea");
+    sc.fillStyle = g; sc.fill();
+    sc.strokeStyle = "#7fb6d6"; sc.lineWidth = 1.5 / k; sc.stroke();
+    // facets
+    sc.strokeStyle = "rgba(120,170,205,.55)"; sc.lineWidth = 1 / k;
+    sc.beginPath(); sc.moveTo(-6, -4); sc.lineTo(ICE_PTS[2][0], ICE_PTS[2][1]);
+    sc.moveTo(-6, -4); sc.lineTo(ICE_PTS[7][0], ICE_PTS[7][1]);
+    sc.moveTo(-6, -4); sc.lineTo(ICE_PTS[11][0], ICE_PTS[11][1]); sc.stroke();
+    sc.restore();
+    sc.fillStyle = "rgba(255,255,255,.9)"; sc.font = "600 12px system-ui, sans-serif"; sc.textAlign = "center";
+    sc.fillText("iceberg", wx(ICE.x), wy(ICE.y - ICE.r) - 8);
+  }
+
+  function drawShip(st, boatsOnDeck) {
+    sc.save();
+    sc.translate(wx(st.x), wy(st.y)); sc.rotate(st.th); sc.scale(k, k);
+    // hull
+    sc.beginPath(); HULL.forEach(([x, y], i) => i ? sc.lineTo(x, y) : sc.moveTo(x, y)); sc.closePath();
+    sc.fillStyle = "#24262e"; sc.fill();
+    // deck
+    sc.beginPath(); HULL.forEach(([x, y], i) => { const X = x * 0.96, Y = y * 0.8; i ? sc.lineTo(X, Y) : sc.moveTo(X, Y); }); sc.closePath();
+    sc.fillStyle = "#cdab7c"; sc.fill();
+    // deck planks
+    sc.strokeStyle = "rgba(120,80,40,.18)"; sc.lineWidth = 0.6;
+    for (let y = -9; y <= 9; y += 3) { sc.beginPath(); sc.moveTo(-120, y); sc.lineTo(100, y); sc.stroke(); }
+    // superstructure
+    sc.fillStyle = "#f3f0e8"; sc.strokeStyle = "#9b978c"; sc.lineWidth = 0.8;
+    sc.beginPath(); sc.rect(-88, -8.5, 162, 17); sc.fill(); sc.stroke();
+    sc.fillStyle = "#e4e0d5"; sc.fillRect(-84, -5.5, 154, 11);
+    // bridge
+    sc.fillStyle = "#f3f0e8"; sc.beginPath(); sc.rect(74, -10, 8, 20); sc.fill(); sc.stroke();
+    // funnels (generic red with black tops)
+    for (const fx of [48, 14, -20, -54]) {
+      sc.save(); sc.translate(fx, 0);
+      sc.fillStyle = "#b8432f"; sc.beginPath(); sc.ellipse(0, 0, 8, 5.6, 0, 0, Math.PI * 2); sc.fill();
+      sc.fillStyle = "#16161a"; sc.beginPath(); sc.ellipse(0.6, 0, 5.8, 3.8, 0, 0, Math.PI * 2); sc.fill();
+      sc.restore();
+    }
+    // masts
+    sc.fillStyle = "#5b4a35";
+    sc.beginPath(); sc.arc(108, 0, 1.8, 0, 7); sc.fill();
+    sc.beginPath(); sc.arc(-112, 0, 1.8, 0, 7); sc.fill();
+    // lifeboats on deck
+    if (boatsOnDeck) {
+      sc.fillStyle = "#ffffff"; sc.strokeStyle = "#8a8a8a"; sc.lineWidth = 0.5;
+      for (let i = 0; i < 12; i++) for (const side of [-1, 1]) {
+        sc.beginPath(); sc.ellipse(-78 + i * 12, side * 11.3, 4.4, 1.6, 0, 0, 7); sc.fill(); sc.stroke();
+      }
+    }
+    sc.restore();
+  }
+
+  function drawBoats(now) {
+    const el = (now - S.crashReal) / 1000;
+    for (const b of S.boats) {
+      const tt = Math.max(0, el - b.delay);
+      const f = 1 - Math.exp(-tt * 1.1);
+      const d = b.dist * f;
+      const x = b.x + b.dx * d, y = b.y + b.dy * d;
+      const rock = Math.sin(now * 0.004 + b.dist) * 0.15;
+      sc.save(); sc.translate(wx(x), wy(y)); sc.rotate(b.th + rock); sc.scale(k, k);
+      if (tt > 0 && f < 0.97) { sc.strokeStyle = "rgba(255,255,255,.4)"; sc.lineWidth = 1; sc.beginPath(); sc.moveTo(0, 4); sc.lineTo(0, 11); sc.stroke(); }
+      sc.fillStyle = "#ffffff"; sc.strokeStyle = "#e46a1a"; sc.lineWidth = 0.9;
+      sc.beginPath(); sc.ellipse(0, 0, 1.9, 4.6, 0, 0, 7); sc.fill(); sc.stroke();
+      sc.restore();
+    }
+  }
+
+  function drawShipVectors(st) {
+    const cx = wx(st.x), cy = wy(st.y);
+    const PK = 150 * k / PI0;                 // px per kg·m/s  (p_i = 190 m on screen)
+    const idle = S.phase === "idle";
+    const dp = idle ? S.F * S.dt : dpNow();
+    const piX = cx + PI0 * PK, piY = cy;
+    const tipX = piX, tipY = cy + dp * PK;
+    if (S.show.F && S.F > 0 && (idle || (S.phase === "run" && S.t < S.dt))) {
+      const FL = (S.F / 40e6) * 130 * k + 12;
+      arrow(sc, cx - 60 * k, cy - FL * 0.25, cx - 60 * k, cy - FL * 0.25 + FL, "#36d158", 3.5, idle);
+      tlabel(sc, cx - 60 * k, cy - FL * 0.25 + FL + 18, "force", "#138a2c");
+    }
+    if (S.show.pi) { arrow(sc, cx, cy, piX, piY, "#6f8bff", 3.5); tlabel(sc, (cx + piX) / 2 + 40 * k, cy - 10, "before", "#1f3fe0"); }
+    if (S.show.dp && dp > 0) { arrow(sc, piX, piY, tipX, tipY, "#ffa733", 3.5, idle); tlabel(sc, tipX + 38, (piY + tipY) / 2 + 6, "impulse", "#b86400"); }
+    if (S.show.pf) {
+      arrow(sc, cx, cy, tipX, tipY, "#ff5cf0", 3.5, idle && dp > 0);
+      if (dp > PI0 * 0.06) tlabel(sc, (cx + tipX) / 2 - 8, (cy + tipY) / 2 + 24, "after", "#b0109f");
+    }
+  }
+
+  function drawShipScene(now) {
+    if (!sc) return;
+    drawOcean(now);
+    // distance marker like the sketch
+    if (S.phase === "idle") {
+      sc.save(); sc.setLineDash([3, 7]); sc.strokeStyle = "rgba(255,255,255,.7)"; sc.lineWidth = 1.5;
+      sc.beginPath(); sc.moveTo(wx(0) + 4, wy(0)); sc.lineTo(wx(ICE.x - ICE.r) - 4, wy(0)); sc.stroke(); sc.restore();
+      sc.fillStyle = "rgba(255,255,255,.85)"; sc.font = "12px system-ui, sans-serif"; sc.textAlign = "center";
+
+    }
+    // wake
+    if (S.show.path && S.trail.length > 1) {
+      sc.save(); sc.strokeStyle = "rgba(200,230,250,.45)"; sc.lineWidth = Math.max(2, 10 * k); sc.lineCap = "round"; sc.lineJoin = "round";
+      sc.beginPath(); S.trail.forEach(([x, y], i) => i ? sc.lineTo(wx(x), wy(y)) : sc.moveTo(wx(x), wy(y))); sc.stroke(); sc.restore();
+    }
+    drawIceberg();
+    const st = shipState(S.F, S.dt, S.t);
+    // shake on impact
+    let shx = 0, shy = 0;
+    if (S.phase === "crash") {
+      const e = (now - S.crashReal) / 1000;
+      if (e < 0.6) { shx = (Math.random() - 0.5) * 6 * (1 - e / 0.6); shy = (Math.random() - 0.5) * 6 * (1 - e / 0.6); }
+    }
+    sc.save(); sc.translate(shx, shy);
+    drawShip(st, S.phase !== "crash");
+    sc.restore();
+    if (S.phase === "crash") {
+      // splash rings at impact
+      const e = (now - S.crashReal) / 1000;
+      const [ix, iy] = S.result.at;
+      for (let i = 0; i < 3; i++) {
+        const r = ((e * 0.7 + i / 3) % 1);
+        sc.strokeStyle = `rgba(255,255,255,${0.7 * (1 - r)})`; sc.lineWidth = 2;
+        sc.beginPath(); sc.arc(wx(ix), wy(iy), (8 + r * 40) * k, 0, 7); sc.stroke();
+      }
+      drawBoats(now);
+    }
+    drawShipVectors(st);
+  }
+
+  function drawVecDiag() {
+    const cv = $("vecdiag"), c = cv._c; if (!c) return;
+    const W = cv.clientWidth, H = 210;
+    c.clearRect(0, 0, W, H);
+    const idle = S.phase === "idle";
+    const J = S.F * S.dt;
+    const dp = idle ? J : dpNow();
+    const ox = 22, oy = 36;
+    const PK = (W - 70) / PI0;
+    const maxDp = (H - oy - 18) / PK;
+    const scale = Math.min(1, maxDp / Math.max(J, 1));
+    const pk = PK * scale;
+    const piX = ox + PI0 * pk;
+    const tipY = oy + dp * pk;
+    // grid
+    c.strokeStyle = "#eceaf6"; c.lineWidth = 1;
+    for (let x = ox; x < W; x += 20) { c.beginPath(); c.moveTo(x, 8); c.lineTo(x, H - 4); c.stroke(); }
+    for (let y = oy % 20; y < H; y += 20) { c.beginPath(); c.moveTo(4, y); c.lineTo(W - 4, y); c.stroke(); }
+    arrow(c, ox, oy, piX, oy, "#1f3fe0", 3);
+    tlabel(c, (ox + piX) / 2, oy - 9, "momentum before", "#1f3fe0", 13, false);
+    if (dp > 0) {
+      arrow(c, piX, oy, piX, tipY, "#d97a00", 3, idle);
+      tlabel(c, piX - 34, Math.max(oy + 18, (oy + tipY) / 2 + 5), "impulse", "#b86400", 13, false);
+      arrow(c, ox, oy, piX, tipY, "#d61fd0", 3, idle);
+      tlabel(c, (ox + piX) / 2 - 20, (oy + tipY) / 2 + 26, "momentum after", "#b0109f", 13, false);
+      // angle arc
+      const th = Math.atan2(tipY - oy, piX - ox);
+      if (false) {
+        c.strokeStyle = "#555"; c.lineWidth = 1.2;
+        c.beginPath(); c.arc(ox, oy, 34, 0, th); c.stroke();
+        c.fillStyle = "#333"; c.font = "italic 14px system-ui, sans-serif"; c.textAlign = "left";
+        c.fillText("θ", ox + 38 * Math.cos(th / 2) + 2, oy + 38 * Math.sin(th / 2) + 5);
+      }
+    }
+    c.fillStyle = "#61617a"; c.font = "12px system-ui, sans-serif"; c.textAlign = "right";
+    c.fillText(idle ? "planned (press Go)" : (S.phase === "run" && S.t < S.dt ? "force acting…" : "final"), W - 8, H - 8);
+
+  }
+
+  // =====================================================================
+  //  TAB 2: EGG DROP
+  // =====================================================================
+  const EM = 0.060, G = 9.8, THRESH = 25;          // kg, m/s², N (avg force that cracks the egg)
+  const EGG_RX = 0.0215, EGG_RY = 0.0285;
+  const SURF = [
+    { id: "concrete", name: "Concrete", dt: 1, col: "#a9a9a6", top: "#bdbdb9" },
+    { id: "wood", name: "Wooden table", dt: 3, col: "#a8733f", top: "#c08a52" },
+    { id: "towel", name: "Folded towel", dt: 8, col: "#2f9c95", top: "#46b5ad" },
+    { id: "foam", name: "Foam mat", dt: 20, col: "#e6c23a", top: "#f1d564" },
+    { id: "pillow", name: "Pillow", dt: 50, col: "#c9d6f2", top: "#e3eaf9" },
+  ];
+  const CUSTOM = { id: "custom", name: "Custom", col: "#9a8fc2", top: "#b4abd6" };
+  const TRIAL_COLS = ["#4b47c9", "#d61f6a", "#138a8a", "#d97a00", "#7a3fc9", "#3a7d1c"];
+  const E = { surf: SURF[0], dt: 0.001, h: 1.0, phase: "ready", t: 0, trials: [], trial: null, last: 0 };
+  const SLOW = 25;
+
+  const surfBox = $("surfaces");
+  SURF.forEach(s => {
+    const b = document.createElement("button");
+    b.innerHTML = `<span class="chip" style="background:${s.top}"></span>${s.name}`;
+    b.onclick = () => { E.surf = s; $("sDt").value = s.dt; readEgg(); };
+    b.dataset.id = s.id; surfBox.appendChild(b);
+  });
+  function readEgg() {
+    const v = parseInt($("sDt").value, 10);
+    if (E.surf.id !== "custom" && v !== E.surf.dt) {
+      E.surf = SURF.find(s => s.dt === v) || CUSTOM;
+    }
+    E.dt = v / 1000;
+    E.h = parseFloat($("sH").value);
+    surfBox.querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.id === E.surf.id));
+    $("oDt").textContent = `${(v / 1000).toFixed(3)} s`;
+    $("oH").textContent = `${E.h.toFixed(2)} m`;
+    if (E.phase !== "ready") eggReset();
+    updateEggRead();
+  }
+  $("sDt").oninput = () => { E.surf = SURF.find(s => s.dt === parseInt($("sDt").value, 10)) || CUSTOM; readEgg(); };
+  $("sH").oninput = readEgg;
+
+  const vImpact = () => Math.sqrt(2 * G * E.h);
+  const fallTime = () => Math.sqrt(2 * E.h / G);
+
+  function updateEggRead() {
+    const v = vImpact(), p = EM * v, Fav = p / E.dt;
+    const breaks = Fav > THRESH;
+    const FMAXM = EM * Math.sqrt(2 * G * 2) / 0.001;
+    const lf = F => Math.log10(1 + F) / Math.log10(1 + FMAXM);   // log bar so small forces still show
+    $("eggRead").innerHTML =
+      `<table class="read" style="margin-bottom:6px">
+        <tr><td>Drop height</td><td>${E.h.toFixed(2)} m</td></tr>
+        <tr><td>Speed at landing</td><td>${vImpact().toFixed(2)} m/s</td></tr>
+        <tr><td>Change in momentum</td><td>${(EM * vImpact()).toFixed(3)} kg·m/s</td></tr>
+        <tr><td>Time to stop</td><td>${E.dt.toFixed(3)} s</td></tr>
+        <tr><td>Average force on egg</td><td>${Fav < 100 ? Fav.toFixed(1) : Fav.toFixed(0)} N</td></tr>
+      </table>` +
+      meter("Change in momentum (impulse)", p / (EM * Math.sqrt(2 * G * 2)), "#f09a2b", "set by drop height") +
+      meter("Time to stop", E.dt / 0.08, "#7a8aa8", "") +
+      meter("Force on the egg", lf(Fav), E.phase !== "done" ? "#8f8fb0" : breaks ? "#d64545" : "#36b158", E.phase !== "done" ? "drop to find out" : breaks ? '<span class="no">egg broke</span>' : '<span class="ok">egg survived</span>', lf(THRESH)) +
+      `<p class="small">The dashed line is about how much force an egg can take.</p>`;
+  }
+
+  function eggReset() {
+    E.phase = "ready"; E.t = 0; E.trial = null;
+    $("eggBanner").classList.add("hidden");
+    $("eggGo").disabled = false;
+    $("eggSlow").textContent = "";
+    updateEggRead();
+  }
+  function eggGo() {
+    if (E.phase !== "ready") eggReset();
+    const v = vImpact();
+    E.run = { v, p: EM * v, dt: E.dt, Fav: EM * v / E.dt, h: E.h, surf: E.surf, tf: fallTime() };
+    E.run.breaks = E.run.Fav > THRESH;
+    E.phase = "fall"; E.t = 0;
+    $("eggGo").disabled = true;
+  }
+  $("eggGo").onclick = eggGo;
+  $("eggReset").onclick = eggReset;
+  $("zoomG").onchange = () => drawFGraph();
+  $("eggClear").onclick = () => { E.trials = []; renderTrials(); drawFGraph(); };
+
+  function finishEgg() {
+    const r = E.run;
+    E.trials.push({ ...r, col: TRIAL_COLS[E.trials.length % TRIAL_COLS.length] });
+    if (E.trials.length > 6) E.trials.shift();
+    renderTrials();
+    E.phase = "done"; updateEggRead();
+    const b = $("eggBanner");
+    b.classList.remove("hidden", "good", "bad");
+    if (r.breaks) {
+      b.classList.add("bad");
+      b.innerHTML = `<b class="title">Splat!</b>${r.surf.name} stopped the egg too quickly, so the force was too big.`;
+    } else {
+      b.classList.add("good");
+      b.innerHTML = `<b class="title">The egg survived!</b>${r.surf.name} stopped the egg slowly, so the force stayed small.`;
+    }
+  }
+
+  function renderTrials() {
+    const tb = $("trials");
+    if (!E.trials.length) { tb.innerHTML = ""; return; }
+    tb.innerHTML = `<tr><th>Surface</th><th>h</th><th>&Delta;p (N·s)</th><th>&Delta;t (s)</th><th>F<sub>avg</sub> (N)</th><th>Egg</th></tr>` +
+      E.trials.map(r => `<tr><td><span class="dot" style="background:${r.col}"></span>${r.surf.name}</td><td>${r.h.toFixed(2)} m</td><td>${r.p.toFixed(3)}</td><td>${r.dt.toFixed(3)}</td><td>${r.Fav < 100 ? r.Fav.toFixed(1) : r.Fav.toFixed(0)}</td><td>${r.breaks ? '<span class="no">splat</span>' : '<span class="ok">ok</span>'}</td></tr>`).join("");
+  }
+
+  // egg kinematics during contact (half-sine force pulse): returns penetration s and velocity
+  function contact(v0, dt, t) {
+    const w = Math.PI / dt;
+    return { s: v0 / 2 * (t + Math.sin(w * t) / w), v: v0 * (1 + Math.cos(w * t)) / 2, F: (Math.PI / 2) * EM * v0 / dt * Math.sin(w * t) };
+  }
+
+  // --- egg rendering
+  const eggCv = $("egg"); let ec, eW = 0, eH = 0;
+  function resizeEgg() {
+    eW = eggCv.clientWidth; if (!eW) return;
+    eH = Math.round(eW * 0.5);
+    ec = setupCanvas(eggCv, eW, eH);
+    const fg = $("fgraph");
+    fg._c = setupCanvas(fg, fg.clientWidth, 230);
+  }
+
+  function eggPath(c, cx, cy, rx, ry) {
+    // pointy end up; cy is centre
+    c.beginPath();
+    c.moveTo(cx, cy - ry);
+    c.bezierCurveTo(cx + rx * 0.95, cy - ry, cx + rx * 1.05, cy + ry * 0.35, cx + rx, cy + ry * 0.35);
+    c.bezierCurveTo(cx + rx * 0.95, cy + ry * 1.05, cx - rx * 0.95, cy + ry * 1.05, cx - rx, cy + ry * 0.35);
+    c.bezierCurveTo(cx - rx * 1.05, cy + ry * 0.35, cx - rx * 0.95, cy - ry, cx, cy - ry);
+    c.closePath();
+  }
+  function drawEgg(c, cx, bottomY, rx, ry, cracks) {
+    const cy = bottomY - ry * 0.98;
+    c.save();
+    eggPath(c, cx, cy, rx, ry);
+    const g = c.createRadialGradient(cx - rx * 0.35, cy - ry * 0.35, rx * 0.1, cx, cy, ry * 1.1);
+    g.addColorStop(0, "#fffaf0"); g.addColorStop(0.7, "#f1dcc0"); g.addColorStop(1, "#d8b994");
+    c.fillStyle = g; c.fill();
+    c.strokeStyle = "#a88a66"; c.lineWidth = 1; c.stroke();
+    if (cracks > 0) {
+      c.strokeStyle = "#5b4630"; c.lineWidth = 1.4;
+      c.beginPath();
+      c.moveTo(cx - rx * 0.9, cy + ry * 0.4); c.lineTo(cx - rx * 0.4, cy + ry * 0.2); c.lineTo(cx - rx * 0.1, cy + ry * 0.5);
+      c.lineTo(cx + rx * 0.3, cy + ry * 0.25); c.lineTo(cx + rx * 0.85, cy + ry * 0.45);
+      if (cracks > 1) { c.moveTo(cx - rx * 0.4, cy + ry * 0.2); c.lineTo(cx - rx * 0.5, cy - ry * 0.2); c.moveTo(cx + rx * 0.3, cy + ry * 0.25); c.lineTo(cx + rx * 0.4, cy - ry * 0.15); }
+      c.stroke();
+    }
+    c.restore();
+  }
+  function drawSplat(c, cx, y, scale, f) {
+    // f: 0..1 spread
+    c.save();
+    c.fillStyle = "rgba(255,255,245,.9)";
+    c.beginPath(); c.ellipse(cx, y - 2 * scale, (26 + 34 * f) * scale, (4 + 2 * f) * scale, 0, 0, 7); c.fill();
+    c.fillStyle = "#f2b01e";
+    c.beginPath(); c.ellipse(cx + 4 * scale, y - 4 * scale, 11 * scale, 5 * scale, 0, 0, 7); c.fill();
+    c.fillStyle = "#f6dcb8"; c.strokeStyle = "#a88a66"; c.lineWidth = 1;
+    const shards = [[-30, -6, 0.4], [-18, -10, -0.6], [22, -8, 0.9], [36, -5, -0.3], [-40, -3, 1.2], [10, -12, 0.2]];
+    for (const [dx, dy, a] of shards) {
+      c.save(); c.translate(cx + dx * scale * (0.6 + 0.6 * f), y + dy * scale); c.rotate(a);
+      c.beginPath(); c.moveTo(-5 * scale, 0); c.lineTo(5 * scale, -2 * scale); c.lineTo(3 * scale, 4 * scale); c.closePath(); c.fill(); c.stroke();
+      c.restore();
+    }
+    c.restore();
+  }
+
+  function drawSurface(c, x0, x1, topY, botY, surf, dipCx, dipDepth, dipW) {
+    c.save();
+    c.beginPath();
+    c.moveTo(x0, botY); c.lineTo(x0, topY);
+    const n = 60;
+    for (let i = 0; i <= n; i++) {
+      const x = x0 + (x1 - x0) * i / n;
+      const u = (x - dipCx) / dipW;
+      const d = dipDepth * Math.exp(-u * u * 2.2);
+      c.lineTo(x, topY + d);
+    }
+    c.lineTo(x1, botY); c.closePath();
+    const g = c.createLinearGradient(0, topY, 0, botY);
+    g.addColorStop(0, surf.top); g.addColorStop(1, surf.col);
+    c.fillStyle = g; c.fill();
+    c.clip();
+    // textures
+    if (surf.id === "concrete") {
+      c.fillStyle = "rgba(60,60,60,.25)";
+      for (let i = 0; i < 140; i++) { const x = x0 + ((i * 97) % 1000) / 1000 * (x1 - x0), y = topY + ((i * 61) % 100) / 100 * (botY - topY); c.fillRect(x, y, 2, 2); }
+    } else if (surf.id === "wood") {
+      c.strokeStyle = "rgba(90,50,20,.3)"; c.lineWidth = 1;
+      for (let y = topY + 6; y < botY; y += 7) { c.beginPath(); c.moveTo(x0, y); c.bezierCurveTo(x0 + (x1 - x0) * 0.3, y + 3, x0 + (x1 - x0) * 0.6, y - 3, x1, y); c.stroke(); }
+    } else if (surf.id === "towel") {
+      c.strokeStyle = "rgba(255,255,255,.35)"; c.lineWidth = 2;
+      for (let y = topY + 8; y < botY; y += 9) { c.beginPath(); c.moveTo(x0, y); c.lineTo(x1, y); c.stroke(); }
+    } else if (surf.id === "foam") {
+      c.fillStyle = "rgba(160,120,0,.25)";
+      for (let i = 0; i < 90; i++) { const x = x0 + ((i * 53) % 100) / 100 * (x1 - x0), y = topY + ((i * 37) % 100) / 100 * (botY - topY); c.beginPath(); c.arc(x, y + 4, 2.2, 0, 7); c.fill(); }
+    } else if (surf.id === "pillow") {
+      c.strokeStyle = "rgba(90,110,170,.25)"; c.lineWidth = 1.5;
+      for (let x = x0 + 14; x < x1; x += 22) { c.beginPath(); c.moveTo(x, topY); c.lineTo(x, botY); c.stroke(); }
+    }
+    c.restore();
+  }
+
+  function eggStateNow() {
+    // returns { y: height of egg bottom above surface (m, negative = penetration), s, F, cracks, splat }
+    const r = E.run;
+    if (!r || E.phase === "ready") return { y: E.h, s: 0, F: 0 };
+    if (E.phase === "fall") return { y: E.h - 0.5 * G * E.t * E.t, s: 0, F: 0 };
+    if (E.phase === "contact") { const k2 = contact(r.v, r.dt, E.t); return { y: -k2.s, s: k2.s, F: k2.F, frac: E.t / r.dt }; }
+    return { y: -r.v * r.dt / 2, s: r.v * r.dt / 2, F: 0, frac: 1 };
+  }
+
+  function drawEggScene() {
+    if (!ec) return;
+    const c = ec, W = eW, H = eH;
+    c.clearRect(0, 0, W, H);
+    // backgrounds
+    c.fillStyle = "#eef1fb"; c.fillRect(0, 0, W, H);
+    const leftW = Math.round(W * 0.34);
+    c.fillStyle = "#e6e9f7"; c.fillRect(0, 0, leftW, H);
+    c.strokeStyle = "#cfd3ea"; c.beginPath(); c.moveTo(leftW + 0.5, 0); c.lineTo(leftW + 0.5, H); c.stroke();
+
+    const st = eggStateNow();
+    const surf = E.run && E.phase !== "ready" ? E.run.surf : E.surf;
+    const h = E.run && E.phase !== "ready" ? E.run.h : E.h;
+    const broke = E.run && E.run.breaks;
+
+    // ---- left: whole drop
+    const groundY = H - 50;
+    const K1 = (groundY - 30) / 2.1;              // px per m
+    const lcx = leftW * 0.55;
+    drawSurface(c, 16, leftW - 16, groundY, H - 14, surf, lcx, Math.min(st.s * K1, 12), 18);
+    // height marker
+    c.strokeStyle = "#7a7a95"; c.fillStyle = "#4a4a60"; c.lineWidth = 1;
+    const topY = groundY - h * K1;
+    c.setLineDash([4, 4]); c.beginPath(); c.moveTo(lcx - 30, topY); c.lineTo(lcx + 30, topY); c.stroke(); c.setLineDash([]);
+    arrow(c, 26, groundY, 26, topY, "#7a7a95", 1.2, false, 7);
+    arrow(c, 26, topY, 26, groundY, "#7a7a95", 1.2, false, 7);
+    c.font = "600 13px system-ui, sans-serif"; c.textAlign = "left";
+    c.fillText(`h = ${h.toFixed(2)} m`, 32, (topY + groundY) / 2);
+    const leftEggVisible = !(broke && (E.phase === "done"));
+    if (leftEggVisible) drawEgg(c, lcx, groundY - st.y * K1, Math.max(4, EGG_RX * K1 * 1.3), Math.max(5.5, EGG_RY * K1 * 1.3), 0);
+    else drawSplat(c, lcx, groundY, 0.35, 1);
+    // zoom box indicator
+    c.strokeStyle = "rgba(75,71,201,.6)"; c.setLineDash([3, 3]);
+    c.strokeRect(lcx - 22, groundY - 0.32 * K1, 44, 0.32 * K1 + 14); c.setLineDash([]);
+    c.fillStyle = "#4b47c9"; c.font = "11px system-ui, sans-serif"; c.textAlign = "center";
+    c.fillText("close-up →", lcx, groundY - 0.32 * K1 - 5);
+
+    // ---- right: close-up
+    const rx0 = leftW + 1, rW = W - leftW - 1;
+    const K2 = Math.min(rW / 0.55, (H - 40) / 0.5);  // px per m
+    const surfY = 30 + 0.30 * K2;
+    const ccx = rx0 + rW * 0.42;
+    const maxDip = (H - surfY) * 0.85;
+    const dip = Math.min(st.s * K2, maxDip);
+    const showSplat = broke && E.phase === "done";
+    drawSurface(c, rx0, W, surfY, H, surf, ccx, showSplat ? dip * 0.6 : dip, EGG_RX * K2 * 1.7);
+    // label on surface
+    c.fillStyle = "rgba(0,0,0,.55)"; c.font = "600 13px system-ui, sans-serif"; c.textAlign = "right";
+    c.fillText(surf.name, W - 12, H - 12);
+    const eggBottom = surfY - Math.max(st.y, -st.s) * K2;
+    const eggBottomClamped = Math.min(eggBottom, surfY + dip);
+    if (showSplat) {
+      drawSplat(c, ccx, surfY + dip * 0.6, K2 / 650 * 1.6, 1);
+    } else if (eggBottomClamped > -EGG_RY * K2 * 2.2) {
+      let cracks = 0;
+      if (broke && E.phase === "contact") cracks = st.frac > 0.25 ? (st.frac > 0.6 ? 2 : 1) : 0;
+      drawEgg(c, ccx, eggBottomClamped, EGG_RX * K2, EGG_RY * K2, cracks);
+    }
+    // force arrow on egg during contact
+    if (E.phase === "contact" && st.F > 0) {
+      const Fpk = (Math.PI / 2) * E.run.Fav;
+      const len = 26 + 110 * Math.min(1, st.F / Math.max(Fpk, 1e-9)) * Math.min(1, Math.log10(1 + Fpk) / 2.7);
+      const ax = ccx + EGG_RX * K2 + 34;
+      arrow(c, ax, surfY + dip, ax, surfY + dip - len, "#138a2c", 4);
+      c.fillStyle = "#138a2c"; c.font = "600 14px system-ui, sans-serif"; c.textAlign = "left";
+      c.fillText(`force = ${st.F < 100 ? st.F.toFixed(1) : st.F.toFixed(0)} N`, ax + 10, surfY + dip - len / 2);
+    }
+    // velocity / momentum before impact
+    if (E.phase === "fall" || E.phase === "ready") {
+      const v = E.phase === "fall" ? G * E.t : 0;
+      if (v > 0.05 && eggBottom > 20) {
+        const len = 18 + v * 14;
+        const ex = ccx - EGG_RX * K2 - 30;
+        const ey = eggBottom - EGG_RY * K2;
+        arrow(c, ex, ey - len / 2, ex, ey + len / 2, "#1f3fe0", 3);
+        tlabel(c, ex - 40, ey + 5, "momentum", "#1f3fe0", 13);
+      }
+    }
+    // clock
+    c.fillStyle = "#4a4a60"; c.font = "13px system-ui, sans-serif"; c.textAlign = "left";
+    if (E.phase === "contact" || E.phase === "done") {
+      const tc = E.phase === "contact" ? E.t : E.run.dt;
+      c.fillText(E.phase === "contact" ? "stopping…" : "stopped", rx0 + 12, 20);
+    } else if (E.phase === "fall") {
+      c.fillText("falling…", rx0 + 12, 20);
+    } else {
+      c.fillText("Press Drop", rx0 + 12, 20);
+    }
+  }
+
+  function drawFGraph() {
+    const fg = $("fgraph"), c = fg._c; if (!c) return;
+    const W = fg.clientWidth, H = 230;
+    c.clearRect(0, 0, W, H);
+    const L0 = 52, R0 = 14, T0 = 14, B0 = 34;
+    const gw = W - L0 - R0, gh = H - T0 - B0;
+    const TMAX = 0.085;
+    const list = E.trials.slice();
+    const cur = (E.phase === "contact") ? { ...E.run, col: "#111", partial: E.t } : null;
+    const allPk = list.concat(cur ? [cur] : []).map(r => r.Fav * Math.PI / 2);
+    let FMAX = Math.max(THRESH * 1.6, ...allPk, 1);
+    // nice axis max
+    const nice = [10, 20, 40, 50, 100, 200, 300, 400, 500, 800, 1000, 1500, 2000];
+    FMAX = nice.find(n => n >= FMAX) || Math.ceil(FMAX / 500) * 500;
+    if ($("zoomG").checked) FMAX = 60;
+    const X = t => L0 + t / TMAX * gw, Y = F => T0 + gh - F / FMAX * gh;
+    // axes and grid
+    c.strokeStyle = "#e6e4f2"; c.lineWidth = 1; c.fillStyle = "#61617a"; c.font = "11px system-ui, sans-serif";
+    for (let i = 0; i <= 5; i++) {
+      const F = FMAX * i / 5, y = Y(F);
+      c.beginPath(); c.moveTo(L0, y); c.lineTo(W - R0, y); c.stroke();
+      c.textAlign = "right"; c.fillText(F.toFixed(0), L0 - 6, y + 4);
+    }
+    for (let ms = 0; ms <= 80; ms += 10) {
+      const x = X(ms / 1000);
+      c.beginPath(); c.moveTo(x, T0); c.lineTo(x, T0 + gh); c.stroke();
+      c.textAlign = "center"; c.fillText(ms, x, T0 + gh + 14);
+    }
+    c.fillStyle = "#33334a"; c.font = "600 12px system-ui, sans-serif";
+    c.textAlign = "center"; c.fillText("time (ms)", L0 + gw / 2, H - 4);
+    c.save(); c.translate(13, T0 + gh / 2); c.rotate(-Math.PI / 2); c.fillText("force on egg (N)", 0, 0); c.restore();
+    c.strokeStyle = "#33334a"; c.beginPath(); c.moveTo(L0, T0); c.lineTo(L0, T0 + gh); c.lineTo(W - R0, T0 + gh); c.stroke();
+    // threshold
+    c.strokeStyle = "#c81e1e"; c.setLineDash([6, 4]); c.lineWidth = 1.3;
+    c.beginPath(); c.moveTo(L0, Y(THRESH)); c.lineTo(W - R0, Y(THRESH)); c.stroke(); c.setLineDash([]);
+    c.fillStyle = "#c81e1e"; c.font = "11px system-ui, sans-serif"; c.textAlign = "right";
+    c.fillText(`egg breaks if F_avg > ${THRESH} N`, W - R0 - 4, Y(THRESH) - 4);
+
+    function pulse(r, upto, fillA) {
+      const n = 120, end = upto === undefined ? r.dt : upto;
+      c.beginPath(); c.moveTo(X(0), Y(0));
+      for (let i = 0; i <= n; i++) {
+        const t = end * i / n;
+        c.lineTo(X(t), Y((Math.PI / 2) * r.Fav * Math.sin(Math.PI * t / r.dt)));
+      }
+      c.lineTo(X(end), Y(0)); c.closePath();
+      c.globalAlpha = fillA; c.fillStyle = r.col; c.fill(); c.globalAlpha = 1;
+      c.strokeStyle = r.col; c.lineWidth = 2; c.stroke();
+    }
+    c.save(); c.beginPath(); c.rect(L0, T0, gw, gh + 1); c.clip();
+    list.forEach((r, i) => {
+      pulse(r, undefined, 0.16);
+      // average-force rectangle (same area)
+      c.strokeStyle = r.col; c.setLineDash([3, 3]); c.lineWidth = 1;
+      c.strokeRect(X(0), Y(r.Fav), X(r.dt) - X(0), Y(0) - Y(r.Fav)); c.setLineDash([]);
+    });
+    if (cur) pulse(cur, cur.partial, 0.12);
+    c.restore();
+    if (list.length) {
+      c.fillStyle = "#33334a"; c.font = "12px system-ui, sans-serif"; c.textAlign = "right";
+      c.fillText("area under each curve = impulse = Δp (same height → same area)", W - R0 - 4, T0 + 14);
+    } else {
+      c.fillStyle = "#8a8aa0"; c.font = "13px system-ui, sans-serif"; c.textAlign = "center";
+      c.fillText("Drop the egg to plot force vs. time. Try several surfaces and compare.", L0 + gw / 2, T0 + gh / 2 - 14);
+    }
+  }
+
+  // =====================================================================
+  //  TAB 3: GOLF FOLLOW-THROUGH
+  // =====================================================================
+  const GM = 0.0459;                        // kg, golf ball
+  const BASE_DT = 0.25e-3;                  // s
+  const FOLLOW = { none: { f: 1.0, name: "No follow-through" }, half: { f: 1.3, name: "Half follow-through" }, full: { f: 1.6, name: "Full follow-through" } };
+  const FACE = { steel: { add: 0, name: "steel" }, ti: { add: 0.05e-3, name: "titanium" } };
+  const GSLOW = 4000;
+  const GOLF_COLS = ["#2f7d32", "#d61f6a", "#4b47c9", "#d97a00", "#138a8a", "#7a3fc9"];
+  const Gf = { F: 3000, follow: "none", face: "steel", phase: "ready", t: 0, run: null, drives: [] };
+  const golfDt = () => BASE_DT * FOLLOW[Gf.follow].f + FACE[Gf.face].add;
+
+  function segInit(id, key) {
+    $(id).querySelectorAll("button").forEach(b => b.onclick = () => {
+      Gf[key] = b.dataset.v;
+      $(id).querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b));
+      readGolf();
+    });
+  }
+  segInit("segFollow", "follow"); segInit("segFace", "face");
+  $("sGF").oninput = readGolf;
+
+  function readGolf() {
+    Gf.F = parseFloat($("sGF").value);
+    $("oGF").textContent = `${Gf.F.toLocaleString("en-CA")} N`;
+    const dt = golfDt();
+    $("oGT").textContent = `${(dt * 1000).toFixed(2)} ms = ${dt.toFixed(5)} s`;
+    if (Gf.phase !== "ready" && Gf.phase !== "done") return;
+    if (Gf.phase === "done") golfReset();
+    updateGolfRead();
+  }
+  function updateGolfRead() {
+    const r = Gf.run && Gf.phase !== "ready" ? Gf.run : null;
+    const F = r ? r.F : Gf.F, dt = r ? r.dt : golfDt();
+    const J = F * dt, v = J / GM;
+    $("golfRead").innerHTML = `
+      <tr><td>Mass of ball, m</td><td>${GM} kg</td></tr>
+      <tr><td>Initial velocity, v<sub>i</sub></td><td>0 m/s</td></tr>
+      <tr class="sep"><td>Average force, F</td><td>${F.toLocaleString("en-CA")} N</td></tr>
+      <tr><td>Contact time, &Delta;t</td><td>${dt.toFixed(5)} s</td></tr>
+      <tr><td>Impulse, F&Delta;t</td><td>${J.toFixed(2)} N·s</td></tr>
+      <tr><td>Change in momentum, &Delta;p</td><td>${J.toFixed(2)} kg·m/s</td></tr>
+      <tr class="sep"><td>Launch speed, v<sub>f</sub> = &Delta;p / m</td><td>${v.toFixed(1)} m/s</td></tr>
+      <tr><td></td><td style="font-weight:400;color:var(--muted)">(${(v * 3.6).toFixed(0)} km/h)</td></tr>
+      <tr><td>Estimated carry</td><td>${(v * 3.1).toFixed(0)} m</td></tr>`;
+  }
+  function golfReset() {
+    Gf.phase = "ready"; Gf.t = 0; Gf.run = null;
+    $("golfBanner").classList.add("hidden");
+    $("golfGo").disabled = false; $("golfSlow").textContent = "";
+    updateGolfRead();
+  }
+  function golfGo() {
+    if (Gf.phase !== "ready") golfReset();
+    const dt = golfDt(), J = Gf.F * dt, v = J / GM;
+    Gf.run = { F: Gf.F, dt, J, v, carry: v * 3.1, follow: Gf.follow, face: Gf.face, label: `${FOLLOW[Gf.follow].name}, ${FACE[Gf.face].name}` };
+    Gf.phase = "swing"; Gf.t = 0;
+    $("golfGo").disabled = true;
+    updateGolfRead();
+  }
+  $("golfGo").onclick = golfGo;
+  $("golfClear").onclick = () => { Gf.drives = []; renderDrives(); drawGGraph(); drawGolfScene(); };
+
+  function finishGolf() {
+    const r = Gf.run;
+    Gf.drives.push({ ...r, col: GOLF_COLS[Gf.drives.length % GOLF_COLS.length] });
+    if (Gf.drives.length > 6) Gf.drives.shift();
+    renderDrives(); drawGGraph();
+    const best = Math.max(...Gf.drives.map(d => d.carry));
+    const b = $("golfBanner");
+    b.classList.remove("hidden", "bad"); b.classList.add("good");
+    b.innerHTML = `<b class="title">${r.carry.toFixed(0)} m drive</b>Impulse ${r.J.toFixed(2)} N·s → launch speed ${r.v.toFixed(1)} m/s${Gf.drives.length > 1 && r.carry >= best ? " · longest so far!" : ""}`;
+    $("golfGo").disabled = false;
+  }
+  function renderDrives() {
+    const tb = $("gtrials");
+    if (!Gf.drives.length) { tb.innerHTML = ""; return; }
+    tb.innerHTML = `<tr><th>Swing</th><th>F (N)</th><th>&Delta;t (s)</th><th>F&Delta;t (N·s)</th><th>v<sub>f</sub> (m/s)</th><th>Carry (m)</th></tr>` +
+      Gf.drives.map(d => `<tr><td><span class="dot" style="background:${d.col}"></span>${d.label}</td><td>${d.F.toLocaleString("en-CA")}</td><td>${d.dt.toFixed(5)}</td><td>${d.J.toFixed(2)}</td><td>${d.v.toFixed(1)}</td><td>${d.carry.toFixed(0)}</td></tr>`).join("");
+  }
+
+  // --- golf rendering
+  const golfCv = $("golf"); let gc2, gW2 = 0, gH2 = 0;
+  function resizeGolf() {
+    gW2 = golfCv.clientWidth; if (!gW2) return;
+    gH2 = Math.round(gW2 * 0.48);
+    gc2 = setupCanvas(golfCv, gW2, gH2);
+    const g = $("ggraph"); g._c = setupCanvas(g, g.clientWidth, 230);
+  }
+  const SWING_T = 0.45, FLIGHT_T = 2.2;
+
+  function drawGolfScene() {
+    if (!gc2) return;
+    const c = gc2, W = gW2, H = gH2;
+    // ----- right: driving range
+    const leftW = Math.round(W * 0.48);
+    const sky = c.createLinearGradient(0, 0, 0, H);
+    sky.addColorStop(0, "#cfe6f7"); sky.addColorStop(1, "#eef6fb");
+    c.fillStyle = sky; c.fillRect(leftW, 0, W - leftW, H);
+    const groundY = H - 46;
+    c.fillStyle = "#7cbf5a"; c.fillRect(leftW, groundY, W - leftW, H - groundY);
+    c.fillStyle = "#6aae49";
+    for (let i = 0; i < 12; i++) c.fillRect(leftW + i * (W - leftW) / 12, groundY, (W - leftW) / 24, H - groundY);
+    const teeX = leftW + 26, RMAX = 350;
+    const mx = d => teeX + d / RMAX * (W - leftW - 46);
+    c.fillStyle = "#2c4a22"; c.font = "11px system-ui, sans-serif"; c.textAlign = "center";
+    for (let d = 50; d <= RMAX; d += 50) {
+      const x = mx(d);
+      c.fillStyle = "rgba(255,255,255,.75)"; c.fillRect(x - 1, groundY, 2, 10);
+      c.fillStyle = "#1f3a17"; c.fillText(`${d} m`, x, groundY + 24);
+    }
+    // previous drives: flags
+    for (const d of Gf.drives) {
+      if (Gf.phase !== "done" && Gf.run && d === Gf.drives[Gf.drives.length - 1] && false) continue;
+      const x = mx(Math.min(d.carry, RMAX));
+      c.strokeStyle = "#333"; c.lineWidth = 1.5; c.beginPath(); c.moveTo(x, groundY); c.lineTo(x, groundY - 26); c.stroke();
+      c.fillStyle = d.col; c.beginPath(); c.moveTo(x, groundY - 26); c.lineTo(x + 13, groundY - 21); c.lineTo(x, groundY - 16); c.closePath(); c.fill();
+    }
+    // tee and golfer silhouette-free tee marker
+    c.fillStyle = "#fff"; c.fillRect(teeX - 2, groundY - 6, 4, 6);
+    // flight
+    const r = Gf.run;
+    if (r && (Gf.phase === "flight" || Gf.phase === "done")) {
+      const s = Gf.phase === "done" ? 1 : Math.min(1, Gf.t / FLIGHT_T);
+      const dist = Math.min(r.carry, RMAX);
+      const hpx = Math.min(groundY - 20, dist / RMAX * (groundY - 30) * 0.75 + 20);
+      c.strokeStyle = "rgba(60,60,80,.45)"; c.setLineDash([4, 5]); c.lineWidth = 1.5;
+      c.beginPath();
+      for (let i = 0; i <= 60; i++) { const u = s * i / 60; const x = teeX + (mx(dist) - teeX) * u, y = groundY - 6 - hpx * 4 * u * (1 - u); i ? c.lineTo(x, y) : c.moveTo(x, y); }
+      c.stroke(); c.setLineDash([]);
+      if (Gf.phase === "flight") {
+        const x = teeX + (mx(dist) - teeX) * s, y = groundY - 6 - hpx * 4 * s * (1 - s);
+        c.fillStyle = "#fff"; c.strokeStyle = "#777"; c.beginPath(); c.arc(x, y, 4.5, 0, 7); c.fill(); c.stroke();
+      }
+    } else {
+      c.fillStyle = "#fff"; c.strokeStyle = "#777"; c.beginPath(); c.arc(teeX, groundY - 10, 4.5, 0, 7); c.fill(); c.stroke();
+    }
+    c.fillStyle = "#33334a"; c.font = "600 12px system-ui, sans-serif"; c.textAlign = "left";
+    c.fillText("Driving range", leftW + 12, 20);
+
+    // ----- left: slow-motion close-up of impact
+    c.fillStyle = "#e9f0e4"; c.fillRect(0, 0, leftW, H);
+    c.strokeStyle = "#cfd8c8"; c.beginPath(); c.moveTo(leftW + 0.5, 0); c.lineTo(leftW + 0.5, H); c.stroke();
+    const cy = H * 0.6, R = Math.min(leftW * 0.075, H * 0.085);
+    c.save(); c.beginPath(); c.rect(0, 0, leftW, H); c.clip();
+    const ballX0 = leftW * 0.2;
+    // the club and ball travel together for the whole contact time, so the zone is longer for a longer Δt
+    const zoneFor = dt => leftW * 0.46 * (dt / 0.45e-3);
+    let faceX, ballX, squash = 0, Fnow = 0, tilt = 0, lift = 0, zone = 0, flex = 0;
+    const startX = ballX0 - R - leftW * 0.18;
+    if (!r || Gf.phase === "ready") { faceX = startX; ballX = ballX0; }
+    else if (Gf.phase === "swing") { const u = Gf.t / SWING_T; faceX = startX + (ballX0 - R - startX) * u * u; ballX = ballX0; tilt = (1 - u) * 0.4; }
+    else if (Gf.phase === "contact") {
+      const u = Gf.t / r.dt, w = Math.PI;
+      const sNorm = (u - Math.sin(w * u) / w);          // ball displacement fraction (velocity rises like 1 − cos)
+      zone = zoneFor(r.dt) * sNorm;
+      ballX = ballX0 + zone;
+      Fnow = (Math.PI / 2) * r.F * Math.sin(Math.PI * u);
+      const fr = Fnow / ((Math.PI / 2) * 10000);
+      flex = (r.face === "ti" ? 0.75 : 0.06) * R * fr;
+      squash = fr * (r.face === "ti" ? 0.16 : 0.32);
+      faceX = ballX - R * (1 - squash) + flex;
+    } else {
+      const e = Gf.phase === "flight" ? Gf.t : FLIGHT_T;
+      zone = zoneFor(r.dt);
+      ballX = ballX0 + zone + e * 1400;
+      const reach = { none: 0.02, half: 0.22, full: 0.75 }[r.follow] * leftW;
+      const up = { none: 0, half: 0.35, full: 1.2 }[r.follow];
+      const k2 = 1 - Math.exp(-e * (r.follow === "none" ? 14 : 3));
+      faceX = ballX0 + zone - R + reach * k2;
+      lift = up * H * 0.35 * k2 * k2;
+      tilt = -up * 0.9 * k2;
+    }
+    // contact zone: where the club was pushing the ball
+    if (zone > 1) {
+      c.fillStyle = "rgba(255,196,0,.28)";
+      c.fillRect(ballX0 - R, cy - R * 1.6, zone + 2 * R, R * 3.2);
+      c.strokeStyle = "rgba(200,140,0,.9)"; c.setLineDash([4, 4]); c.lineWidth = 1.2;
+      c.strokeRect(ballX0 - R, cy - R * 1.6, zone + 2 * R, R * 3.2); c.setLineDash([]);
+      c.fillStyle = "#8a5d00"; c.font = "600 12px system-ui, sans-serif"; c.textAlign = "left";
+      c.fillText("club pushing ball", ballX0 - R + 4, cy - R * 1.6 - 6);
+    }
+    // follow-through path
+    if (r && (Gf.phase === "flight" || Gf.phase === "done") && r.follow !== "none") {
+      const reach = { half: 0.22, full: 0.75 }[r.follow] * leftW, up = { half: 0.35, full: 1.2 }[r.follow];
+      c.strokeStyle = "rgba(60,60,90,.45)"; c.setLineDash([3, 6]); c.lineWidth = 2;
+      c.beginPath();
+      for (let i = 0; i <= 30; i++) { const k3 = i / 30; const x = ballX0 + zone - R * 1.2 + reach * k3, y = cy - up * H * 0.35 * k3 * k3; i ? c.lineTo(x, y) : c.moveTo(x, y); }
+      c.stroke(); c.setLineDash([]);
+    }
+    // ground line
+    c.fillStyle = "#7cbf5a"; c.fillRect(0, cy + R + 6, leftW, H - cy - R - 6);
+    // tee
+    c.fillStyle = "#f4f4f4"; c.strokeStyle = "#999";
+    c.beginPath(); c.moveTo(ballX0 - 6, cy + R - 2); c.lineTo(ballX0 + 6, cy + R - 2); c.lineTo(ballX0 + 2, cy + R + 20); c.lineTo(ballX0 - 2, cy + R + 20); c.closePath(); c.fill(); c.stroke();
+    // club head
+    c.save(); c.translate(faceX, cy - lift); c.rotate(tilt);
+    c.strokeStyle = "#555"; c.lineWidth = 5; c.beginPath(); c.moveTo(-R * 0.6, -R * 1.2); c.lineTo(-R * 2.6, -H); c.stroke();
+    const face = r ? r.face : Gf.face;
+    const grad = c.createLinearGradient(-R * 2.2, 0, 0, 0);
+    if (face === "ti") { grad.addColorStop(0, "#3d4450"); grad.addColorStop(1, "#9aa6b8"); } else { grad.addColorStop(0, "#5a5a5a"); grad.addColorStop(1, "#c8c8c8"); }
+    c.fillStyle = grad; c.strokeStyle = "#222"; c.lineWidth = 1.5;
+    c.beginPath(); c.roundRect ? c.roundRect(-R * 2.3, -R * 1.25, R * 2.3, R * 2.4, [R * 1.1, 4, 4, R * 1.1]) : c.rect(-R * 2.3, -R * 1.25, R * 2.3, R * 2.4); c.fill(); c.stroke();
+    // club face: bows inward under load (a lot for thin titanium, barely for stiff steel)
+    c.fillStyle = face === "ti" ? "#c9d4e6" : "#e2e2e2";
+    c.beginPath(); c.moveTo(-5, -R * 1.15); c.lineTo(0, -R * 1.15);
+    c.quadraticCurveTo(-flex * 2, -R * 0.05, 0, R * 1.05); c.lineTo(-5, R * 1.05);
+    c.quadraticCurveTo(-5 - flex * 2, -R * 0.05, -5, -R * 1.15); c.closePath(); c.fill();
+    c.strokeStyle = "#222"; c.lineWidth = 1.2; c.beginPath(); c.moveTo(0, -R * 1.15); c.quadraticCurveTo(-flex * 2, -R * 0.05, 0, R * 1.05); c.stroke();
+    c.restore();
+    if (flex > R * 0.12) {
+      c.fillStyle = "#3b4a66"; c.font = "600 12px system-ui, sans-serif"; c.textAlign = "right";
+      c.fillText("titanium face flexes", faceX - R * 0.4, cy + R * 1.6 + 16);
+    }
+    // ball (squashed against face)
+    if (ballX < leftW + R) {
+      c.save(); c.translate(ballX, cy);
+      c.scale(1 - squash, 1 + squash * 0.6);
+      c.fillStyle = "#fbfbfb"; c.strokeStyle = "#8c8c8c"; c.lineWidth = 1.2;
+      c.beginPath(); c.arc(0, 0, R, 0, 7); c.fill(); c.stroke();
+      c.fillStyle = "rgba(0,0,0,.08)";
+      for (let i = 0; i < 14; i++) { const a = i * 2.4, rr = R * 0.6 * ((i % 3) + 1) / 3; c.beginPath(); c.arc(Math.cos(a) * rr, Math.sin(a) * rr, R * 0.08, 0, 7); c.fill(); }
+      c.restore();
+    }
+    if (Gf.phase === "contact") {
+      const len = 20 + Fnow / ((Math.PI / 2) * 10000) * leftW * 0.3;
+      arrow(c, ballX + R + 6, cy, ballX + R + 6 + len, cy, "#138a2c", 4);
+      c.fillStyle = "#138a2c"; c.font = "600 13px system-ui, sans-serif"; c.textAlign = "left";
+      c.fillText(`F = ${Math.round(Fnow).toLocaleString("en-CA")} N`, ballX + R + 8, cy - 14);
+    }
+    c.restore();
+    // contact time comparison
+    const list = Gf.drives.slice(-4);
+    if (list.length) {
+      const bx = 10, bw = leftW - 90, y0 = H - 10 - list.length * 14;
+      c.fillStyle = "rgba(255,255,255,.8)"; c.fillRect(4, y0 - 20, leftW - 8, list.length * 14 + 26);
+      c.fillStyle = "#33334a"; c.font = "600 11px system-ui, sans-serif"; c.textAlign = "left";
+      c.fillText("contact time of each swing", bx, y0 - 7);
+      list.forEach((d, i) => {
+        const y = y0 + i * 14;
+        c.fillStyle = d.col; c.fillRect(bx, y, bw * d.dt / 0.5e-3, 9);
+        c.fillStyle = "#33334a"; c.font = "11px system-ui, sans-serif";
+        c.fillText(`${(d.dt * 1000).toFixed(2)} ms`, bx + bw * d.dt / 0.5e-3 + 5, y + 8);
+      });
+    }
+    c.fillStyle = "#33334a"; c.font = "600 12px system-ui, sans-serif"; c.textAlign = "left";
+    c.fillText("Impact close-up (slow motion)", 10, 20);
+    c.font = "12px system-ui, sans-serif"; c.fillStyle = "#4a4a60";
+    if (Gf.phase === "contact") c.fillText(`contact: ${(Gf.t * 1000).toFixed(2)} of ${(r.dt * 1000).toFixed(2)} ms`, 10, 38);
+    else if (r && (Gf.phase === "flight" || Gf.phase === "done")) c.fillText(`contact lasted ${(r.dt * 1000).toFixed(2)} ms`, 10, 38);
+  }
+
+  function drawGGraph() {
+    const fg = $("ggraph"), c = fg._c; if (!c) return;
+    const W = fg.clientWidth, H = 230;
+    c.clearRect(0, 0, W, H);
+    const L0 = 58, R0 = 14, T0 = 14, B0 = 34, gw = W - L0 - R0, gh = H - T0 - B0;
+    const TMAX = 0.0006, FMAX = 16000;
+    const X = t => L0 + t / TMAX * gw, Y = F => T0 + gh - F / FMAX * gh;
+    c.strokeStyle = "#e6e4f2"; c.lineWidth = 1; c.fillStyle = "#61617a"; c.font = "11px system-ui, sans-serif";
+    for (let F = 0; F <= FMAX; F += 4000) { const y = Y(F); c.beginPath(); c.moveTo(L0, y); c.lineTo(W - R0, y); c.stroke(); c.textAlign = "right"; c.fillText(F.toLocaleString("en-CA"), L0 - 6, y + 4); }
+    for (let t = 0; t <= 0.6; t += 0.1) { const x = X(t / 1000); c.beginPath(); c.moveTo(x, T0); c.lineTo(x, T0 + gh); c.stroke(); c.textAlign = "center"; c.fillText(t.toFixed(1), x, T0 + gh + 14); }
+    c.fillStyle = "#33334a"; c.font = "600 12px system-ui, sans-serif"; c.textAlign = "center";
+    c.fillText("time (ms)", L0 + gw / 2, H - 4);
+    c.save(); c.translate(13, T0 + gh / 2); c.rotate(-Math.PI / 2); c.fillText("force on ball (N)", 0, 0); c.restore();
+    c.strokeStyle = "#33334a"; c.beginPath(); c.moveTo(L0, T0); c.lineTo(L0, T0 + gh); c.lineTo(W - R0, T0 + gh); c.stroke();
+    const pulse = (r, end, a) => {
+      c.beginPath(); c.moveTo(X(0), Y(0));
+      for (let i = 0; i <= 100; i++) { const t = end * i / 100; c.lineTo(X(t), Y((Math.PI / 2) * r.F * Math.sin(Math.PI * t / r.dt))); }
+      c.lineTo(X(end), Y(0)); c.closePath();
+      c.globalAlpha = a; c.fillStyle = r.col; c.fill(); c.globalAlpha = 1; c.strokeStyle = r.col; c.lineWidth = 2; c.stroke();
+    };
+    Gf.drives.forEach(r => pulse(r, r.dt, 0.15));
+    if (Gf.phase === "contact") pulse({ ...Gf.run, col: "#111" }, Gf.t, 0.1);
+    c.fillStyle = "#33334a"; c.font = "12px system-ui, sans-serif"; c.textAlign = "right";
+    c.fillText(Gf.drives.length ? "area under each curve = impulse = Δp of the ball (bigger area, faster ball)" : "Swing to plot force vs. time. Try different follow-throughs.", W - R0 - 4, T0 + 14);
+  }
+
+  function stepGolf(dtr) {
+    if (Gf.phase === "swing") { Gf.t += dtr; if (Gf.t >= SWING_T) { Gf.t = 0; Gf.phase = "contact"; $("golfSlow").textContent = `Impact shown ${GSLOW.toLocaleString("en-CA")}× slower`; } }
+    else if (Gf.phase === "contact") { Gf.t += dtr / GSLOW; if (Gf.t >= Gf.run.dt) { Gf.t = 0; Gf.phase = "flight"; $("golfSlow").textContent = ""; } drawGGraph(); }
+    else if (Gf.phase === "flight") { Gf.t += dtr; if (Gf.t >= FLIGHT_T) { Gf.phase = "done"; finishGolf(); } }
+  }
+
+  // =====================================================================
+  //  main loop
+  // =====================================================================
+  let last = performance.now();
+  function frame(now) {
+    const dtr = Math.min(0.05, (now - last) / 1000); last = now;
+    if (tab === "ship") {
+      if (S.phase === "run") {
+        S.t += dtr * S.speed;
+        const r = S.result;
+        if (r.crash && S.t >= r.t) { S.t = r.t; S.phase = "crash"; finishShip(); }
+        else if (!r.crash && S.t >= r.t) { S.t = r.t; S.phase = "clear"; finishShip(); }
+        const st = shipState(S.F, S.dt, S.t);
+        const sternX = st.x - L / 2 * Math.cos(st.th), sternY = st.y - L / 2 * Math.sin(st.th);
+        S.trail.push([sternX, sternY]);
+        updateShipReadouts();
+      }
+      drawShipScene(now);
+      drawVecDiag();
+    } else if (tab === "golf") {
+      stepGolf(dtr);
+      drawGolfScene();
+    } else {
+      if (E.phase === "fall") {
+        E.t += dtr;
+        if (E.t >= E.run.tf) { E.t = 0; E.phase = "contact"; $("eggSlow").textContent = `Impact shown in slow motion (${SLOW}× slower)`; }
+      } else if (E.phase === "contact") {
+        E.t += dtr / SLOW;
+        if (E.t >= E.run.dt) { E.t = E.run.dt; E.phase = "done"; finishEgg(); $("eggGo").disabled = false; }
+      }
+      drawEggScene();
+      if (E.phase === "contact" || E.redraw !== E.trials.length) { drawFGraph(); E.redraw = E.trials.length; }
+    }
+    requestAnimationFrame(frame);
+  }
+
+  function resizeAll() {
+    if (tab === "ship") { resizeShip(); drawShipScene(performance.now()); drawVecDiag(); }
+    else if (tab === "golf") { resizeGolf(); drawGolfScene(); drawGGraph(); }
+    else { resizeEgg(); drawEggScene(); drawFGraph(); }
+  }
+  window.addEventListener("resize", resizeAll);
+  document.addEventListener("keydown", e => {
+    if (e.code === "Space" && !(e.target instanceof HTMLInputElement && e.target.type !== "range") && e.target.tagName !== "BUTTON") {
+      e.preventDefault();
+      if (tab === "ship") { if (S.phase === "run") return; shipGo(); }
+      else if (tab === "golf") { if (Gf.phase === "swing" || Gf.phase === "contact" || Gf.phase === "flight") return; golfGo(); }
+      else { if (E.phase === "fall" || E.phase === "contact") return; eggGo(); }
+    }
+  });
+
+  readShipControls();
+  readEgg();
+  readGolf();
+  renderTrials();
+  resizeAll();
+  requestAnimationFrame(frame);
+})();
+</script>
+
+</body></html>
