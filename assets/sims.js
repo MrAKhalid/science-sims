@@ -22,7 +22,8 @@ window.COURSES = {
       { id: "organic", name: "B. Organic Chemistry", sims: [] },
       { id: "structure-properties", name: "C. Structure and Properties of Matter", sims: [] },
       { id: "energy-rates", name: "D. Energy Changes and Rates of Reaction", sims: [
-        { title: "Pull the Ions Apart", file: "pull-the-ions-apart.html", blurb: "Drag ions out of an NH₄NO₃ or CaCl₂ crystal and watch the water cool or warm as the potential energy changes." }
+        { title: "Pull the Ions Apart", file: "pull-the-ions-apart.html", blurb: "Drag ions out of an NH₄NO₃ or CaCl₂ crystal and watch the water cool or warm as the potential energy changes." },
+        { title: "Enthalpy of Solution Lab", file: "enthalpy-of-solution-lab.html", blurb: "Virtual coffee-cup calorimetry: measure mass and volume, dissolve the solid, and collect temperature data to find ΔH." }
       ]},
       { id: "equilibrium", name: "E. Chemical Systems and Equilibrium", sims: [] },
       { id: "electrochemistry", name: "F. Electrochemistry", sims: [] }
