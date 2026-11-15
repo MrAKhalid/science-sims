@@ -190,9 +190,7 @@ tr.r-good td:last-child{color:var(--good)} tr.r-bad td:last-child{color:var(--ba
     <div class="measgrid">
       <div>
         <h2>Centigram balance (±0.01 g)</h2>
-        <label class="jarpick"><b>Choose the salt jar:</b>
-          <select id="saltSel"></select>
-        </label>
+        <select id="saltSel" hidden></select>
         <svg id="balSvg" viewBox="0 0 340 230" width="100%" aria-label="Digital balance">
           <rect x="0" y="0" width="340" height="230" fill="#f2f4f7"/>
           <rect x="0" y="200" width="340" height="30" fill="#c9ced6"/>
@@ -368,9 +366,9 @@ function renderBalance(){
   $("boatG").style.display = S.boat ? "" : "none";
   const r = Math.min(30, 6*Math.sqrt(S.saltMass));
   const pile = $("saltPile"); pile.setAttribute("rx", S.saltMass>0 ? r : 0); pile.setAttribute("ry", S.saltMass>0 ? Math.max(2,r*0.35) : 0);
-  const s = saltById(saltSel.value); $("jarLabel").textContent = s.id.replace(/(\d)/g,"$1");
-  $("jarLabel").textContent = s.f;
   saltSel.disabled = S.saltMass>0 || S.saltTaken;
+  // the jar on the bench shows the salt chosen in the lab notebook ("?" until one is chosen)
+  $("jarLabel").textContent = (saltSel.disabled || nbSalt.value) ? saltById(saltSel.value).f : "?";
   $("btnBoat").textContent = S.boat ? "Remove weigh boat" : "Place weigh boat";
   const lock = S.saltTaken;
   ["btnBoat","btnTare","btnScoopBig","btnScoopSmall","btnScoopOut","btnTakeSalt"].forEach(id => $(id).disabled = lock);
@@ -384,6 +382,7 @@ $("btnTare").onclick = () => { S.tare = (S.boat?S.boatMass:0) + S.saltMass; if(S
   msg("balMsg", S.saltMass>0 ? "You tared with salt in the boat. The balance now ignores that salt. Remove the salt and start again if you need its mass." : "Balance zeroed.", S.saltMass>0?"warn":"info"); };
 function addSalt(dm){
   if(!S.boat){ msg("balMsg","You spilled salt on the balance pan! Put a weigh boat on first.","bad"); return; }
+  if(!saltSel.disabled && !nbSalt.value){ msg("balMsg","Choose your salt in the <b>Lab notebook</b> first. That salt's jar will appear on the bench.","warn"); return; }
   S.salt = saltSel.value;
   S.saltMass = Math.max(0, S.saltMass + dm);
   if(S.saltMass>12){ S.saltMass=12; msg("balMsg","That's plenty of salt. Your calorimeter only holds 75 mL of water.","warn"); }
@@ -393,10 +392,9 @@ function addSalt(dm){
 $("btnScoopBig").onclick = () => addSalt(rand(0.7,1.4));
 $("btnScoopSmall").onclick = () => addSalt(rand(0.03,0.12));
 $("btnScoopOut").onclick = () => addSalt(-Math.min(S.saltMass, rand(0.05,0.3)));
-saltSel.onchange = () => { nbSalt.value = saltSel.value; renderBalance(); };
 // keep the jar and the notebook salt in step: picking a salt in either menu changes the other
 nbSalt.onchange = () => {
-  if(!nbSalt.value) return;
+  if(!nbSalt.value){ renderBalance(); return; }
   if(!saltSel.disabled){ saltSel.value = nbSalt.value; renderBalance(); }
   else if(nbSalt.value !== saltSel.value) msg("balMsg", `Careful: the salt on your balance is <b>${saltById(saltSel.value).f}</b>, not ${saltById(nbSalt.value).f}. Your notebook should record the salt you actually used.`, "warn");
 };
