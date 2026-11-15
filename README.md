@@ -5,10 +5,11 @@ Hosted free on GitHub Pages. Fix a file once and every link to it updates.
 ## Folder layout
 
 ```
-index.html                 home page (two course cards)
+index.html                 home page (three course cards)
 assets/sims.js             THE LIST OF SIMULATIONS (the only file you edit)
 sph4u1/<unit>/<sim>.html   physics sims   (dynamics, energy-momentum, fields, light, modern-physics)
 sch4u1/<unit>/<sim>.html   chemistry sims (organic, structure-properties, energy-rates, equilibrium, electrochemistry)
+green-industries/<unit>/<sim>.html   green industries sims (fundamentals, skills, technology-environment-society, careers)
 ```
 
 ## Adding a simulation
@@ -34,4 +35,4 @@ If it's missing, the card just shows without a picture. To regenerate all previe
 ## Browser caching
 
 Pages link to `assets/*` with `?v=<number>`. After changing anything in `assets/`, bump that number in
-`index.html`, `sph4u1/index.html` and `sch4u1/index.html` so browsers fetch the new copy. After changing a simulation file, bump `SIMS_VERSION` at the top of `assets/sims.js` (and the `?v=` numbers above).
+`index.html`, `sph4u1/index.html`, `sch4u1/index.html` and `green-industries/index.html` so browsers fetch the new copy. After changing a simulation file, bump `SIMS_VERSION` at the top of `assets/sims.js` (and the `?v=` numbers above).

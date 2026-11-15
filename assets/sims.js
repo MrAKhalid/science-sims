@@ -2,7 +2,7 @@
 // 1. Put the .html file in the right course/unit folder.
 // 2. Add one line to that unit's "sims" list below: { title, file, blurb }.
 // Bump this number whenever a simulation file changes, so browsers load the new copy.
-window.SIMS_VERSION = "202611150021";
+window.SIMS_VERSION = "202611150120";
 
 window.COURSES = {
   sph4u1: {
@@ -26,10 +26,20 @@ window.COURSES = {
       { id: "structure-properties", name: "C. Structure and Properties of Matter", sims: [] },
       { id: "energy-rates", name: "D. Energy Changes and Rates of Reaction", sims: [
         { title: "Pull the Ions Apart", file: "pull-the-ions-apart.html", blurb: "Drag ions out of an NH₄NO₃ or CaCl₂ crystal and watch the water cool or warm as the potential energy changes." },
-        { title: "Enthalpy of Solution Lab", file: "enthalpy-of-solution-lab.html", blurb: "Virtual coffee-cup calorimetry: measure mass and volume, dissolve the solid, and collect temperature data to find ΔH." }
+        { title: "Enthalpy of Solution Lab", file: "enthalpy-of-solution-lab.html", blurb: "Virtual coffee-cup calorimetry: measure mass and volume, dissolve the solid, and collect temperature data to find ΔH." },
+        { title: "Collision Theory Lab", file: "collision-theory.html", blurb: "Rotate the reactant molecules and set the temperature to make an effective collision, with repulsion and a live potential energy diagram." }
       ]},
       { id: "equilibrium", name: "E. Chemical Systems and Equilibrium", sims: [] },
       { id: "electrochemistry", name: "F. Electrochemistry", sims: [] }
+    ]
+  },
+  "green-industries": {
+    name: "Green Industries", full: "Green Industries, Technological Education",
+    units: [
+      { id: "fundamentals", name: "A. Green Industries Fundamentals", sims: [] },
+      { id: "skills", name: "B. Green Industries Skills", sims: [] },
+      { id: "technology-environment-society", name: "C. Technology, the Environment, and Society", sims: [] },
+      { id: "careers", name: "D. Professional Practice and Career Opportunities", sims: [] }
     ]
   }
 };
