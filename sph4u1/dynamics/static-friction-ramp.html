@@ -7,7 +7,7 @@
 <style>
 /* Layout: one sheet of lined notebook paper. Red-boxed reminder, controls, the ramp scene, then FBD + graph + the worked equations. */
 :root{
-  --paper:#fdfdf7;
+  --paper:#ffffff;
   --rule:#b9d4ee;
   --margin:#ef9a9a;
   --ink:#1f2030;
@@ -27,9 +27,6 @@
 html{background:var(--paper)}
 body{
   background-color:var(--paper);
-  background-image:
-    linear-gradient(90deg,transparent 0,transparent 46px,var(--margin) 46px,var(--margin) 48px,transparent 48px),
-    repeating-linear-gradient(180deg,transparent 0,transparent 31px,var(--rule) 31px,var(--rule) 32px);
   color:var(--ink);
   font-family:var(--hand);
   font-size:19px;
@@ -43,11 +40,10 @@ body{
   display:grid;gap:16px;
 }
 @media (min-width:700px){.sheet{padding-left:max(64px,env(safe-area-inset-left,0px))}}
-@media (max-width:699px){body{background-image:repeating-linear-gradient(180deg,transparent 0,transparent 31px,var(--rule) 31px,var(--rule) 32px)}}
 h1{font-family:var(--title);font-weight:400;font-size:clamp(28px,4vw,40px);margin:0;line-height:1.1;text-wrap:balance}
 .reminder{
   border:2px solid var(--red);padding:8px 14px;max-width:44ch;
-  font-family:var(--title);font-size:21px;background:rgba(253,253,247,.85);
+  font-family:var(--title);font-size:21px;background:rgba(255,255,255,.85);
 }
 .reminder b{color:var(--red);font-weight:400}
 .top{display:flex;flex-wrap:wrap;gap:12px 28px;align-items:flex-end;justify-content:space-between}
@@ -83,7 +79,7 @@ summary{cursor:pointer;color:var(--ink-soft)}
 .settings label{display:grid;gap:0;min-width:170px}
 .settings input{accent-color:var(--ink)}
 
-.panel{border:2px solid var(--ink);border-radius:8px;background:rgba(253,253,247,.55);min-width:0}
+.panel{border:2px solid var(--ink);border-radius:8px;background:rgba(255,255,255,.55);min-width:0}
 .scene-wrap{position:relative}
 canvas{display:block;width:100%;height:auto}
 .status{
@@ -165,7 +161,7 @@ canvas{display:block;width:100%;height:auto}
 <script>
 (()=>{
 const g=9.8, RAMP_M=2.0;
-const C={ink:"#1f2030",soft:"#5b5d70",red:"#d62828",green:"#2f9e4b",greenFill:"#56c46e",pink:"#e0399b",blue:"#2457d6",orange:"#e07a00",paper:"#fdfdf7",hold:"rgba(47,158,75,.13)",slip:"rgba(214,40,40,.07)"};
+const C={ink:"#1f2030",soft:"#5b5d70",red:"#d62828",green:"#2f9e4b",greenFill:"#56c46e",pink:"#e0399b",blue:"#2457d6",orange:"#e07a00",paper:"#ffffff",hold:"rgba(47,158,75,.13)",slip:"rgba(214,40,40,.07)"};
 const HAND='"Patrick Hand","Comic Sans MS",cursive';
 
 const st={mode:"m1",m1:10,m2:5,theta:35,mus:.25,muk:.20,s:1.0,s0:1.0,v:0,moving:false,dir:0,stuck:"",slow:false,
@@ -200,7 +196,7 @@ function lab(ctx,parts,x,y,color,size=20,align="left"){
   let cx=align==="center"?x-w/2:align==="right"?x-w:x;
   for(const [t,sub] of parts){ctx.font=`${sub?Math.round(size*.68):size}px ${HAND}`;
     // paper halo so labels read over the ruled lines
-    ctx.lineWidth=4;ctx.strokeStyle="rgba(253,253,247,.9)";ctx.strokeText(t,cx,y+(sub?size*.28:0));
+    ctx.lineWidth=4;ctx.strokeStyle="rgba(255,255,255,.9)";ctx.strokeText(t,cx,y+(sub?size*.28:0));
     ctx.fillText(t,cx,y+(sub?size*.28:0));cx+=ctx.measureText(t).width;}
   ctx.restore();return w;
 }
