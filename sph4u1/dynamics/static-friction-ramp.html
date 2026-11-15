@@ -1,0 +1,554 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Static Friction Ramp</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Shadows+Into+Light+Two&display=swap">
+<style>
+/* Layout: one sheet of lined notebook paper. Red-boxed reminder, controls, the ramp scene, then FBD + graph + the worked equations. */
+:root{
+  --paper:#fdfdf7;
+  --rule:#b9d4ee;
+  --margin:#ef9a9a;
+  --ink:#1f2030;
+  --ink-soft:#5b5d70;
+  --red:#d62828;
+  --green:#2f9e4b;
+  --green-fill:#56c46e;
+  --pink:#e0399b;
+  --blue:#2457d6;
+  --orange:#e07a00;
+  --hold:#e3f4e6;
+  --slip:#fde4e4;
+  --hand:"Patrick Hand","Comic Sans MS","Segoe Print",cursive;
+  --title:"Shadows Into Light Two","Patrick Hand","Segoe Print",cursive;
+  color-scheme:light;
+}
+html{background:var(--paper)}
+body{
+  background-color:var(--paper);
+  background-image:
+    linear-gradient(90deg,transparent 0,transparent 46px,var(--margin) 46px,var(--margin) 48px,transparent 48px),
+    repeating-linear-gradient(180deg,transparent 0,transparent 31px,var(--rule) 31px,var(--rule) 32px);
+  color:var(--ink);
+  font-family:var(--hand);
+  font-size:19px;
+  line-height:1.35;
+}
+.sheet{
+  max-width:1180px;margin:0 auto;
+  padding-block:20px 40px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:grid;gap:16px;
+}
+@media (min-width:700px){.sheet{padding-left:max(64px,env(safe-area-inset-left,0px))}}
+@media (max-width:699px){body{background-image:repeating-linear-gradient(180deg,transparent 0,transparent 31px,var(--rule) 31px,var(--rule) 32px)}}
+h1{font-family:var(--title);font-weight:400;font-size:clamp(28px,4vw,40px);margin:0;line-height:1.1;text-wrap:balance}
+.reminder{
+  border:2px solid var(--red);padding:8px 14px;max-width:44ch;
+  font-family:var(--title);font-size:21px;background:rgba(253,253,247,.85);
+}
+.reminder b{color:var(--red);font-weight:400}
+.top{display:flex;flex-wrap:wrap;gap:12px 28px;align-items:flex-end;justify-content:space-between}
+
+.controls{display:flex;flex-wrap:wrap;gap:14px 28px;align-items:center}
+.modes{display:flex;gap:0;border:2px solid var(--ink);border-radius:6px;overflow:hidden}
+.modes button{
+  font:inherit;font-size:18px;padding:6px 14px;border:0;background:var(--paper);color:var(--ink);cursor:pointer;
+}
+.modes button+button{border-left:2px solid var(--ink)}
+.modes button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+.slider-wrap{display:grid;gap:2px;min-width:0;flex:1 1 320px;max-width:560px}
+.slider-label{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.big{font-size:30px;font-variant-numeric:tabular-nums}
+.big.m1{color:var(--green)} .big.m2{color:var(--pink)}
+input[type=range]{width:100%;accent-color:var(--ink);margin:4px 0}
+.ticks{position:relative;height:22px;font-size:15px}
+.ticks span{position:absolute;transform:translateX(-50%);white-space:nowrap;color:var(--red)}
+.ticks span::before{content:"";position:absolute;left:50%;top:-6px;height:7px;border-left:2px solid var(--red)}
+.fixed{display:flex;align-items:center;gap:8px;white-space:nowrap}
+.fixed input{width:72px;font:inherit;font-size:19px;padding:2px 6px;border:2px solid var(--ink);border-radius:4px;background:var(--paper);color:var(--ink)}
+.btn{font:inherit;font-size:18px;padding:5px 16px;border:2px solid var(--ink);border-radius:6px;background:var(--paper);color:var(--ink);cursor:pointer}
+.btn:hover{background:#efeff0}
+
+.toggles{display:flex;flex-wrap:wrap;gap:6px 22px;font-size:18px}
+.toggles label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.toggles input{width:18px;height:18px;accent-color:var(--ink)}
+details{font-size:18px}
+summary{cursor:pointer;color:var(--ink-soft)}
+.settings{display:flex;flex-wrap:wrap;gap:8px 26px;margin-top:6px}
+.settings label{display:grid;gap:0;min-width:170px}
+.settings input{accent-color:var(--ink)}
+
+.panel{border:2px solid var(--ink);border-radius:8px;background:rgba(253,253,247,.55);min-width:0}
+.scene-wrap{position:relative}
+canvas{display:block;width:100%;height:auto}
+.status{
+  position:absolute;right:12px;top:10px;font-family:var(--title);font-size:clamp(20px,3vw,30px);
+  padding:2px 12px;border:2px solid currentColor;border-radius:6px;background:var(--paper);
+}
+.status.hold{color:var(--green)} .status.slip{color:var(--red)}
+.lower{display:grid;gap:16px;grid-template-columns:1fr}
+@media (min-width:900px){.lower{grid-template-columns:minmax(0,1fr) minmax(0,1.15fr) minmax(0,1.1fr)}}
+.panel h2{font-family:var(--title);font-weight:400;font-size:24px;margin:6px 12px 0}
+.eq{padding:4px 14px 14px;font-size:19px;font-variant-numeric:tabular-nums}
+.eq p{margin:4px 0}
+.eq .hl{color:var(--red)}
+.eq .g{color:var(--green)}
+.eq .b{color:var(--blue)}
+.eq .verdict{margin-top:8px;padding:6px 10px;border-radius:6px;font-size:20px}
+.eq .verdict.hold{background:var(--hold)} .eq .verdict.slip{background:var(--slip)}
+.key{display:flex;flex-wrap:wrap;gap:4px 18px;font-size:17px;color:var(--ink-soft)}
+.key i{font-style:normal;font-weight:700}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+</style>
+
+<div class="sheet">
+  <div class="top">
+    <div style="display:grid;gap:8px">
+      <h1>Ramp, pulley &amp; static friction</h1>
+      <div class="reminder">Remember that <b>F<sub>s</sub></b> can change size and direction depending on circumstances.</div>
+    </div>
+    <div class="key">
+      <span><i style="color:var(--ink)">&#8594;</i> F<sub>N</sub>, mg</span>
+      <span><i style="color:var(--blue)">&#8594;</i> F<sub>T</sub></span>
+      <span><i style="color:var(--red)">&#8594;</i> F<sub>s</sub> (F<sub>k</sub> once sliding)</span>
+      <span><i style="color:var(--orange)">&#8594;</i> a</span>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="modes" role="group" aria-label="Which mass to change">
+      <button id="modeM1" aria-pressed="true">Change m<sub>1</sub></button>
+      <button id="modeM2" aria-pressed="false">Change m<sub>2</sub></button>
+    </div>
+    <div class="slider-wrap">
+      <div class="slider-label"><span id="sliderName">m<sub>1</sub> (on the ramp)</span><span class="big m1" id="sliderVal">10.0 kg</span></div>
+      <input type="range" id="massSlider" min="1" max="20" step="0.1" value="10" aria-label="Mass">
+      <div class="ticks" id="ticks"></div>
+    </div>
+    <label class="fixed" id="fixedWrap"><span id="fixedName">m<sub>2</sub> fixed at</span>
+      <input type="number" id="fixedMass" min="0.5" max="20" step="0.1" value="5.0"> kg</label>
+    <button class="btn" id="resetBtn">Reset</button>
+  </div>
+
+  <div class="toggles">
+    <label><input type="checkbox" id="tAnswers" checked> Mark the critical masses</label>
+    <label><input type="checkbox" id="tComp"> Show mg components</label>
+    <label><input type="checkbox" id="tValues" checked> Show force values</label>
+    <label><input type="checkbox" id="tSlow"> Slow motion</label>
+  </div>
+  <details>
+    <summary>Change the ramp (angle, &mu;<sub>s</sub>, &mu;<sub>k</sub>)</summary>
+    <div class="settings">
+      <label>Angle &theta; = <span id="thVal">35</span>&deg;<input type="range" id="theta" min="10" max="50" step="1" value="35"></label>
+      <label>&mu;<sub>s</sub> = <span id="musVal">0.25</span><input type="range" id="mus" min="0.05" max="0.70" step="0.01" value="0.25"></label>
+      <label>&mu;<sub>k</sub> = <span id="mukVal">0.20</span><input type="range" id="muk" min="0.02" max="0.70" step="0.01" value="0.20"></label>
+    </div>
+  </details>
+
+  <div class="panel scene-wrap">
+    <canvas id="scene" width="900" height="500" aria-label="Ramp with block m1 connected over a pulley to hanging mass m2, with force vectors"></canvas>
+    <div class="status hold" id="status">Holding still</div>
+  </div>
+
+  <div class="lower">
+    <div class="panel"><h2>FBD of m<sub>1</sub></h2><canvas id="fbd" width="420" height="380"></canvas></div>
+    <div class="panel"><h2 id="graphTitle">F<sub>s</sub> needed vs m<sub>1</sub></h2><canvas id="graph" width="480" height="380"></canvas></div>
+    <div class="panel"><h2>The math</h2><div class="eq" id="eq"></div></div>
+  </div>
+</div>
+
+<script>
+(()=>{
+const g=9.8, RAMP_M=2.0;
+const C={ink:"#1f2030",soft:"#5b5d70",red:"#d62828",green:"#2f9e4b",greenFill:"#56c46e",pink:"#e0399b",blue:"#2457d6",orange:"#e07a00",paper:"#fdfdf7",hold:"rgba(47,158,75,.13)",slip:"rgba(214,40,40,.07)"};
+const HAND='"Patrick Hand","Comic Sans MS",cursive';
+
+const st={mode:"m1",m1:10,m2:5,theta:35,mus:.25,muk:.20,s:1.0,s0:1.0,v:0,moving:false,dir:0,stuck:"",slow:false,
+  showAns:true,showComp:false,showVals:true,last:null};
+
+const $=id=>document.getElementById(id);
+const scene=$("scene"),fbd=$("fbd"),graph=$("graph");
+function setupCanvas(cv){const dpr=Math.min(window.devicePixelRatio||1,2);const w=cv.width,h=cv.height;cv._w=w;cv._h=h;cv.width=w*dpr;cv.height=h*dpr;const ctx=cv.getContext("2d");ctx.setTransform(dpr,0,0,dpr,0,0);return ctx;}
+const sx=setupCanvas(scene),fx=setupCanvas(fbd),gx=setupCanvas(graph);
+
+/* ---------- hand-drawn helpers ---------- */
+function rnd(n){const x=Math.sin(n*12.9898+78.233)*43758.5453;return x-Math.floor(x);}
+function hline(ctx,x1,y1,x2,y2,seed=1){
+  const dx=x2-x1,dy=y2-y1,len=Math.hypot(dx,dy)||1;
+  const off=(rnd(seed)-.5)*Math.min(5,len*.035);
+  const mx=(x1+x2)/2-dy/len*off,my=(y1+y2)/2+dx/len*off;
+  ctx.beginPath();ctx.moveTo(x1+(rnd(seed+1)-.5)*1.2,y1+(rnd(seed+2)-.5)*1.2);ctx.quadraticCurveTo(mx,my,x2,y2);ctx.stroke();
+}
+function arrow(ctx,x,y,dx,dy,color,seed,w=2.6){
+  const len=Math.hypot(dx,dy);if(len<1.5)return;
+  ctx.save();ctx.strokeStyle=color;ctx.lineWidth=w;ctx.lineCap="round";ctx.lineJoin="round";
+  const x2=x+dx,y2=y+dy;hline(ctx,x,y,x2,y2,seed);
+  const ang=Math.atan2(dy,dx),hl=Math.min(13,len*.45),sp=.48+(rnd(seed+5)-.5)*.1;
+  ctx.beginPath();ctx.moveTo(x2-hl*Math.cos(ang-sp),y2-hl*Math.sin(ang-sp));ctx.lineTo(x2,y2);ctx.lineTo(x2-hl*Math.cos(ang+sp),y2-hl*Math.sin(ang+sp));ctx.stroke();
+  ctx.restore();
+}
+function dashed(ctx,x,y,dx,dy,color,w=1.8){ctx.save();ctx.setLineDash([6,5]);arrow(ctx,x,y,dx,dy,color,99,w);ctx.restore();}
+/* label with subscripts: parts = [[text, isSub], ...] */
+function lab(ctx,parts,x,y,color,size=20,align="left"){
+  ctx.save();ctx.fillStyle=color;ctx.textBaseline="middle";ctx.textAlign="left";
+  let w=0;for(const [t,sub] of parts){ctx.font=`${sub?Math.round(size*.68):size}px ${HAND}`;w+=ctx.measureText(t).width;}
+  let cx=align==="center"?x-w/2:align==="right"?x-w:x;
+  for(const [t,sub] of parts){ctx.font=`${sub?Math.round(size*.68):size}px ${HAND}`;
+    // paper halo so labels read over the ruled lines
+    ctx.lineWidth=4;ctx.strokeStyle="rgba(253,253,247,.9)";ctx.strokeText(t,cx,y+(sub?size*.28:0));
+    ctx.fillText(t,cx,y+(sub?size*.28:0));cx+=ctx.measureText(t).width;}
+  ctx.restore();return w;
+}
+const N=v=>(Math.abs(v)<0.05?0:v).toFixed(1);
+
+/* ---------- physics ---------- */
+function rad(){return st.theta*Math.PI/180;}
+function crit(){
+  const t=rad(),s=Math.sin(t),c=Math.cos(t),mu=st.mus;
+  if(st.mode==="m1"){const lo=st.m2/(s+mu*c);const hi=(s-mu*c)>1e-6?st.m2/(s-mu*c):Infinity;return{lo,hi};}
+  return{lo:Math.max(0,st.m1*(s-mu*c)),hi:st.m1*(s+mu*c)};
+}
+function staticForces(){
+  const t=rad(),FN=st.m1*g*Math.cos(t),par=st.m1*g*Math.sin(t),FT=st.m2*g;
+  const need=par-FT, max=st.mus*FN;
+  return{FN,par,perp:FN,FT,need,max,holds:Math.abs(need)<=max+1e-9};
+}
+function forcesNow(){
+  const sf=staticForces();
+  if(!st.moving){
+    if(st.stuck&&st.last)return st.last;
+    return{...sf,mode:"static",F:sf.holds?sf.need:sf.need,a:0};
+  }
+  const t=rad(),d=st.dir,fk=-d*st.muk*sf.FN;
+  const a=(st.m2*g-sf.par+fk)/(st.m1+st.m2);
+  return{...sf,mode:"kinetic",F:fk,a,FT:st.m2*(g-a)};
+}
+
+/* ---------- geometry ---------- */
+function geom(){
+  const t=rad(),c=Math.cos(t),s=Math.sin(t);
+  const W=scene._w,ground=470,left=40;
+  const L=Math.min(560/c,350/s);
+  const B={x:left,y:ground},T={x:left+L*c,y:ground-L*s};
+  const u={x:c,y:-s},n={x:-s,y:-c};
+  const r=15,Hs=22;
+  const Pc={x:T.x+u.x*(r+22)+n.x*(Hs-r),y:T.y+u.y*(r+22)+n.y*(Hs-r)};
+  const k=L/RAMP_M;
+  const w1=40+5*Math.sqrt(st.m1),w2=38+5.5*Math.sqrt(st.m2);
+  const hang0=Math.max(40,(ground-Pc.y)*.42);
+  return{t,c,s,ground,B,T,u,n,r,Hs,Pc,k,L,w1,w2,hang0};
+}
+function limits(G){
+  const smaxRamp=(G.L-30-G.w1/2)/G.k;
+  const smaxFloor=st.s0+(G.ground-4-G.w2-G.Pc.y-G.hang0)/G.k;
+  const sminRamp=(G.w1/2+6)/G.k;
+  const sminPul=st.s0-(G.hang0-G.r-14)/G.k;
+  return{smin:Math.max(sminRamp,sminPul),smax:Math.min(smaxRamp,smaxFloor)};
+}
+
+/* ---------- simulation step ---------- */
+function step(dt){
+  if(st.stuck)return;
+  const sf=staticForces();
+  if(!st.moving){
+    if(sf.holds)return;
+    st.moving=true;st.dir=sf.need>0?-1:1;st.v=0;
+  }
+  const f=forcesNow();
+  st.v+=f.a*dt;
+  if(st.v*st.dir<=0){ // friction has stopped it; static friction takes over again
+    st.v=0;st.moving=false;st.dir=0;return;
+  }
+  st.s+=st.v*dt;
+  const G=geom(),Lm=limits(G);
+  if(st.s>=Lm.smax){st.s=Lm.smax;st.last=f;st.v=0;st.moving=false;st.stuck=(G.ground-G.Pc.y-G.hang0-(st.s-st.s0)*G.k-G.w2<8)?"m2 hit the floor":"m1 hit the pulley";}
+  else if(st.s<=Lm.smin){st.s=Lm.smin;st.last=f;st.v=0;st.moving=false;st.stuck="m2 hit the pulley";}
+}
+function reset(){st.s=st.s0;st.v=0;st.moving=false;st.dir=0;st.stuck="";st.last=null;}
+
+/* ---------- drawing: scene ---------- */
+function rotRect(ctx,cx,cy,w,h,ang,fill,stroke,seed){
+  ctx.save();ctx.translate(cx,cy);ctx.rotate(ang);
+  ctx.fillStyle=fill;ctx.beginPath();ctx.rect(-w/2,-h/2,w,h);ctx.fill();
+  ctx.strokeStyle=stroke;ctx.lineWidth=2.4;ctx.lineCap="round";
+  const p=[[-w/2,-h/2],[w/2,-h/2],[w/2,h/2],[-w/2,h/2]];
+  for(let i=0;i<4;i++){const a=p[i],b=p[(i+1)%4];hline(ctx,a[0],a[1],b[0],b[1],seed+i*3);}
+  ctx.restore();
+}
+function drawScene(f){
+  const ctx=sx,W=scene._w,H=scene._h;ctx.clearRect(0,0,W,H);
+  const G=geom(),{B,T,u,n,Pc,r,Hs,k}=G;
+  ctx.lineCap="round";ctx.lineJoin="round";
+  // ramp
+  ctx.strokeStyle=C.ink;ctx.lineWidth=2.6;
+  hline(ctx,B.x-10,G.ground,T.x+150,G.ground,3);
+  hline(ctx,B.x,B.y,T.x,T.y,7);hline(ctx,T.x,T.y,T.x,G.ground,11);
+  // hatch ground
+  ctx.lineWidth=1.3;ctx.strokeStyle=C.soft;
+  for(let x=B.x;x<T.x+150;x+=18){hline(ctx,x,G.ground+2,x-9,G.ground+11,x);}
+  // angle arc + label (red like the notes)
+  ctx.strokeStyle=C.red;ctx.lineWidth=2;ctx.beginPath();ctx.arc(B.x,B.y,48,-G.t,0);ctx.stroke();
+  lab(ctx,[[st.theta+"°",0]],B.x+56,B.y-14,C.red,19);
+  // μ label on ramp
+  const mp={x:B.x+u.x*G.L*.13+n.x*-20,y:B.y+u.y*G.L*.13+n.y*-20};
+  ctx.save();ctx.translate(mp.x,mp.y);ctx.rotate(-G.t);lab(ctx,[["μ",0],["s",1],[" = "+st.mus.toFixed(2),0]],0,0,C.green,18,"center");ctx.restore();
+
+  // block m1
+  const s=st.s,cx=B.x+u.x*s*k+n.x*(G.w1/2),cy=B.y+u.y*s*k+n.y*(G.w1/2);
+  // pulley bracket
+  ctx.strokeStyle=C.blue;ctx.lineWidth=2.4;hline(ctx,T.x,T.y,Pc.x,Pc.y,21);
+  ctx.beginPath();ctx.arc(Pc.x,Pc.y,r,0,Math.PI*2);ctx.stroke();
+  ctx.fillStyle=C.blue;ctx.beginPath();ctx.arc(Pc.x,Pc.y,3,0,Math.PI*2);ctx.fill();
+  // string
+  const A={x:B.x+u.x*(s*k+G.w1/2)+n.x*Hs,y:B.y+u.y*(s*k+G.w1/2)+n.y*Hs};
+  const Tp={x:Pc.x+n.x*r,y:Pc.y+n.y*r};
+  ctx.strokeStyle=C.ink;ctx.lineWidth=1.6;
+  ctx.beginPath();ctx.moveTo(A.x,A.y);ctx.lineTo(Tp.x,Tp.y);ctx.arc(Pc.x,Pc.y,r,Math.atan2(n.y,n.x),0,false);
+  const hang=G.hang0+(s-st.s0)*k, m2top=Pc.y+hang;
+  ctx.lineTo(Pc.x+r,m2top);ctx.stroke();
+  rotRect(ctx,cx,cy,G.w1,G.w1,-G.t,C.greenFill,C.ink,31);
+  const m2c={x:Pc.x+r,y:m2top+G.w2/2};
+  rotRect(ctx,m2c.x,m2c.y,G.w2,G.w2,0,C.pink,C.ink,51);
+  // mass labels
+  const L1={x:cx-u.x*(G.w1/2+12)+n.x*(G.w1/2+4),y:cy-u.y*(G.w1/2+12)+n.y*(G.w1/2+4)};
+  lab(ctx,[["m",0],["1",1],[" = "+st.m1.toFixed(1)+" kg",0]],L1.x,L1.y,C.green,21,"right");
+  lab(ctx,[["m",0],["2",1],[" = "+st.m2.toFixed(1)+" kg",0]],m2c.x+G.w2/2+10,m2c.y,C.ink,21);
+
+  // force vectors on m1
+  const sc=0.82; // px per newton
+  const V=st.showVals;
+  const mg=st.m1*g;
+  arrow(ctx,cx,cy,0,mg*sc,C.ink,61);
+  lab(ctx,V?[["m",0],["1",1],["g = "+N(mg)+" N",0]]:[["m",0],["1",1],["g",0]],cx-8,cy+mg*sc+2,C.ink,19,"right");
+  arrow(ctx,cx,cy,n.x*f.FN*sc,n.y*f.FN*sc,C.ink,71);
+  const fnTip={x:cx+n.x*f.FN*sc,y:cy+n.y*f.FN*sc};
+  lab(ctx,V?[["F",0],["N",1],[" = "+N(f.FN)+" N",0]]:[["F",0],["N",1]],fnTip.x-8,fnTip.y-12,C.ink,19,"right");
+  // tension from the front face
+  const fT={x:cx+u.x*G.w1/2,y:cy+u.y*G.w1/2};
+  arrow(ctx,fT.x,fT.y,u.x*f.FT*sc,u.y*f.FT*sc,C.blue,81);
+  const tTip={x:fT.x+u.x*f.FT*sc,y:fT.y+u.y*f.FT*sc};
+  lab(ctx,V?[["F",0],["T",1],[" = "+N(f.FT)+" N",0]]:[["F",0],["T",1]],tTip.x+n.x*20,tTip.y+n.y*20,C.blue,19,"center");
+  // friction at the contact surface
+  const base={x:cx-n.x*(G.w1/2),y:cy-n.y*(G.w1/2)};
+  const F=f.F;
+  if(!st.stuck){
+    const fsLen=F*sc; // same scale as every other force
+    const o={x:base.x-n.x*8,y:base.y-n.y*8};
+    if(Math.abs(F)>0.05){
+      arrow(ctx,o.x,o.y,u.x*fsLen,u.y*fsLen,C.red,91,3);
+    }else{ctx.fillStyle=C.red;ctx.beginPath();ctx.arc(o.x,o.y,4,0,Math.PI*2);ctx.fill();}
+    const sg=F>=0?1:-1;const tip={x:o.x+u.x*(fsLen+sg*34)-n.x*26,y:o.y+u.y*(fsLen+sg*34)-n.y*26};
+    const nm=f.mode==="kinetic"?"k":"s";
+    lab(ctx,V?[["F",0],[nm,1],[" = "+N(Math.abs(F))+" N",0]]:[["F",0],[nm,1]],tip.x,tip.y,C.red,19,"center");
+    // max-friction marks along the surface (static only)
+    if(f.mode==="static"){
+      ctx.save();ctx.strokeStyle=C.red;ctx.globalAlpha=.55;ctx.lineWidth=2;
+      for(const sg of[1,-1]){const m={x:o.x+u.x*f.max*sc*sg,y:o.y+u.y*f.max*sc*sg};
+        hline(ctx,m.x+n.x*7,m.y+n.y*7,m.x-n.x*7,m.y-n.y*7,111+sg);}
+      ctx.restore();
+    }
+  }
+  // components
+  if(st.showComp){
+    dashed(ctx,cx,cy,-u.x*f.par*sc,-u.y*f.par*sc,C.red);
+    dashed(ctx,cx,cy,-n.x*f.perp*sc,-n.y*f.perp*sc,C.red);
+    const p1={x:cx-u.x*f.par*sc,y:cy-u.y*f.par*sc};
+    lab(ctx,[["m",0],["1",1],["g sinθ",0]],p1.x-8,p1.y,C.red,17,"right");
+  }
+  // m2 forces
+  const m2g=st.m2*g;
+  arrow(ctx,m2c.x,m2c.y,0,m2g*sc,C.ink,131);
+  lab(ctx,V?[["m",0],["2",1],["g = "+N(m2g)+" N",0]]:[["m",0],["2",1],["g",0]],m2c.x+10,m2c.y+m2g*sc-6,C.ink,19);
+  arrow(ctx,m2c.x,m2c.y,0,-f.FT*sc,C.blue,141);
+  // acceleration
+  if(f.mode==="kinetic"&&Math.abs(f.a)>0.01){
+    const al=Math.max(30,Math.abs(f.a)*18)*Math.sign(f.a);
+    const p={x:cx+n.x*(G.w1/2+62)+u.x*10,y:cy+n.y*(G.w1/2+62)+u.y*10};
+    arrow(ctx,p.x,p.y,u.x*al,u.y*al,C.orange,151,3);
+    lab(ctx,[["a = "+Math.abs(f.a).toFixed(2)+" m/s²",0]],p.x+u.x*al/2+n.x*16,p.y+u.y*al/2+n.y*16,C.orange,19,"center");
+  }
+  // note
+  lab(ctx,[["All force arrows to the same scale.  Red ticks = max μ",0],["s",1],["F",0],["N",1]],12,18,C.soft,16);
+  // scale bar
+  ctx.strokeStyle=C.ink;ctx.lineWidth=2.4;const sbx=14,sby=44;
+  hline(ctx,sbx,sby,sbx+20*sc,sby,401);hline(ctx,sbx,sby-5,sbx,sby+5,403);hline(ctx,sbx+20*sc,sby-5,sbx+20*sc,sby+5,405);
+  lab(ctx,[["= 20 N",0]],sbx+20*sc+8,sby,C.ink,17);
+}
+
+/* ---------- drawing: FBD ---------- */
+function drawFBD(f){
+  const ctx=fx,W=fbd._w,H=fbd._h;ctx.clearRect(0,0,W,H);
+  const t=rad(),u={x:Math.cos(t),y:-Math.sin(t)},n={x:-Math.sin(t),y:-Math.cos(t)};
+  const cx=W*.48,cy=H*.46,sc=145/Math.max(st.m1*g,f.FT,f.FN); // scaled to the biggest force
+  // tilted axes
+  ctx.save();ctx.strokeStyle=C.soft;ctx.lineWidth=1.2;ctx.setLineDash([4,6]);
+  ctx.beginPath();ctx.moveTo(cx-u.x*150,cy-u.y*150);ctx.lineTo(cx+u.x*150,cy+u.y*150);
+  ctx.moveTo(cx-n.x*140,cy-n.y*140);ctx.lineTo(cx+n.x*140,cy+n.y*140);ctx.stroke();ctx.restore();
+  // + direction mark (like the notes)
+  const px=34,py=H-46;
+  arrow(ctx,px,py,u.x*30,u.y*30,C.red,201,2);arrow(ctx,px,py,n.x*30,n.y*30,C.red,203,2);
+  lab(ctx,[["+",0]],px+u.x*30+6,py+u.y*30,C.red,20);lab(ctx,[["+",0]],px+n.x*30-14,py+n.y*30,C.red,20);
+  ctx.fillStyle=C.ink;ctx.beginPath();ctx.arc(cx,cy,4,0,Math.PI*2);ctx.fill();
+  const mg=st.m1*g;
+  arrow(ctx,cx,cy,0,mg*sc,C.ink,211);lab(ctx,[["m",0],["1",1],["g",0]],cx,cy+mg*sc+18,C.ink,26,"center");
+  arrow(ctx,cx,cy,n.x*f.FN*sc,n.y*f.FN*sc,C.ink,213);
+  lab(ctx,[["F",0],["N",1]],cx+n.x*f.FN*sc-6,cy+n.y*f.FN*sc-16,C.ink,26,"center");
+  // θ between mg and -n
+  ctx.strokeStyle=C.red;ctx.lineWidth=2;ctx.beginPath();
+  const a1=Math.PI/2,a2=Math.atan2(-n.y,-n.x);ctx.arc(cx,cy,34,Math.min(a1,a2),Math.max(a1,a2));ctx.stroke();
+  lab(ctx,[["θ",0]],cx+46*Math.cos((a1+a2)/2)+2,cy+46*Math.sin((a1+a2)/2)+4,C.red,22,"center");
+  if(st.showComp){dashed(ctx,cx,cy,-u.x*f.par*sc,-u.y*f.par*sc,C.red);dashed(ctx,cx,cy,-n.x*f.perp*sc,-n.y*f.perp*sc,C.red);}
+  // FT along +x
+  arrow(ctx,cx,cy,u.x*f.FT*sc,u.y*f.FT*sc,C.blue,215);
+  lab(ctx,[["F",0],["T",1]],cx+u.x*f.FT*sc+n.x*18,cy+u.y*f.FT*sc+n.y*22,C.blue,26,"center");
+  // friction, offset just below the x-axis so it doesn't hide F_T
+  if(!st.stuck){
+    const o={x:cx-n.x*10,y:cy-n.y*10},F=f.F*sc;
+    if(Math.abs(f.F)>0.05)arrow(ctx,o.x,o.y,u.x*F,u.y*F,C.red,217,3);
+    const nm=f.mode==="kinetic"?"k":"s";
+    lab(ctx,[["F",0],[nm,1]],o.x+u.x*F-n.x*20,o.y+u.y*F-n.y*24,C.red,26,"center");
+  }
+  lab(ctx,[["all arrows to scale",0]],W-12,H-14,C.soft,16,"right");
+}
+
+/* ---------- drawing: graph ---------- */
+function drawGraph(f){
+  const ctx=gx,W=graph._w,H=graph._h;ctx.clearRect(0,0,W,H);
+  const t=rad(),s=Math.sin(t),c=Math.cos(t);
+  const isM1=st.mode==="m1";
+  const sl=$("massSlider"),xmin=+sl.min,xmax=+sl.max;
+  const need=x=>isM1?(x*g*s-st.m2*g):(st.m1*g*s-x*g);
+  const lim=x=>isM1?st.mus*x*g*c:st.mus*st.m1*g*c;
+  let ymax=0;for(let x=0;x<=xmax;x+=xmax/40){ymax=Math.max(ymax,Math.abs(need(x)),lim(x));}
+  ymax=Math.ceil(ymax*1.08/10)*10;
+  const L=74,R=W-16,Tt=18,Bm=H-50;
+  const X=x=>L+(x-0)/(xmax-0)*(R-L),Y=y=>Tt+(ymax-y)/(2*ymax)*(Bm-Tt);
+  // hold region
+  ctx.fillStyle=C.hold;ctx.beginPath();
+  for(let i=0;i<=60;i++){const x=xmax*i/60;i?ctx.lineTo(X(x),Y(lim(x))):ctx.moveTo(X(x),Y(lim(x)));}
+  for(let i=60;i>=0;i--){const x=xmax*i/60;ctx.lineTo(X(x),Y(-lim(x)));}
+  ctx.closePath();ctx.fill();
+  // axes
+  ctx.strokeStyle=C.ink;ctx.lineWidth=2;hline(ctx,L,Tt,L,Bm,301);hline(ctx,L,Y(0),R,Y(0),303);
+  ctx.font=`18px ${HAND}`;ctx.fillStyle=C.soft;ctx.textAlign="center";ctx.textBaseline="top";
+  const xstep=xmax>12?2:1;
+  for(let x=0;x<=xmax+1e-9;x+=xstep){ctx.fillText(x,X(x),Bm+4);ctx.fillRect(X(x)-.5,Y(0)-3,1,6);}
+  ctx.textAlign="right";ctx.textBaseline="middle";
+  const ys=ymax>80?20:ymax>40?10:5;
+  for(let y=-ymax;y<=ymax+1e-9;y+=ys){ctx.fillText(y,L-6,Y(y));ctx.fillRect(L-3,Y(y)-.5,6,1);}
+  lab(ctx,isM1?[["m",0],["1",1],[" (kg)",0]]:[["m",0],["2",1],[" (kg)",0]],(L+R)/2,H-12,C.ink,18,"center");
+  ctx.save();ctx.translate(16,(Tt+Bm)/2);ctx.rotate(-Math.PI/2);lab(ctx,[["F",0],["s",1],[" (N),  + = up the ramp",0]],0,0,C.ink,19,"center");ctx.restore();
+  // limit lines
+  ctx.save();ctx.setLineDash([7,6]);ctx.strokeStyle=C.ink;ctx.lineWidth=1.8;
+  for(const sg of[1,-1]){ctx.beginPath();ctx.moveTo(X(0),Y(sg*lim(0)));ctx.lineTo(X(xmax),Y(sg*lim(xmax)));ctx.stroke();}
+  ctx.restore();
+  const lx=xmax*.36;
+  lab(ctx,[["+μ",0],["s",1],["F",0],["N",1],[" (max up)",0]],X(lx),Y(lim(lx))-16,C.ink,18,"center");
+  lab(ctx,[["−μ",0],["s",1],["F",0],["N",1],[" (max down)",0]],X(lx),Y(-lim(lx))+17,C.ink,18,"center");
+  lab(ctx,[["stays still",0]],X(xmax*.8),Y(0)+13,C.green,19,"center");
+  // needed line
+  ctx.strokeStyle=C.red;ctx.lineWidth=2.6;hline(ctx,X(xmin<0?0:0),Y(need(0)),X(xmax),Y(need(xmax)),307);
+  {const nx=isM1?xmax*.18:xmax*.62;lab(ctx,[["F",0],["s",1],[" needed",0]],X(nx)+10,Y(need(nx))+22,C.red,19,"left");}
+  // critical masses
+  if(st.showAns){const cr=crit();
+    ctx.save();ctx.strokeStyle=C.red;ctx.setLineDash([2,4]);ctx.lineWidth=1.5;
+    for(const v of[cr.lo,cr.hi]){if(isFinite(v)&&v<=xmax){ctx.beginPath();ctx.moveTo(X(v),Tt);ctx.lineTo(X(v),Bm);ctx.stroke();
+      lab(ctx,[[v.toFixed(1),0]],X(v)+4,Tt+10,C.red,19);}}
+    ctx.restore();}
+  // current point
+  const xv=isM1?st.m1:st.m2,yv=need(xv),ok=Math.abs(yv)<=lim(xv);
+  ctx.fillStyle=ok?C.red:C.paper;ctx.strokeStyle=C.red;ctx.lineWidth=2.4;
+  ctx.beginPath();ctx.arc(X(xv),Y(yv),7,0,Math.PI*2);ctx.fill();ctx.stroke();
+  if(!ok)lab(ctx,[["friction can't supply this",0]],X(xv)+(xv>xmax*.6?-12:12),Y(yv)+(yv>0?18:-18),C.red,18,xv>xmax*.6?"right":"left");
+}
+
+/* ---------- equations panel ---------- */
+let lastEq="";
+function renderEq(f){
+  const sf=staticForces(),cr=crit();const th=st.theta,mu=st.mus.toFixed(2);
+  const dirTxt=v=>Math.abs(v)<0.05?"zero":(v>0?"up the ramp":"down the ramp");
+  let h=`<p>ΣF<sub>y</sub> = 0 = F<sub>N</sub> − m<sub>1</sub>g cosθ</p>
+  <p>F<sub>N</sub> = (${st.m1.toFixed(1)})(9.8)cos${th}° = <b>${N(sf.FN)} N</b></p>
+  <p>F<sub>s,max</sub> = μ<sub>s</sub>F<sub>N</sub> = (${mu})(${N(sf.FN)}) = <b class="hl">${N(sf.max)} N</b></p>
+  <p>If nothing moves, F<sub>T</sub> = <span class="g">m<sub>2</sub>g</span> = <span class="b">${N(sf.FT)} N</span></p>
+  <p>ΣF<sub>x</sub> = F<sub>T</sub> + F<sub>s</sub> − m<sub>1</sub>g sinθ = 0</p>
+  <p>F<sub>s</sub> needed = m<sub>1</sub>g sinθ − m<sub>2</sub>g = ${N(sf.par)} − ${N(sf.FT)} = <b class="hl">${N(sf.need)} N</b></p>`;
+  if(sf.holds&&!st.moving&&!st.stuck){
+    h+=`<div class="verdict hold">|${N(Math.abs(sf.need))}| ≤ ${N(sf.max)}, so static friction can do it.<br>F<sub>s</sub> = ${N(Math.abs(sf.need))} N ${dirTxt(sf.need)}. Nothing moves.</div>`;
+  }else{
+    const dir=st.moving?(st.dir>0?"up":"down"):(sf.need>0?"down":"up");
+    h+=`<div class="verdict slip">${N(Math.abs(sf.need))} N needed &gt; ${N(sf.max)} N max, so it slips.<br>m<sub>1</sub> slides ${dir} the ramp. Kinetic friction takes over: F<sub>k</sub> = μ<sub>k</sub>F<sub>N</sub> = ${N(st.muk*sf.FN)} N.`;
+    if(f.mode==="kinetic")h+=`<br>a = ${Math.abs(f.a).toFixed(2)} m/s², F<sub>T</sub> = m<sub>2</sub>(g − a) = ${N(f.FT)} N`;
+    if(st.stuck)h+=`<br><b>${st.stuck}.</b> Press Reset.`;
+    h+=`</div>`;
+  }
+  if(st.showAns){
+    const hi=isFinite(cr.hi)?cr.hi.toFixed(1)+" kg":"no limit (it never slides down)";
+    h+= st.mode==="m1"
+      ? `<p style="margin-top:8px">Nothing moves for <span class="hl">${cr.lo.toFixed(1)} kg ≤ m<sub>1</sub> ≤ ${hi}</span></p>`
+      : `<p style="margin-top:8px">Nothing moves for <span class="hl">${cr.lo.toFixed(1)} kg ≤ m<sub>2</sub> ≤ ${cr.hi.toFixed(1)} kg</span></p>`;
+  }
+  if(h!==lastEq){$("eq").innerHTML=h;lastEq=h;}
+  const stEl=$("status");
+  const txt=st.stuck?"Stopped":st.moving?"Slipping!":"Holding still";
+  if(stEl.textContent!==txt){stEl.textContent=txt;stEl.className="status "+(st.moving||st.stuck?"slip":"hold");}
+}
+
+/* ---------- UI wiring ---------- */
+const slider=$("massSlider"),fixed=$("fixedMass");
+function syncUI(){
+  const isM1=st.mode==="m1";
+  $("modeM1").setAttribute("aria-pressed",isM1);$("modeM2").setAttribute("aria-pressed",!isM1);
+  if(isM1){slider.min=1;slider.max=20;slider.value=st.m1;fixed.value=st.m2.toFixed(1);
+    $("sliderName").innerHTML="m<sub>1</sub> (on the ramp)";$("fixedName").innerHTML="m<sub>2</sub> fixed at";$("graphTitle").innerHTML="F<sub>s</sub> needed vs m<sub>1</sub>";}
+  else{slider.min=0.5;slider.max=12;slider.value=st.m2;fixed.value=st.m1.toFixed(1);
+    $("sliderName").innerHTML="m<sub>2</sub> (hanging)";$("fixedName").innerHTML="m<sub>1</sub> fixed at";$("graphTitle").innerHTML="F<sub>s</sub> needed vs m<sub>2</sub>";}
+  updateVal();drawTicks();
+}
+function updateVal(){const v=$("sliderVal"),isM1=st.mode==="m1";v.textContent=(isM1?st.m1:st.m2).toFixed(1)+" kg";v.className="big "+(isM1?"m1":"m2");}
+function drawTicks(){
+  const el=$("ticks");el.innerHTML="";if(!st.showAns)return;
+  const cr=crit(),mn=+slider.min,mx=+slider.max;
+  for(const v of[cr.lo,cr.hi]){if(!isFinite(v)||v<mn||v>mx)continue;
+    const sp=document.createElement("span");
+    // thumb is ~16px wide: map value to its centre
+    const p=(v-mn)/(mx-mn);sp.style.left=`calc(${p*100}% + ${(0.5-p)*16}px)`;sp.textContent=v.toFixed(1);el.appendChild(sp);}
+}
+function afterChange(){if(st.stuck)reset();updateVal();drawTicks();}
+slider.addEventListener("input",()=>{const v=+slider.value;if(st.mode==="m1")st.m1=v;else st.m2=v;afterChange();});
+fixed.addEventListener("input",()=>{let v=parseFloat(fixed.value);if(!isFinite(v)||v<=0)return;v=Math.min(20,v);
+  if(st.mode==="m1")st.m2=v;else st.m1=v;afterChange();});
+$("modeM1").onclick=()=>{if(st.mode!=="m1"){st.mode="m1";st.m1=10;st.m2=5;}reset();syncUI();};
+$("modeM2").onclick=()=>{if(st.mode!=="m2"){st.mode="m2";st.m1=10;st.m2=5;}reset();syncUI();};
+$("resetBtn").onclick=reset;
+$("tAnswers").onchange=e=>{st.showAns=e.target.checked;drawTicks();};
+$("tComp").onchange=e=>{st.showComp=e.target.checked;};
+$("tValues").onchange=e=>{st.showVals=e.target.checked;};
+$("tSlow").onchange=e=>{st.slow=e.target.checked;};
+$("theta").oninput=e=>{st.theta=+e.target.value;$("thVal").textContent=st.theta;reset();drawTicks();};
+$("mus").oninput=e=>{st.mus=+e.target.value;$("musVal").textContent=st.mus.toFixed(2);
+  if(st.muk>st.mus){st.muk=st.mus;$("muk").value=st.muk;$("mukVal").textContent=st.muk.toFixed(2);}afterChange();};
+$("muk").oninput=e=>{st.muk=Math.min(+e.target.value,st.mus);e.target.value=st.muk;$("mukVal").textContent=st.muk.toFixed(2);};
+
+let prev=performance.now();
+function frame(now){
+  let dt=Math.min(.05,(now-prev)/1000);prev=now;
+  if(st.slow)dt*=.25;
+  const sub=4;for(let i=0;i<sub;i++)step(dt/sub);
+  const f=forcesNow();
+  drawScene(f);drawFBD(f);drawGraph(f);renderEq(f);
+  requestAnimationFrame(frame);
+}
+syncUI();
+requestAnimationFrame(frame);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{lastEq="";});
+window.__sim=st;
+})();
+</script>
+
+</body></html>

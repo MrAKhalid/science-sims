@@ -6,9 +6,11 @@ window.COURSES = {
     name: "SPH4U1", full: "Grade 12 Physics, University Preparation",
     units: [
       { id: "dynamics", name: "B. Dynamics", sims: [
-        { title: "Projectile Launcher (example)", file: "example-projectile.html", blurb: "Change launch angle and speed and watch the trajectory. Delete this example once your own sims are in." }
+        { title: "Ramp, Pulley & Static Friction", file: "static-friction-ramp.html", blurb: "Change the masses and see how static friction changes size and direction, with the FBD, graph, and math." }
       ]},
-      { id: "energy-momentum", name: "C. Energy and Momentum", sims: [] },
+      { id: "energy-momentum", name: "C. Energy and Momentum", sims: [
+        { title: "Spring Simple Harmonic Motion", file: "spring-shm.html", blurb: "Horizontal and vertical springs plus the circular-motion link, with vectors, energy bars, and graphs." }
+      ]},
       { id: "fields", name: "D. Gravitational, Electric, and Magnetic Fields", sims: [] },
       { id: "light", name: "E. The Wave Nature of Light", sims: [] },
       { id: "modern-physics", name: "F. Revolutions in Modern Physics", sims: [] }

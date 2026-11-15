@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spring SHM Simulator</title>
+<style>
+  :root {
+    --bg: #f4f3fb;
+    --panel: #ffffff;
+    --ink: #1d1d2b;
+    --muted: #61617a;
+    --line: #dcdbea;
+    --accent: #4b47c9;
+    --scene: #eeeefa;
+    --c-F: #138a2c;
+    --c-dx: #1f3fe0;
+    --c-v: #d61fd0;
+    --c-a: #e01818;
+    --c-Fg: #d97a00;
+    --c-Fnet: #3a3a3a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font: 15px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    padding: 16px;
+  }
+  .wrap { max-width: 1280px; margin: 0 auto; }
+  header { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; margin-bottom: 12px; }
+  h1 { font-size: 20px; margin: 0; font-weight: 650; }
+  .tabs { display: inline-flex; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 3px; }
+  .tabs button {
+    border: 0; background: transparent; padding: 7px 16px; border-radius: 7px;
+    font: inherit; font-weight: 600; color: var(--muted); cursor: pointer;
+  }
+  .tabs button.on { background: var(--accent); color: #fff; }
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 14px; align-items: start; }
+  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+  .stage { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px; }
+  canvas#scene { width: 100%; display: block; border-radius: 8px; background: var(--scene); touch-action: none; }
+  .hint { color: var(--muted); font-size: 13px; margin: 8px 4px 0; }
+  .bar { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; align-items: center; }
+  .btn {
+    border: 1px solid var(--line); background: var(--panel); color: var(--ink);
+    padding: 7px 14px; border-radius: 8px; font: inherit; font-weight: 600; cursor: pointer;
+  }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn:hover { filter: brightness(0.97); }
+  select { font: inherit; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); }
+  aside { display: flex; flex-direction: column; gap: 14px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .card h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 8px; }
+  details.card > summary { cursor: pointer; list-style: none; }
+  details.card > summary::-webkit-details-marker { display: none; }
+  details.card > summary h2 { display: inline; }
+  details.card > summary::after { content: "▾"; float: right; color: var(--muted); }
+  details.card:not([open]) > summary::after { content: "▸"; }
+  .vec { display: flex; align-items: center; gap: 10px; padding: 4px 0; cursor: pointer; user-select: none; }
+  .vec input { width: 17px; height: 17px; accent-color: var(--accent); }
+  .sw { width: 26px; height: 0; border-top: 3px solid; position: relative; }
+  .sw::after { content: ""; position: absolute; right: -2px; top: -7px; border: 5.5px solid transparent; border-left: 8px solid; border-left-color: inherit; border-right: 0; }
+  .vec .nm { font-weight: 650; }
+  .vec .ds { color: var(--muted); font-size: 13px; }
+  .vec.hidden { display: none; }
+  .row { display: flex; gap: 8px; margin-top: 6px; }
+  .row .btn { padding: 4px 10px; font-size: 13px; }
+  .slider { margin: 6px 0 10px; }
+  .slider label { display: flex; justify-content: space-between; font-size: 14px; }
+  .slider output { font-variant-numeric: tabular-nums; font-weight: 600; }
+  .slider input { width: 100%; accent-color: var(--accent); }
+  table.read { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 14px; }
+  table.read td { padding: 2px 0; }
+  table.read td:last-child { text-align: right; font-weight: 600; }
+  .ebar { display: grid; grid-template-columns: 34px 1fr 64px; gap: 8px; align-items: center; font-size: 13px; margin: 5px 0; font-variant-numeric: tabular-nums; }
+  .ebar .track { height: 14px; background: #f0eff7; border-radius: 4px; overflow: hidden; }
+  .ebar .fill { height: 100%; width: 0; border-radius: 4px; }
+  .ebar span:last-child { text-align: right; }
+  .ebar.hidden { display: none; }
+  canvas#graph { width: 100%; height: 150px; display: block; margin-top: 10px; background: #fbfbff; border: 1px solid var(--line); border-radius: 8px; }
+  .graphwrap.hidden { display: none; }
+  sub { font-size: 75%; }
+  .tiltwrap.hidden { display: none; }
+  .tiltwrap .slider { margin-top: 12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Spring Simple Harmonic Motion</h1>
+    <div class="tabs" role="tablist">
+      <button id="tabH" class="on" role="tab" aria-selected="true">Horizontal</button>
+      <button id="tabV" role="tab" aria-selected="false">Vertical</button>
+      <button id="tabC" role="tab" aria-selected="false">Circular motion ↔ SHM</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <div class="stage">
+      <canvas id="scene"></canvas>
+      <p class="hint" id="hint">Drag the block to stretch or compress the spring, then let go. It is released from rest.</p>
+      <div class="bar">
+        <button class="btn primary" id="play">Pause</button>
+        <button class="btn" id="reset">Reset to equilibrium</button>
+        <label>Speed
+          <select id="speed">
+            <option value="1">1×</option>
+            <option value="0.5">½×</option>
+            <option value="0.25">¼×</option>
+            <option value="0.1">0.1×</option>
+          </select>
+        </label>
+        <label style="margin-left:auto"><input type="checkbox" id="showGraph" checked> Graph</label>
+      </div>
+      <div class="graphwrap" id="graphwrap">
+        <canvas id="graph"></canvas>
+      </div>
+    </div>
+
+    <aside>
+      <div class="card tiltwrap hidden" id="tiltWrap">
+        <h2>View of the circle</h2>
+        <button class="btn primary" id="tiltBtn" style="width:100%">Tilt to side view</button>
+        <div class="slider" style="margin-bottom:0">
+          <label>View angle <output id="tiltOut">0°</output></label>
+          <input type="range" id="tilt" min="0" max="90" step="1" value="0">
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted)"><span>0° top view</span><span>90° side view</span></div>
+      </div>
+      <details class="card" open>
+        <summary><h2>Vectors</h2></summary>
+        <div id="vecList" style="margin-top:8px"></div>
+        <div class="row">
+          <button class="btn" id="allOn">Show all</button>
+          <button class="btn" id="allOff">Hide all</button>
+        </div>
+      </details>
+
+      <details class="card" open>
+        <summary><h2>Settings</h2></summary>
+        <div style="margin-top:8px"></div>
+        <div class="slider">
+          <label>Mass, m <output id="mOut"></output></label>
+          <input type="range" id="m" min="0.2" max="2" step="0.05" value="0.5">
+        </div>
+        <div class="slider">
+          <label>Spring constant, k <output id="kOut"></output></label>
+          <input type="range" id="k" min="5" max="60" step="1" value="25">
+        </div>
+        <div class="slider">
+          <label>Damping (friction) <output id="bOut"></output></label>
+          <input type="range" id="b" min="0" max="2" step="0.05" value="0">
+        </div>
+        <label class="vec" style="padding:0"><input type="checkbox" id="showLabels" checked> Show values on vectors</label>
+      </details>
+
+      <div class="card">
+        <h2>Readings</h2>
+        <table class="read">
+          <tr><td>Stretch / compression, Δx</td><td id="rDx"></td></tr>
+          <tr><td id="rFlab">Spring force, F<sub>x</sub> = −kΔx</td><td id="rF"></td></tr>
+          <tr><td id="rVlab">Velocity, v<sub>x</sub></td><td id="rV"></td></tr>
+          <tr><td id="rAlab">Acceleration, a<sub>x</sub></td><td id="rA"></td></tr>
+          <tr><td>Period, T = 2π√(m/k)</td><td id="rT"></td></tr>
+          <tr><td>Time, t</td><td id="rt"></td></tr>
+        </table>
+      </div>
+
+      <div class="card">
+        <h2>Energy</h2>
+        <div class="ebar"><span>E<sub>k</sub></span><div class="track"><div class="fill" id="eK" style="background:var(--c-v)"></div></div><span id="eKv"></span></div>
+        <div class="ebar"><span>E<sub>e</sub></span><div class="track"><div class="fill" id="eE" style="background:var(--c-F)"></div></div><span id="eEv"></span></div>
+        <div class="ebar hidden" id="eGrow"><span>E<sub>g</sub></span><div class="track"><div class="fill" id="eG" style="background:var(--c-Fg)"></div></div><span id="eGv"></span></div>
+        <div class="ebar"><span>E<sub>T</sub></span><div class="track"><div class="fill" id="eT" style="background:#555"></div></div><span id="eTv"></span></div>
+        <p class="hint" id="eNote" style="margin:6px 0 0">E<sub>e</sub> = ½kΔx², E<sub>k</sub> = ½mv²</p>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script>
+(() => {
+  "use strict";
+  const g = 9.8;
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const COL = {
+    F: css("--c-F"), dx: css("--c-dx"), v: css("--c-v"), a: css("--c-a"),
+    Fg: css("--c-Fg"), Fnet: css("--c-Fnet"), accent: css("--accent"),
+  };
+
+  // ---------- Vector menu ----------
+  const VECTORS = [
+    { id: "F",    lab: ["F", "x"],     desc: "spring force",          modes: "hvc" },
+    { id: "dx",   lab: ["Δx", ""],     desc: "stretch / compression", modes: "hvc" },
+    { id: "v",    lab: ["v", "x"],     desc: "velocity",              modes: "hvc" },
+    { id: "a",    lab: ["a", "x"],     desc: "acceleration",          modes: "hvc" },
+    { id: "Fg",   lab: ["F", "g"],     desc: "force of gravity",      modes: "v"  },
+    { id: "Fnet", lab: ["F", "net"],   desc: "net force",             modes: "hvc" },
+  ];
+  const show = { F: true, dx: true, v: true, a: true, Fg: true, Fnet: false };
+  const vecList = document.getElementById("vecList");
+  for (const V of VECTORS) {
+    const row = document.createElement("label");
+    row.className = "vec";
+    row.dataset.modes = V.modes;
+    row.innerHTML = `<input type="checkbox" ${show[V.id] ? "checked" : ""}>
+      <span class="sw" style="border-color:${COL[V.id]};color:${COL[V.id]}"></span>
+      <span class="nm" style="color:${COL[V.id]}">${V.lab[0]}${V.lab[1] ? `<sub data-sub="${V.id}">${V.lab[1]}</sub>` : ""}</span>
+      <span class="ds">${V.desc}</span>`;
+    row.querySelector("input").addEventListener("change", e => { show[V.id] = e.target.checked; draw(); });
+    vecList.appendChild(row);
+  }
+  document.getElementById("allOn").onclick = () => setAll(true);
+  document.getElementById("allOff").onclick = () => setAll(false);
+  function setAll(on) {
+    vecList.querySelectorAll(".vec").forEach((row, i) => {
+      if (!row.classList.contains("hidden")) { row.querySelector("input").checked = on; show[VECTORS[i].id] = on; }
+    });
+    draw();
+  }
+
+  // ---------- State ----------
+  const S = {
+    mode: "h",        // "h" horizontal, "v" vertical
+    m: 0.5, k: 25, b: 0,
+    s: 0,             // Δx: displacement from natural length (m). + = stretched
+    v: 0,             // velocity along axis (+ = direction of stretch)
+    t: 0,
+    running: true,
+    dragging: false,
+    speed: 1,
+    Emax: 0.01,
+    tilt: 0,          // circle view angle in degrees (0 = top view, 90 = side view)
+    tiltTarget: null,
+  };
+  const L0 = { h: 0.6, v: 0.35, c: 0.6 };      // natural length (m)
+  const AMAX = 0.4;                    // max drag distance from equilibrium (m)
+  const PPM_H = 500;                   // pixels per metre (horizontal)
+
+  const eqS = () => S.mode === "v" ? S.m * g / S.k : 0;
+  const sMin = () => Math.max(eqS() - AMAX, -0.75 * L0[S.mode]);
+  const sMax = () => eqS() + AMAX;
+
+  function accel(s, v) {
+    const Fs = -S.k * s;
+    const Fg = S.mode === "v" ? S.m * g : 0;
+    return (Fs + Fg - S.b * v) / S.m;
+  }
+
+  function step(dt) {
+    // RK4
+    const f = (s, v) => [v, accel(s, v)];
+    const [k1s, k1v] = f(S.s, S.v);
+    const [k2s, k2v] = f(S.s + k1s * dt / 2, S.v + k1v * dt / 2);
+    const [k3s, k3v] = f(S.s + k2s * dt / 2, S.v + k2v * dt / 2);
+    const [k4s, k4v] = f(S.s + k3s * dt, S.v + k3v * dt);
+    S.s += dt / 6 * (k1s + 2 * k2s + 2 * k3s + k4s);
+    S.v += dt / 6 * (k1v + 2 * k2v + 2 * k3v + k4v);
+    S.t += dt;
+  }
+
+  // ---------- Canvas setup ----------
+  const cv = document.getElementById("scene");
+  const ctx = cv.getContext("2d");
+  const LW = 960;                       // logical width
+  const C_OFF = 420;                    // circle panel height in the circle tab
+  const LH = { h: 440, v: 640, c: 420 + 440 };        // logical height
+  let scale = 1;
+
+  function resize() {
+    const w = cv.clientWidth;
+    const h = w * LH[S.mode] / LW;
+    cv.style.height = h + "px";
+    const dpr = window.devicePixelRatio || 1;
+    cv.width = Math.round(w * dpr);
+    cv.height = Math.round(h * dpr);
+    scale = w / LW;
+    ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+    resizeGraph();
+    draw();
+  }
+
+  // ---------- Geometry ----------
+  const BLOCK = 84;
+  function ppm() {
+    if (S.mode !== "v") return PPM_H;
+    // fit natural length + lowest point + block in the canvas
+    const avail = LH.v - 60 - BLOCK - 30;
+    return Math.min(520, avail / (L0.v + sMax()));
+  }
+  // Horizontal
+  const H = { wallX: 70, floorY: 330 };
+  H.axisY = H.floorY - BLOCK / 2;
+  // Vertical
+  const VG = { ceilY: 60, axisX: 300 };
+
+  function blockRect() {
+    const p = ppm();
+    if (S.mode !== "v") {
+      const x = H.wallX + (L0.h + S.s) * p;
+      return { x, y: H.floorY - BLOCK, w: BLOCK, h: BLOCK };
+    }
+    const y = VG.ceilY + (L0.v + S.s) * p;
+    return { x: VG.axisX - BLOCK / 2, y, w: BLOCK, h: BLOCK };
+  }
+
+  // ---------- Drawing helpers ----------
+  function arrow(x1, y1, x2, y2, color, width = 3) {
+    const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy);
+    if (len < 2) {           // zero vector: draw a dot
+      ctx.fillStyle = color;
+      ctx.beginPath(); ctx.arc(x1, y1, 3.5, 0, Math.PI * 2); ctx.fill();
+      return;
+    }
+    const ux = dx / len, uy = dy / len;
+    const head = Math.min(14, len * 0.6);
+    ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = width; ctx.lineCap = "round";
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2 - ux * head * 0.8, y2 - uy * head * 0.8); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - ux * head - uy * head * 0.45, y2 - uy * head + ux * head * 0.45);
+    ctx.lineTo(x2 - ux * head + uy * head * 0.45, y2 - uy * head - ux * head * 0.45);
+    ctx.closePath(); ctx.fill();
+  }
+
+  // Label with a subscript: main, sub, optional value text
+  function label(x, y, main, sub, color, align = "center", value = "") {
+    ctx.save();
+    ctx.fillStyle = color;
+    ctx.textBaseline = "middle";
+    const big = "600 19px system-ui, sans-serif", small = "600 13px system-ui, sans-serif", val = "500 13px system-ui, sans-serif";
+    ctx.font = big; const w1 = ctx.measureText(main).width;
+    ctx.font = small; const w2 = sub ? ctx.measureText(sub).width + 1 : 0;
+    ctx.font = val; const w3 = value ? ctx.measureText(" " + value).width : 0;
+    const tw = w1 + w2 + w3;
+    let x0 = align === "center" ? x - tw / 2 : align === "right" ? x - tw : x;
+    // halo for legibility
+    ctx.fillStyle = "rgba(238,238,250,0.85)";
+    ctx.fillRect(x0 - 3, y - 12, tw + 6, 24);
+    ctx.fillStyle = color;
+    ctx.font = big; ctx.fillText(main, x0, y);
+    if (sub) { ctx.font = small; ctx.fillText(sub, x0 + w1 + 1, y + 6); }
+    if (value) { ctx.font = val; ctx.fillText(" " + value, x0 + w1 + w2, y); }
+    ctx.restore();
+  }
+
+  function spring(x1, y1, x2, y2, coils = 13, amp = 20) {
+    const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy);
+    const ux = dx / len, uy = dy / len, nx = -uy, ny = ux;
+    const lead = 14;
+    const body = Math.max(len - 2 * lead, 1);
+    // squash the amplitude a little when very compressed so it stays readable
+    ctx.strokeStyle = "#1b1b1b"; ctx.lineWidth = 2.2; ctx.lineJoin = "round";
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x1 + ux * lead, y1 + uy * lead);
+    const N = 400;
+    for (let i = 0; i <= N; i++) {
+      const u = i / N;
+      const off = amp * Math.sin(2 * Math.PI * coils * u);
+      const d = lead + body * u;
+      ctx.lineTo(x1 + ux * d + nx * off, y1 + uy * d + ny * off);
+    }
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+  }
+
+  function dashedLine(x1, y1, x2, y2, color) {
+    ctx.save();
+    ctx.setLineDash([6, 6]); ctx.strokeStyle = color; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+    ctx.restore();
+  }
+
+  function smallText(t, x, y, color = "#61617a", align = "left") {
+    ctx.save(); ctx.fillStyle = color; ctx.font = "500 13px system-ui, sans-serif";
+    ctx.textAlign = align; ctx.textBaseline = "middle"; ctx.fillText(t, x, y); ctx.restore();
+  }
+
+  // ---------- Vector scaling ----------
+  const SCALE = { F: 12, v: 55, a: 6, dx: null }; // px per N, px per m/s, px per m/s²
+  const CLAMP = 290;
+  function vlen(q, value) {
+    let L = value * SCALE[q];
+    if (Math.abs(L) > CLAMP) L = Math.sign(L) * CLAMP;
+    return L;
+  }
+  const fmt = (x, d = 2) => (Math.abs(x) < 0.5 * Math.pow(10, -d) ? 0 : x).toFixed(d);
+
+  function quantities() {
+    const Fs = -S.k * S.s;
+    const Fg = S.mode === "v" ? S.m * g : 0;
+    const Fnet = Fs + Fg - S.b * S.v;
+    return { Fs, Fg, Fnet, a: Fnet / S.m, v: S.v };
+  }
+
+  // ---------- Scene ----------
+  function draw() {
+    ctx.clearRect(0, 0, LW, LH[S.mode]);
+    if (S.mode === "h") drawH();
+    else if (S.mode === "v") drawV();
+    else { drawCircle(); ctx.save(); ctx.translate(0, C_OFF); drawH(); ctx.restore(); }
+  }
+
+  const showVals = () => document.getElementById("showLabels").checked;
+
+  function drawH() {
+    const p = ppm();
+    const q = quantities();
+    const B = blockRect();
+    const natX = H.wallX + L0.h * p;
+
+    // floor
+    ctx.fillStyle = "#d9d6c6"; ctx.fillRect(0, H.floorY, LW, LH.h - H.floorY);
+    ctx.fillStyle = "#b9b5a0"; ctx.fillRect(0, H.floorY, LW, 3);
+    // wall
+    ctx.fillStyle = "#e4c400"; ctx.fillRect(H.wallX - 30, H.floorY - 110, 30, 110);
+    ctx.strokeStyle = "#8a7600"; ctx.lineWidth = 1.5; ctx.strokeRect(H.wallX - 30, H.floorY - 110, 30, 110);
+    for (let y = H.floorY - 104; y < H.floorY; y += 14) {
+      ctx.beginPath(); ctx.moveTo(H.wallX - 30, y + 12); ctx.lineTo(H.wallX - 18, y); ctx.stroke();
+    }
+
+    // natural length / equilibrium reference
+    dashedLine(natX, 70, natX, LH.h - 18, "#8b8ba8");
+    smallText("natural length = equilibrium (Δx = 0)", natX + 6, LH.h - 14, "#61617a");
+
+    // spring
+    spring(H.wallX, H.axisY, B.x, H.axisY, 13, 22);
+
+    // block
+    drawBlock(B);
+
+    // Δx vector, drawn in the floor from the natural-length line to the block's face
+    const vals = showVals();
+    if (show.dx) {
+      const y = H.floorY + 50;
+      arrow(natX, y, B.x, y, COL.dx);
+      const lx = Math.abs(B.x - natX) > 50 ? (natX + B.x) / 2 : B.x + (B.x >= natX ? 30 : -30);
+      label(lx, y - 20, "Δx", "", COL.dx, "center", vals ? `${fmt(S.s)} m` : "");
+    }
+
+    // vectors stacked above the block, starting at its centre
+    const cx = B.x + B.w / 2;
+    const rows = [];
+    if (show.F)    rows.push(["F", "F", "x", vlen("F", q.Fs), vals ? `${fmt(q.Fs, 1)} N` : ""]);
+    if (show.Fnet) rows.push(["Fnet", "F", "net", vlen("F", q.Fnet), vals ? `${fmt(q.Fnet, 1)} N` : ""]);
+    if (show.v)    rows.push(["v", "v", "x", vlen("v", q.v), vals ? `${fmt(q.v)} m/s` : ""]);
+    if (show.a)    rows.push(["a", "a", "x", vlen("a", q.a), vals ? `${fmt(q.a, 1)} m/s²` : ""]);
+    let y = B.y - 26;
+    for (let i = rows.length - 1; i >= 0; i--) {
+      const [id, m, s, L, val] = rows[i];
+      arrow(cx, y, cx + L, y, COL[id]);
+      const tipX = cx + L;
+      if (Math.abs(L) < 2) label(cx + 14, y, m, s, COL[id], "left", val);
+      else label(tipX + (L > 0 ? 10 : -10), y, m, s, COL[id], L > 0 ? "left" : "right", val);
+      y -= 44;
+    }
+
+    // positive direction indicator
+    smallText("+ direction →", LW - 20, 24, "#61617a", "right");
+  }
+
+  function drawV() {
+    const p = ppm();
+    const q = quantities();
+    const B = blockRect();
+    const natY = VG.ceilY + L0.v * p + 0;           // where block top sits at Δx = 0
+    const eqY = VG.ceilY + (L0.v + eqS()) * p;      // block top at equilibrium
+
+    // ceiling
+    ctx.fillStyle = "#e4c400"; ctx.fillRect(VG.axisX - 110, VG.ceilY - 26, 220, 26);
+    ctx.strokeStyle = "#8a7600"; ctx.lineWidth = 1.5; ctx.strokeRect(VG.axisX - 110, VG.ceilY - 26, 220, 26);
+    for (let x = VG.axisX - 104; x < VG.axisX + 98; x += 14) {
+      ctx.beginPath(); ctx.moveTo(x, VG.ceilY - 26); ctx.lineTo(x + 12, VG.ceilY - 14); ctx.stroke();
+    }
+
+    // reference lines
+    dashedLine(30, natY, LW - 30, natY, "#8b8ba8");
+    smallText("natural length (Δx = 0)", LW - 30, natY - 11, "#61617a", "right");
+    ctx.save(); ctx.globalAlpha = 0.9;
+    dashedLine(30, eqY, LW - 30, eqY, COL.accent);
+    ctx.restore();
+    smallText(`equilibrium (Δx = mg/k = ${fmt(eqS())} m)`, LW - 30, eqY + 12, COL.accent, "right");
+
+    // spring
+    spring(VG.axisX, VG.ceilY, VG.axisX, B.y, 13, 20);
+    drawBlock(B);
+
+    const vals = showVals();
+    // Δx: from natural-length line to block top, left of the block
+    if (show.dx) {
+      const x = VG.axisX - BLOCK / 2 - 60;
+      arrow(x, natY, x, B.y, COL.dx);
+      const ly = Math.abs(B.y - natY) > 40 ? (natY + B.y) / 2 : B.y + (B.y >= natY ? 22 : -22);
+      label(x - 12, ly, "Δx", "", COL.dx, "right", vals ? `${fmt(S.s)} m` : "");
+    }
+
+    // other vectors, side by side to the right of the block, from block centre
+    const cy = B.y + B.h / 2;
+    const cols = [];
+    if (show.F)    cols.push(["F", "F", "x", vlen("F", q.Fs), vals ? `${fmt(-q.Fs, 1)} N` : ""]);
+    if (show.Fg)   cols.push(["Fg", "F", "g", vlen("F", q.Fg), vals ? `${fmt(-q.Fg, 1)} N` : ""]);
+    if (show.Fnet) cols.push(["Fnet", "F", "net", vlen("F", q.Fnet), vals ? `${fmt(-q.Fnet, 1)} N` : ""]);
+    if (show.v)    cols.push(["v", "v", "y", vlen("v", q.v), vals ? `${fmt(-q.v)} m/s` : ""]);
+    if (show.a)    cols.push(["a", "a", "y", vlen("a", q.a), vals ? `${fmt(-q.a, 1)} m/s²` : ""]);
+    let x = VG.axisX + BLOCK / 2 + 40;
+    for (const [id, m, s, L, val] of cols) {
+      arrow(x, cy, x, cy + L, COL[id]);
+      if (Math.abs(L) < 2) label(x, cy - 18, m, s, COL[id], "center", val);
+      else label(x, cy + L + (L > 0 ? 18 : -18), m, s, COL[id], "center", val);
+      x += vals ? 100 : 62;
+    }
+
+    smallText("+ direction ↑ (up)", LW - 30, 24, "#61617a", "right");
+  }
+
+  function drawCircle() {
+    const p = ppm();
+    const q = quantities();
+    const w = Math.sqrt(S.k / S.m);
+    const A = Math.hypot(S.s, S.v / w);                 // amplitude = radius of the reference circle
+    const th = A > 1e-6 ? Math.atan2(-S.v / w, S.s) : 0; // phase angle: Δx = A cos θ, v = −Aω sin θ
+    const c = Math.cos(S.tilt * Math.PI / 180);         // foreshortening of the circle's y-direction
+    const cx = H.wallX + L0.h * p + BLOCK / 2;          // lines up with the block's centre at equilibrium
+    const cy = 210;
+    const R = A * p;
+    const bx = cx + R * Math.cos(th), by = cy - R * Math.sin(th) * c;
+    const vals = showVals();
+
+    // panel
+    ctx.fillStyle = "#e6e5f6"; ctx.fillRect(0, 0, LW, C_OFF);
+    ctx.fillStyle = "#cfcde6"; ctx.fillRect(0, C_OFF - 2, LW, 2);
+    const view = S.tilt < 5 ? "TOP VIEW" : S.tilt > 85 ? "SIDE VIEW" : `TILTED ${Math.round(S.tilt)}°`;
+    ctx.save();
+    ctx.fillStyle = COL.accent; ctx.fillRect(LW - 170, 22, 170, 34);
+    ctx.fillStyle = "#fff"; ctx.font = "700 italic 17px system-ui, sans-serif"; ctx.textBaseline = "middle";
+    ctx.fillText(view, LW - 156, 39);
+    ctx.restore();
+
+    // axes
+    const ext = Math.max(R, 60) + 45;
+    ctx.save(); ctx.setLineDash([3, 9]); ctx.lineCap = "round"; ctx.lineWidth = 5;
+    ctx.strokeStyle = "#e5512c"; ctx.beginPath(); ctx.moveTo(cx - ext, cy); ctx.lineTo(cx + ext, cy); ctx.stroke();
+    if (c > 0.03) { ctx.strokeStyle = "#e9a21a"; ctx.beginPath(); ctx.moveTo(cx, cy - ext * c); ctx.lineTo(cx, cy + ext * c); ctx.stroke(); }
+    ctx.restore();
+    smallText("x-axis", cx - ext, cy + 16, "#e5512c");
+    if (c > 0.15) smallText("y-axis", cx + 8, cy - ext * c + 4, "#c9860a");
+
+    // orbit (a ring seen at an angle is an ellipse; edge-on it is a line)
+    ctx.save();
+    ctx.strokeStyle = "#a9a8bd"; ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.ellipse(cx, cy, Math.max(R, 0.5), Math.max(R * c, 0.5), 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.restore();
+
+    // radius and angle
+    if (R > 8 && c > 0.25) {
+      ctx.save(); ctx.strokeStyle = "#6c6b85"; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(bx, by); ctx.stroke();
+      ctx.beginPath();
+      const thN = ((th % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+      for (let i = 0; i <= 40; i++) {
+        const t = thN * i / 40, r = 30;
+        const X = cx + r * Math.cos(t), Y = cy - r * Math.sin(t) * c;
+        i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y);
+      }
+      ctx.stroke(); ctx.restore();
+      smallText("θ", cx + 36 * Math.cos(thN / 2), cy - 36 * Math.sin(thN / 2) * c, "#3e3d55", "center");
+    }
+
+    // projection: ball straight down to the x-axis and on to the block
+    ctx.save(); ctx.globalAlpha = 0.55;
+    dashedLine(bx, by, bx, C_OFF + H.floorY - BLOCK, COL.dx);
+    ctx.restore();
+    ctx.fillStyle = COL.dx;
+    ctx.beginPath(); ctx.arc(bx, cy, 5, 0, Math.PI * 2); ctx.fill();
+
+    // full velocity (tangent) and centripetal acceleration on the ball
+    const vT = A * w, aC = A * w * w;
+    const ux = -Math.sin(th), uy = Math.cos(th);       // tangent in the plane
+    if (show.v && R > 1) {
+      ctx.save(); ctx.globalAlpha = 0.45;
+      const L = Math.min(vT * SCALE.v, CLAMP);
+      arrow(bx, by, bx + ux * L, by - uy * L * c, COL.v, 3);
+      ctx.restore();
+      label(bx + ux * L + 14 * Math.sign(ux || 1), by - uy * L * c, "v", "", COL.v, ux >= 0 ? "left" : "right", vals ? `${fmt(vT)} m/s` : "");
+    }
+    if (show.a && R > 1) {
+      ctx.save(); ctx.globalAlpha = 0.45;
+      const L = Math.min(aC * SCALE.a, R);
+      arrow(bx, by, bx - Math.cos(th) * L, by + Math.sin(th) * L * c, COL.a, 3);
+      ctx.restore();
+    }
+
+    // ball
+    const grad = ctx.createRadialGradient(bx - 7, by - 7, 3, bx, by, 22);
+    grad.addColorStop(0, "#c9fbff"); grad.addColorStop(1, "#22c4d6");
+    ctx.fillStyle = grad; ctx.strokeStyle = "#0f7f8c"; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(bx, by, 20, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+    // x-components at the shadow point: these match the block's vectors exactly
+    if (show.v) {
+      const L = vlen("v", q.v);
+      arrow(bx, cy - 34, bx + L, cy - 34, COL.v);
+      label(Math.abs(L) < 2 ? bx + 14 : bx + L + (L > 0 ? 10 : -10), cy - 34, "v", "x", COL.v, Math.abs(L) < 2 || L > 0 ? "left" : "right", vals ? `${fmt(q.v)} m/s` : "");
+    }
+    if (show.a) {
+      const L = vlen("a", q.a);
+      arrow(bx, cy + 34, bx + L, cy + 34, COL.a);
+      label(Math.abs(L) < 2 ? bx + 14 : bx + L + (L > 0 ? 10 : -10), cy + 34, "a", "x", COL.a, Math.abs(L) < 2 || L > 0 ? "left" : "right", vals ? `${fmt(q.a, 1)} m/s²` : "");
+    }
+
+    // equations
+    const deg = ((th * 180 / Math.PI) % 360 + 360) % 360;
+    const lines = [
+      `A = ${A.toFixed(3)} m (radius = amplitude)`,
+      `ω = √(k/m) = ${w.toFixed(2)} rad/s`,
+      `θ = ωt = ${deg.toFixed(0)}°`,
+      `Δx = A cos θ = ${fmt(S.s, 3)} m`,
+    ];
+    lines.forEach((t, i) => smallText(t, 20, 30 + i * 22, "#3e3d55"));
+  }
+
+  function drawBlock(B) {
+    ctx.fillStyle = S.dragging ? "#7f86f0" : "#9aa0f5";
+    ctx.strokeStyle = "#2b2f7a"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.roundRect ? ctx.roundRect(B.x, B.y, B.w, B.h, 4) : ctx.rect(B.x, B.y, B.w, B.h);
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "#1d1d4b"; ctx.font = "600 15px system-ui, sans-serif";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText(`${S.m.toFixed(2)} kg`, B.x + B.w / 2, B.y + B.h / 2);
+    ctx.textAlign = "left";
+  }
+
+  // ---------- Interaction ----------
+  let grabOffset = 0;
+  function toLogical(e) {
+    const r = cv.getBoundingClientRect();
+    return { x: (e.clientX - r.left) / scale, y: (e.clientY - r.top) / scale - (S.mode === "c" ? C_OFF : 0) };
+  }
+  function overBlock(pt) {
+    const B = blockRect(), pad = 14;
+    return pt.x > B.x - pad && pt.x < B.x + B.w + pad && pt.y > B.y - pad && pt.y < B.y + B.h + pad;
+  }
+  cv.addEventListener("pointerdown", e => {
+    const pt = toLogical(e);
+    if (!overBlock(pt)) return;
+    S.dragging = true;
+    cv.setPointerCapture(e.pointerId);
+    const B = blockRect();
+    grabOffset = S.mode !== "v" ? pt.x - B.x : pt.y - B.y;
+    cv.style.cursor = "grabbing";
+    e.preventDefault();
+  });
+  cv.addEventListener("pointermove", e => {
+    const pt = toLogical(e);
+    if (!S.dragging) { cv.style.cursor = overBlock(pt) ? "grab" : "default"; return; }
+    const p = ppm();
+    let s = S.mode !== "v"
+      ? (pt.x - grabOffset - H.wallX) / p - L0.h
+      : (pt.y - grabOffset - VG.ceilY) / p - L0.v;
+    S.s = Math.min(sMax(), Math.max(sMin(), s));
+    S.v = 0;
+    clearTrace();
+    draw(); updateReadouts();
+  });
+  const endDrag = e => {
+    if (!S.dragging) return;
+    S.dragging = false;
+    S.v = 0; S.t = 0;
+    S.Emax = 0;
+    cv.style.cursor = "grab";
+    setRunning(true);
+  };
+  cv.addEventListener("pointerup", endDrag);
+  cv.addEventListener("pointercancel", endDrag);
+
+  // ---------- Controls ----------
+  const playBtn = document.getElementById("play");
+  function setRunning(on) { S.running = on; playBtn.textContent = on ? "Pause" : "Play"; }
+  playBtn.onclick = () => setRunning(!S.running);
+  document.getElementById("reset").onclick = () => {
+    S.s = eqS(); S.v = 0; S.t = 0; S.Emax = 0; clearTrace(); draw(); updateReadouts();
+  };
+  document.getElementById("speed").onchange = e => { S.speed = +e.target.value; };
+  document.getElementById("showLabels").onchange = () => draw();
+
+  const inits = [];
+  const sliders = [
+    ["m", v => `${(+v).toFixed(2)} kg`],
+    ["k", v => `${v} N/m`],
+    ["b", v => `${(+v).toFixed(2)} kg/s`],
+  ];
+  for (const [id, f] of sliders) {
+    const el = document.getElementById(id), out = document.getElementById(id + "Out");
+    const upd = () => {
+      S[id] = +el.value; out.textContent = f(el.value);
+      S.Emax = 0;
+      if (S.dragging || !S.running) S.s = Math.min(sMax(), Math.max(sMin(), S.s));
+      draw(); updateReadouts();
+    };
+    el.addEventListener("input", upd); inits.push(upd);
+  }
+
+  function setMode(mode) {
+    S.mode = mode;
+    const hz = mode !== "v";
+    for (const [id, m] of [["tabH", "h"], ["tabV", "v"], ["tabC", "c"]]) {
+      document.getElementById(id).classList.toggle("on", mode === m);
+      document.getElementById(id).setAttribute("aria-selected", mode === m);
+    }
+    document.getElementById("tiltWrap").classList.toggle("hidden", mode !== "c");
+    vecList.querySelectorAll(".vec").forEach(row => row.classList.toggle("hidden", !row.dataset.modes.includes(mode)));
+    // subscripts follow the axis of motion
+    vecList.querySelectorAll('sub[data-sub="v"]').forEach(s => s.textContent = hz ? "x" : "y");
+    vecList.querySelectorAll('sub[data-sub="a"]').forEach(s => s.textContent = hz ? "x" : "y");
+    document.getElementById("rVlab").innerHTML = hz ? "Velocity, v<sub>x</sub>" : "Velocity, v<sub>y</sub> (+ up)";
+    document.getElementById("rAlab").innerHTML = hz ? "Acceleration, a<sub>x</sub>" : "Acceleration, a<sub>y</sub> (+ up)";
+    document.getElementById("rFlab").innerHTML = hz ? "Spring force, F<sub>x</sub> = −kΔx" : "Spring force, F<sub>x</sub> (+ up)";
+    document.getElementById("eGrow").classList.toggle("hidden", hz);
+    document.getElementById("eNote").innerHTML = hz
+      ? "E<sub>e</sub> = ½kΔx², E<sub>k</sub> = ½mv²"
+      : "E<sub>e</sub> = ½kΔx², E<sub>k</sub> = ½mv², E<sub>g</sub> = mgh (h = 0 at the lowest drag point)";
+    document.getElementById("hint").textContent = mode === "c"
+      ? "The ball goes around the circle at constant speed, and its x-position (its shadow on the x-axis) always lines up with the block. Tilt the circle to side view and the ball moves exactly like the block. Drag the block to change the radius (amplitude)."
+      : hz
+      ? "Drag the block left or right to compress or stretch the spring, then let go. It is released from rest."
+      : "Drag the block up or down, then let go. It oscillates about the equilibrium line, where kΔx = mg.";
+    // start displaced so it is moving when the tab opens
+    S.s = eqS() + (hz ? 0.25 : 0.15);
+    if (mode === "c") { S.tilt = 0; S.tiltTarget = null; syncTilt(); } S.v = 0; S.t = 0; S.Emax = 0;
+    clearTrace();
+    setRunning(true);
+    resize();
+    updateReadouts();
+  }
+  document.getElementById("tabH").onclick = () => setMode("h");
+  document.getElementById("tabV").onclick = () => setMode("v");
+  document.getElementById("tabC").onclick = () => setMode("c");
+
+  // ---------- Tilt controls (circle tab) ----------
+  const tiltEl = document.getElementById("tilt"), tiltOut = document.getElementById("tiltOut"), tiltBtn = document.getElementById("tiltBtn");
+  function syncTilt() {
+    tiltEl.value = Math.round(S.tilt);
+    tiltOut.textContent = `${Math.round(S.tilt)}°`;
+    const goingSide = S.tiltTarget != null ? S.tiltTarget === 90 : S.tilt < 45;
+    tiltBtn.textContent = goingSide ? "Tilt to side view" : "Tilt to top view";
+  }
+  tiltEl.addEventListener("input", () => { S.tilt = +tiltEl.value; S.tiltTarget = null; syncTilt(); draw(); });
+  tiltBtn.onclick = () => { S.tiltTarget = (S.tiltTarget != null ? S.tiltTarget === 90 : S.tilt < 45) ? 90 : 0; syncTilt(); };
+
+  // ---------- Readouts & energy ----------
+  const $ = id => document.getElementById(id);
+  function updateReadouts() {
+    const q = quantities();
+    const sign = S.mode === "v" ? -1 : 1;  // vertical readings reported with + up
+    $("rDx").textContent = `${fmt(S.s, 3)} m ${S.s > 0.0005 ? "(stretched)" : S.s < -0.0005 ? "(compressed)" : ""}`;
+    $("rF").textContent = `${fmt(sign * q.Fs, 2)} N`;
+    $("rV").textContent = `${fmt(sign * q.v, 2)} m/s`;
+    $("rA").textContent = `${fmt(sign * q.a, 2)} m/s²`;
+    $("rT").textContent = `${(2 * Math.PI * Math.sqrt(S.m / S.k)).toFixed(3)} s`;
+    $("rt").textContent = `${S.t.toFixed(2)} s`;
+
+    const Ek = 0.5 * S.m * S.v * S.v;
+    const Ee = 0.5 * S.k * S.s * S.s;
+    const Eg = S.mode === "v" ? S.m * g * (sMax() - S.s) : 0;
+    const Et = Ek + Ee + Eg;
+    S.Emax = Math.max(S.Emax, Et, 0.01);
+    const pct = E => `${Math.min(100, 100 * E / S.Emax)}%`;
+    $("eK").style.width = pct(Ek); $("eKv").textContent = `${Ek.toFixed(3)} J`;
+    $("eE").style.width = pct(Ee); $("eEv").textContent = `${Ee.toFixed(3)} J`;
+    $("eG").style.width = pct(Eg); $("eGv").textContent = `${Eg.toFixed(3)} J`;
+    $("eT").style.width = pct(Et); $("eTv").textContent = `${Et.toFixed(3)} J`;
+  }
+
+  // ---------- Graph ----------
+  const gc = $("graph"), gx = gc.getContext("2d");
+  const WINDOW = 8; // seconds shown
+  let trace = [];
+  function clearTrace() { trace = []; drawGraph(); }
+  let gW = 0, gH = 0;
+  function resizeGraph() {
+    const dpr = window.devicePixelRatio || 1;
+    gW = gc.clientWidth; gH = gc.clientHeight;
+    gc.width = Math.round(gW * dpr); gc.height = Math.round(gH * dpr);
+    gx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    drawGraph();
+  }
+  $("showGraph").onchange = e => { $("graphwrap").classList.toggle("hidden", !e.target.checked); resizeGraph(); };
+
+  function drawGraph() {
+    if (!gW) return;
+    gx.clearRect(0, 0, gW, gH);
+    const mid = gH / 2, padL = 8;
+    gx.strokeStyle = "#cfcfe0"; gx.lineWidth = 1;
+    gx.beginPath(); gx.moveTo(0, mid); gx.lineTo(gW, mid); gx.stroke();
+    gx.fillStyle = "#61617a"; gx.font = "12px system-ui, sans-serif";
+    gx.fillText("t →", gW - 26, mid - 6);
+    // series: displacement from equilibrium, velocity, acceleration (each scaled to its own maximum)
+    const series = [
+      ["dx", p => p.y, show.dx, S.mode !== "v" ? "Δx" : "position from equilibrium"],
+      ["v", p => p.v, show.v, "v"],
+      ["a", p => p.a, show.a, "a"],
+    ];
+    const t1 = trace.length ? trace[trace.length - 1].t : 0;
+    const t0 = Math.max(0, t1 - WINDOW);
+    let lx = padL;
+    for (const [id, f, on, name] of series) {
+      if (!on) continue;
+      gx.fillStyle = COL[id]; gx.font = "600 12px system-ui, sans-serif";
+      gx.fillText(name, lx, 14); lx += gx.measureText(name).width + 14;
+      if (trace.length < 2) continue;
+      let mx = 1e-6; for (const p of trace) mx = Math.max(mx, Math.abs(f(p)));
+      gx.strokeStyle = COL[id]; gx.lineWidth = 2; gx.beginPath();
+      trace.forEach((p, i) => {
+        const X = padL + (p.t - t0) / WINDOW * (gW - padL * 2);
+        const Y = mid - f(p) / mx * (mid - 20);
+        i ? gx.lineTo(X, Y) : gx.moveTo(X, Y);
+      });
+      gx.stroke();
+    }
+    gx.fillStyle = "#8b8ba8"; gx.font = "11px system-ui, sans-serif";
+    gx.fillText("each curve scaled to its own maximum", gW - 210, gH - 6);
+  }
+
+  // ---------- Main loop ----------
+  let last = performance.now();
+  function frame(now) {
+    let dt = Math.min(0.05, (now - last) / 1000);
+    last = now;
+    if (S.tiltTarget != null) {
+      const d = S.tiltTarget - S.tilt, stepDeg = 40 * dt;
+      if (Math.abs(d) <= stepDeg) { S.tilt = S.tiltTarget; S.tiltTarget = null; }
+      else S.tilt += Math.sign(d) * stepDeg;
+      syncTilt();
+      if (!S.running || S.dragging) draw();
+    }
+    if (S.running && !S.dragging) {
+      let sim = dt * S.speed;
+      const h = 1 / 600;
+      while (sim > 1e-9) { const d = Math.min(h, sim); step(d); sim -= d; }
+      const q = quantities();
+      const sign = S.mode === "v" ? -1 : 1;
+      trace.push({ t: S.t, y: sign * (S.s - eqS()), v: sign * S.v, a: sign * q.a });
+      while (trace.length && trace[0].t < S.t - WINDOW) trace.shift();
+      draw(); updateReadouts(); drawGraph();
+    }
+    requestAnimationFrame(frame);
+  }
+
+  window.addEventListener("resize", resize);
+  inits.forEach(f => f());
+  setMode("h");
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
