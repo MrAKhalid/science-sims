@@ -11,12 +11,12 @@
     else{
       var g=document.createElement("div"); g.className="sims";
       u.sims.forEach(function(s){
-        var href=u.id+"/"+s.file;
+        var href=u.id+"/"+s.file+"?v="+(window.SIMS_VERSION||"");
         var d=document.createElement("div"); d.className="sim";
         d.innerHTML='<a class="thumb" target="_blank" rel="noopener"><img alt="" loading="lazy"></a><h3></h3><p></p><div class="links"><a target="_blank" rel="noopener">Open full screen</a></div>';
         d.querySelector("h3").textContent=s.title; d.querySelector("p").textContent=s.blurb||"";
         var th=d.querySelector(".thumb");th.href=href;th.setAttribute("aria-label","Open "+s.title);
-        var im=th.querySelector("img");im.src=href.replace(/\.html$/,".png");im.onerror=function(){th.remove()};
+        var im=th.querySelector("img");im.src=u.id+"/"+s.file.replace(/\.html$/,".png")+"?v="+(window.SIMS_VERSION||"");im.onerror=function(){th.remove()};
         d.querySelector(".links a").href=href;
         g.appendChild(d);
       });

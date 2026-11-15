@@ -34,4 +34,4 @@ If it's missing, the card just shows without a picture. To regenerate all previe
 ## Browser caching
 
 Pages link to `assets/*` with `?v=<number>`. After changing anything in `assets/`, bump that number in
-`index.html`, `sph4u1/index.html` and `sch4u1/index.html` so browsers fetch the new copy.
+`index.html`, `sph4u1/index.html` and `sch4u1/index.html` so browsers fetch the new copy. After changing a simulation file, bump `SIMS_VERSION` at the top of `assets/sims.js` (and the `?v=` numbers above).
