@@ -30,3 +30,8 @@ sch4u1/<unit>/<sim>.html   chemistry sims (organic, structure-properties, energy
 
 Each sim can have a preview image with the same name and `.png` (e.g. `spring-shm.png` next to `spring-shm.html`).
 If it's missing, the card just shows without a picture. To regenerate all previews: `node tools/make-thumbs.js` (needs Playwright), or ask Claude.
+
+## Browser caching
+
+Pages link to `assets/*` with `?v=<number>`. After changing anything in `assets/`, bump that number in
+`index.html`, `sph4u1/index.html` and `sch4u1/index.html` so browsers fetch the new copy.
