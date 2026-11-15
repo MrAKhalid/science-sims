@@ -226,7 +226,7 @@ const has = (ctx,i,j) => ctx.contacts.some(c => c.i===i && c.j===j);
 const gapOf = (ctx,i,j) => { const c = ctx.contacts.find(c => c.i===i && c.j===j); return c ? c.gap : Infinity; };
 const upright = a => { const d = (((a*180/Math.PI)%180)+180)%180; return Math.abs(d-90) <= 22; };
 const REACTIONS = [
-  { key:'nobr', tab:'2 NOBr', title:'Decomposition of nitrosyl bromide', context:'The example from the lesson.',
+  { key:'nobr', tab:'2 NOBr', title:'Decomposition of nitrosyl bromide', context:'A classic reaction chemists use to study reaction rates and equilibrium.',
     A:'NOBr', B:'NOBr', lhs:[[2,'NOBr']], rhs:[[2,'NO'],[1,'Br2']], dH:47, Ea:90, thresholdC:100, start:[180,0],
     hint:[2,5], goal:'The two Br atoms must hit each other so a Br–Br bond can form.',
     orient(ctx){ const ok = has(ctx,2,5);
@@ -857,7 +857,7 @@ new ResizeObserver(() => { eqDirty = true; }).observe(cvE);
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => eqDirty = true);
 new MutationObserver(() => eqDirty = true).observe(root, { attributes:true, attributeFilter:['data-theme'] });
 if (document.fonts) document.fonts.ready.then(() => eqDirty = true);
-loadReaction(0);
+loadReaction(Math.floor(Math.random()*REACTIONS.length));
 requestAnimationFrame(frame);
 })();
 </script>
