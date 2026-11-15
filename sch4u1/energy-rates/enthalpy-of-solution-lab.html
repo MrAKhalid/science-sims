@@ -69,6 +69,7 @@ th{background:#f3f5f9}
 #lidGroup{transition:transform .6s ease}
 #lidGroup.off{transform:translate(120px,40px) rotate(8deg)}
 .small{font-size:12px}
+.jarpick{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:15px;margin-bottom:6px}.jarpick select{font-size:15px;padding:6px;border:2px solid var(--accent);border-radius:6px}
 .nbjump{display:none;text-decoration:none}
 @media (max-width:900px){.nbjump{display:inline-block}}
 .notebook input:disabled,.notebook select:disabled,.notebook textarea:disabled,.calc input:disabled{background:#f1efe6;color:#555}
@@ -149,7 +150,7 @@ tr.r-good td:last-child{color:var(--good)} tr.r-bad td:last-child{color:var(--ba
           <g id="boatOnBench" style="display:none">
             <path d="M20 255 L70 255 L62 262 L28 262 Z" fill="#eef3f8" stroke="#9aa6b2"/>
             <ellipse cx="45" cy="254" rx="14" ry="4" fill="#fdfdfd" stroke="#ccc"/>
-            <text x="45" y="282" text-anchor="middle" font-size="10" fill="#ddd">weighed salt</text>
+            <text x="45" y="282" text-anchor="middle" font-size="10" fill="#ddd" id="boatLabel">weighed salt</text>
           </g>
           <g id="cylOnBench" style="display:none">
             <rect x="236" y="150" width="20" height="112" fill="#e8f3ff" stroke="#8aa" opacity=".9"/>
@@ -189,7 +190,7 @@ tr.r-good td:last-child{color:var(--good)} tr.r-bad td:last-child{color:var(--ba
     <div class="measgrid">
       <div>
         <h2>Centigram balance (±0.01 g)</h2>
-        <label class="small">Salt jar:
+        <label class="jarpick"><b>Choose the salt jar:</b>
           <select id="saltSel"></select>
         </label>
         <svg id="balSvg" viewBox="0 0 340 230" width="100%" aria-label="Digital balance">
@@ -429,7 +430,7 @@ function renderCylinder(){
     if(v%10===0) g += `<text x="${40+L+6}" y="${y+5}" font-size="14" fill="#223">${v}</text>`; }
   g += `<rect x="40" y="0" width="140" height="300" fill="none" stroke="#7c94a8" stroke-width="2"/>`;
   g += `<line x1="0" y1="${cy}" x2="30" y2="${cy}" stroke="#d43" stroke-dasharray="3 3"/><text x="2" y="${cy-5}" font-size="10" fill="#d43">eye</text>`;
-  if(V<=0) g += `<text x="110" y="150" text-anchor="middle" font-size="13" fill="#889">empty</text>`;
+  if(V<=0) g += `<text x="150" y="110" text-anchor="middle" font-size="13" fill="#889">empty</text>`;
   z.innerHTML = g;
   const lock = S.cylTaken;
   ["btnPourBig","btnPourSmall","btnDropper","btnPourOut","btnTakeWater"].forEach(id=>$(id).disabled = lock);
@@ -451,6 +452,7 @@ $("btnTakeWater").onclick = () => { S.cylTaken = true; renderCylinder(); updateC
 
 // =============== CALORIMETER ===============
 function updateCal(){
+  if(S.salt) $("boatLabel").textContent = saltById(S.salt).f;
   $("boatOnBench").style.display = (S.saltTaken && !S.saltAdded) ? "" : "none";
   $("cylOnBench").style.display = (S.cylTaken && S.cylV>0) ? "" : "none";
   $("lidGroup").classList.toggle("off", !S.lidOn);
@@ -530,7 +532,7 @@ $("btnAddSalt").onclick = () => {
   S.fMax = Math.abs(dTfull) > room ? room/Math.abs(dTfull) : 1;
   S.saturated = S.fMax < 1;
   updateCal();
-  msg("calMsg","Salt added! Put the lid back on quickly and hold <b>Swirl</b>.","warn");
+  msg("calMsg",`${s.f} added! Put the lid back on quickly and hold <b>Swirl</b>.`,"warn");
 };
 function setSwirl(on){ S.swirl = on && S.waterAdded && !S.stopped; $("cupGroup").classList.toggle("swirling", S.swirl); }
 const sw = $("btnSwirl");
