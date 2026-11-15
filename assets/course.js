@@ -13,10 +13,12 @@
       u.sims.forEach(function(s){
         var href=u.id+"/"+s.file, abs=new URL(href,location.href).href;
         var d=document.createElement("div"); d.className="sim";
-        d.innerHTML='<h3></h3><p></p><div class="links"><a target="_blank" rel="noopener">Open full screen</a><button class="copy" type="button">Copy link for SharePoint</button></div>';
+        d.innerHTML='<a class="thumb" target="_blank" rel="noopener"><img alt="" loading="lazy"></a><h3></h3><p></p><div class="links"><a target="_blank" rel="noopener">Open full screen</a><button class="copy" type="button">Copy link</button></div>';
         d.querySelector("h3").textContent=s.title; d.querySelector("p").textContent=s.blurb||"";
-        d.querySelector("a").href=href;
-        d.querySelector("button").onclick=function(){var b=this;navigator.clipboard.writeText(abs).then(function(){b.textContent="Copied";setTimeout(function(){b.textContent="Copy link for SharePoint"},1500)})};
+        var th=d.querySelector(".thumb");th.href=href;th.setAttribute("aria-label","Open "+s.title);
+        var im=th.querySelector("img");im.src=href.replace(/\.html$/,".png");im.onerror=function(){th.remove()};
+        d.querySelector(".links a").href=href;
+        d.querySelector("button").onclick=function(){var b=this;navigator.clipboard.writeText(abs).then(function(){b.textContent="Copied";setTimeout(function(){b.textContent="Copy link"},1500)})};
         g.appendChild(d);
       });
       sec.appendChild(g);

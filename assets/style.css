@@ -15,6 +15,9 @@ h1{font-size:1.9rem;margin:0 0 4px}
 .unit h2{font-size:1.15rem;border-bottom:1px solid var(--line);padding-bottom:6px}
 .sims{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
 .sim{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px}
+.thumb{display:block;margin:-14px -14px 12px;border-bottom:1px solid var(--line);border-radius:10px 10px 0 0;overflow:hidden;aspect-ratio:16/10;background:#fff}
+.thumb img{display:block;width:100%;height:100%;object-fit:cover;object-position:top left;transition:transform .2s}
+.thumb:hover img{transform:scale(1.03)}
 .sim h3{margin:0 0 4px;font-size:1rem}.sim p{margin:0 0 10px;color:var(--muted);font-size:.92rem}
 .sim .links{display:flex;gap:14px;font-size:.9rem;flex-wrap:wrap}
 .empty{color:var(--muted);font-style:italic}

@@ -1,6 +1,6 @@
 # Science Simulations site
 
-Hosted free on GitHub Pages. Fix a file once and every SharePoint page that embeds it updates.
+Hosted free on GitHub Pages. Fix a file once and every link to it updates.
 
 ## Folder layout
 
@@ -26,21 +26,7 @@ sch4u1/<unit>/<sim>.html   chemistry sims (organic, structure-properties, energy
 3. Settings > Pages > Source: "Deploy from a branch", Branch: `main`, folder `/ (root)`. Save.
 4. Your site: `https://<your-username>.github.io/science-sims/`
 
-## Embedding in SharePoint
+## Thumbnails
 
-One-time (SharePoint admin, or site owner):
-- Site settings > **HTML Field Security** > add `<your-username>.github.io` to the allowed domains.
-  (Under the gear > Site information > View all site settings > HTML Field Security.)
-  If you are not a site owner, ask your board's SharePoint admin to add it.
-
-Per page:
-1. Create a page, one section per unit (e.g. "B. Dynamics").
-2. Add an **Embed** web part.
-3. Paste this (use "Copy link for SharePoint" on the course page to get the URL):
-   ```html
-   <iframe src="https://<your-username>.github.io/science-sims/sph4u1/dynamics/inclined-plane.html"
-           width="100%" height="650" style="border:0"></iframe>
-   ```
-4. Add a Text web part under it with a link "Open full screen" pointing to the same URL (useful on Chromebooks/phones).
-
-Simpler option: embed the whole course page (`.../sph4u1/`) once with a tall iframe and let students click through.
+Each sim can have a preview image with the same name and `.png` (e.g. `spring-shm.png` next to `spring-shm.html`).
+If it's missing, the card just shows without a picture. To regenerate all previews: `node tools/make-thumbs.js` (needs Playwright), or ask Claude.
