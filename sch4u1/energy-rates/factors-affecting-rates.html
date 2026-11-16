@@ -65,6 +65,8 @@ canvas.sim{width:100%;display:block;border-radius:6px;background:#eaf3fb;touch-a
 .ctrl{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin:10px 0 4px;font-size:14px}
 .notice{background:#fffdf3;border:1px solid #eadfb8;border-radius:8px;padding:10px 12px;margin-top:12px}
 .notice b{color:#6b5200}
+.next{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:12px 18px;margin-top:18px;padding:18px;background:var(--goodbg);border:2px solid #9fd4b4;border-radius:10px;font-size:19px;font-weight:700;color:var(--good)}
+.btn.big{font-size:20px;padding:14px 26px;background:var(--good);border-radius:8px;box-shadow:0 2px 0 #14633a}
 .graphs{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px}
 .graphs.one{grid-template-columns:minmax(0,560px)}
 @media (max-width:680px){ .graphs{grid-template-columns:1fr} }
@@ -493,9 +495,7 @@ function check(i, silent){
   const all=r1&&r2&&r3&&r4;
   if(all){
     const first=!st.done; st.done=true; st.correct={...a}; renderSteps();
-    const nextI = ORDER.find(k=>!state[k].done);
-    $("checkMsg").innerHTML=`<div class="msg good">All correct! The particle view below is unlocked.${nextI!==undefined?` When you're done exploring, go on to <a href="#" id="nextLink">Experiment ${EXPS[nextI].n}</a>.`:` When you're done exploring, see the <a href="#" id="nextLink">Summary</a>.`}</div>`;
-    $("nextLink").onclick=ev=>{ev.preventDefault(); show(nextI!==undefined?nextI:5);};
+    $("checkMsg").innerHTML=`<div class="msg good">All correct! The particle view below is unlocked.</div>`;
     renderParticles(i);
     if(first && !silent) setTimeout(()=>$("particleCard").scrollIntoView({behavior:"smooth",block:"start"}),250);
   } else {
@@ -523,7 +523,11 @@ function renderParticles(i){
         </div></div>`).join("")}
     </div>
     ${graphsFor(e.n)}
-    <div class="notice"><b>What to notice:</b> ${NOTICE[i]}</div>`;
+    <div class="notice"><b>What to notice:</b> ${NOTICE[i]}</div>
+    <div class="next"><span>Done exploring?</span><button class="btn big" id="btnNext"></button></div>`;
+  const nextI = ORDER.find(k=>!state[k].done);
+  $("btnNext").textContent = nextI!==undefined ? `Go on to Experiment ${EXPS[nextI].n} →` : "See the Summary →";
+  $("btnNext").onclick=()=>show(nextI!==undefined?nextI:5);
   panels = cs.map((c,k)=>new Panel($("cv"+k), c));
   running=true; speed=1;
   $("btnPause").onclick=()=>{ running=!running; $("btnPause").textContent=running?"Pause":"Play"; };
