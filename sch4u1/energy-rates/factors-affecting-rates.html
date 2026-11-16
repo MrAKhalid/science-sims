@@ -389,9 +389,10 @@ function cfgs(n){
 }
 
 // ===================== GRAPHS =====================
-const fE=(E,kT)=>E<=0?0:2/Math.sqrt(Math.PI)*Math.sqrt(E)/Math.pow(kT,1.5)*Math.exp(-E/kT);
+// hump-shaped distribution drawn like the class notes: the peak moves right and flattens as temperature rises
+const fE=(E,kT)=>{ if(E<=0) return 0; const a=1.6*Math.sqrt(kT); return Math.sqrt(2/Math.PI)*E*E*Math.exp(-E*E/(2*a*a))/(a*a*a); };
 function distSVG(curves, eas, title){
-  const X0=46,X1=390,Y0=200,Y1=44, Emax=9, fmax=0.5;
+  const X0=46,X1=390,Y0=200,Y1=44, Emax=9, fmax=0.42;
   const sx=E=>X0+(X1-X0)*E/Emax, sy=f=>Y0-(Y0-Y1)*Math.min(f,fmax)/fmax;
   let s=`<svg viewBox="0 0 410 240" role="img" aria-label="${title}"><text x="205" y="17" text-anchor="middle" font-size="13" font-weight="700" fill="#1d2430">${title}</text>`;
   s+=`<line x1="${X0}" y1="${Y0}" x2="${X1}" y2="${Y0}" stroke="#333"/><line x1="${X0}" y1="${Y0}" x2="${X0}" y2="${Y1-6}" stroke="#333"/>`;
@@ -420,8 +421,8 @@ function profileSVG(){
   return s;
 }
 function graphsFor(n){
-  if(n===4) return `<div class="graphs one">${distSVG([{kT:1,col:"#1f5fbf",lab:[1.25,0.42,"Cold water"]},{kT:2,col:"#d6453d",lab:[1.9,0.265,"Hot water"],shadeFrom:4,shade:"rgba(214,69,61,.22)"},{kT:1,col:"#1f5fbf",shadeFrom:4,shade:"rgba(31,95,191,.35)"}],[{E:4,col:"#333",t:"Eₐ (same at both temperatures)",dy:8}],"Collision energies in cold vs. hot water")}</div>`;
-  if(n===5) return `<div class="graphs">${profileSVG()}${distSVG([{kT:1,col:"#333",shadeFrom:1.8,shade:"rgba(31,95,191,.25)"},{kT:1,col:"#333",shadeFrom:5,shade:"rgba(122,79,196,.55)"}],[{E:1.8,col:"#1f5fbf",t:"Eₐ with Pt",dy:8},{E:5,col:"#7a4fc4",t:"Eₐ without Pt",dy:8}],"Effective collisions with and without Pt")}</div>`;
+  if(n===4) return `<div class="graphs one">${distSVG([{kT:1,col:"#1f5fbf",lab:[2.9,0.37,"Cold water"]},{kT:2,col:"#d6453d",lab:[5.45,0.17,"Hot water"],shadeFrom:5.2,shade:"rgba(214,69,61,.22)"},{kT:1,col:"#1f5fbf",shadeFrom:5.2,shade:"rgba(31,95,191,.35)"}],[{E:5.2,col:"#333",t:"Eₐ (same for both)",dy:8}],"Collision energies in cold vs. hot water")}</div>`;
+  if(n===5) return `<div class="graphs">${profileSVG()}${distSVG([{kT:1,col:"#333",shadeFrom:3.1,shade:"rgba(31,95,191,.25)"},{kT:1,col:"#333",shadeFrom:5.4,shade:"rgba(122,79,196,.55)"}],[{E:3.1,col:"#1f5fbf",t:"Eₐ with Pt",dy:8},{E:5.4,col:"#7a4fc4",t:"Eₐ without Pt",dy:8}],"Effective collisions with and without Pt")}</div>`;
   return "";
 }
 
