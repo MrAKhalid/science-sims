@@ -449,9 +449,8 @@ function show(i){
   $("main").innerHTML = `
   <div class="card">
     <h2>Experiment ${e.n}: ${e.title}</h2>
-    <p class="intro">You did this experiment in the lab. Use your observations to answer, then explore what was happening to the particles.</p>
     <div class="top">
-      <div class="setup">${setupSVG(e)}<div class="note">The setup you used. Your own observations are what count here.</div></div>
+      <div class="setup">${setupSVG(e)}</div>
       <div>
         <div class="q" id="q1"><b>1. Based on your observations, which reacted faster?</b>
           <div class="opts">${e.fasterOpts.map((t,k)=>opt("faster",k+1,t,a.faster==k+1)).join("")}</div><div class="fb"></div></div>
