@@ -1,0 +1,571 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Factors Affecting Reaction Rates</title>
+<style>
+:root{
+  color-scheme:light;
+  --bg:#eef1f5; --panel:#fff; --ink:#1d2430; --muted:#5b6575; --line:#d5dbe4;
+  --accent:#1f5fbf; --accent2:#e2e9f6; --good:#1e8a4c; --goodbg:#e3f4ea; --bad:#b3261e; --badbg:#fbe7e5;
+  --warn:#8a5a00; --warnbg:#fff3d6;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.4}
+header{background:#14325f;color:#fff;padding:10px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
+header h1{font-size:18px;margin:0;font-weight:700}
+.steps{display:flex;gap:6px;flex-wrap:wrap}
+.steps button{background:#24477f;color:#fff;border:0;border-radius:6px;padding:7px 11px;font-size:14px;cursor:pointer;font-weight:600}
+.steps button.active{background:#fff;color:#14325f}
+.steps button.done::after{content:" ✓";color:#7fe0a5}
+.steps button.active.done::after{color:var(--good)}
+main{max-width:1180px;margin:0 auto;padding:14px 16px 40px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:14px}
+h2{font-size:17px;margin:0 0 8px}
+h3{font-size:15px;margin:0 0 6px}
+.intro{color:var(--muted);margin:0 0 4px}
+.top{display:grid;grid-template-columns:minmax(260px,380px) 1fr;gap:16px;align-items:start}
+@media (max-width:760px){ .top{grid-template-columns:1fr} }
+.setup svg{width:100%;height:auto;display:block}
+.setup .note{font-size:13px;color:var(--muted);margin-top:4px}
+.q{margin:0 0 12px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:#fafbfd}
+.q > b{display:block;margin-bottom:6px}
+.q.ok{border-color:#9fd4b4;background:var(--goodbg)}
+.q.no{border-color:#eab3ad;background:var(--badbg)}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opts label{display:flex;gap:6px;align-items:flex-start;background:#fff;border:1px solid var(--line);border-radius:6px;padding:6px 10px;cursor:pointer;flex:1 1 160px}
+.opts label input{margin-top:3px;flex:none}
+.opts.col{flex-direction:column}
+.opts.col label{flex:none}
+select{font-size:15px;padding:7px;border:1px solid #aab4c3;border-radius:6px;width:100%;background:#fff;color:var(--ink)}
+.fb{margin-top:6px;font-size:14px}
+.q.ok .fb{color:var(--good)} .q.no .fb{color:var(--bad)}
+.btn{background:var(--accent);color:#fff;border:0;border-radius:6px;padding:9px 16px;font-size:15px;font-weight:600;cursor:pointer}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.ghost{background:var(--accent2);color:var(--accent)}
+.msg{padding:8px 12px;border-radius:6px;margin-top:10px;font-size:14px}
+.msg.good{background:var(--goodbg);color:var(--good)} .msg.bad{background:var(--badbg);color:var(--bad)} .msg.info{background:var(--accent2);color:#1a3d78}
+.locked{display:flex;align-items:center;gap:12px;color:var(--muted);padding:18px;border:2px dashed var(--line);border-radius:10px;background:#f7f8fa}
+.locked .lock{font-size:28px}
+.panels{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:680px){ .panels{grid-template-columns:1fr} }
+.panel{border:1px solid var(--line);border-radius:8px;padding:8px;background:#fbfcfe}
+.panel h3{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.panel h3 small{font-weight:400;color:var(--muted);font-size:12px}
+canvas.sim{width:100%;display:block;border-radius:6px;background:#eaf3fb;touch-action:pan-y}
+.legend{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:var(--muted);margin-top:6px}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:6px;padding:5px 6px;text-align:center}
+.stat span{display:block;font-size:11px;color:var(--muted);line-height:1.2}
+.stat b{font-size:18px;font-variant-numeric:tabular-nums}
+.bar{height:6px;background:#e6e9ef;border-radius:3px;margin-top:3px;overflow:hidden}
+.bar div{height:100%;width:0;background:var(--accent);transition:width .3s}
+.ctrl{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin:10px 0 4px;font-size:14px}
+.notice{background:#fffdf3;border:1px solid #eadfb8;border-radius:8px;padding:10px 12px;margin-top:12px}
+.notice b{color:#6b5200}
+.next{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:12px 18px;margin-top:18px;padding:18px;background:var(--goodbg);border:2px solid #9fd4b4;border-radius:10px;font-size:19px;font-weight:700;color:var(--good)}
+.btn.big{font-size:20px;padding:14px 26px;background:var(--good);border-radius:8px;box-shadow:0 2px 0 #14633a}
+.graphs{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px}
+.graphs.one{grid-template-columns:minmax(0,560px)}
+@media (max-width:680px){ .graphs{grid-template-columns:1fr} }
+.graphs svg{width:100%;height:auto;background:#fff;border:1px solid var(--line);border-radius:8px}
+table.sum{border-collapse:collapse;width:100%;font-size:14px}
+table.sum th,table.sum td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+table.sum th{background:var(--accent2)}
+.done-banner{background:var(--goodbg);color:var(--good);border:1px solid #9fd4b4;border-radius:8px;padding:10px 12px;font-weight:600;margin-bottom:10px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Factors Affecting Reaction Rates: What You Can't See</h1>
+  <nav class="steps" id="steps"></nav>
+</header>
+<main id="main"></main>
+
+<script>
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const shuffle = a => { a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+
+// ===================== CONTENT =====================
+const FACTORS = ["Chemical nature of reactants","Concentration of reactants","Surface area of a solid reactant","Temperature of the reaction system","Presence of a catalyst"];
+const MECH = [
+  {id:"freq", t:"It increases the frequency of collisions (collisions per second)"},
+  {id:"eff",  t:"It increases the proportion of collisions that are effective"},
+  {id:"both", t:"Both: more collisions per second AND a greater proportion are effective"}
+];
+const EXPS = [
+ { n:1, title:"Graphite vs. magnesium in HCl",
+   tubes:[ {label:["20 drops 1.0 M HCl","piece of graphite"], solid:"graphite"}, {label:["20 drops 1.0 M HCl","piece of Mg"], solid:"mg"} ],
+   faster:2, fasterOpts:["Test tube 1 (graphite)","Test tube 2 (Mg)","About the same"],
+   fasterHint:"Look back at your observations. Did anything happen to the graphite?",
+   factor:0, mech:"eff",
+   mechHint:"The acid hits both solids equally often, so collision frequency isn't the difference. What differs is whether a collision can actually react.",
+   expl:[
+    {t:"Magnesium reacts readily with H⁺ ions, so some of its collisions are effective. Carbon does not react with HCl, so its collisions never are.", ok:true},
+    {t:"Graphite has a smaller surface area, so the acid particles hit it less often.", h:"The two pieces were similar in size. The difference is what each solid is made of."},
+    {t:"The HCl in test tube 2 was more concentrated, so collisions happened more often.", h:"Check the labels: both test tubes had 1.0 M HCl."},
+    {t:"Graphite acts as a catalyst that blocks the reaction.", h:"No catalyst was used, and catalysts speed reactions up. Compare the chemical nature of carbon and magnesium."},
+    {t:"Magnesium particles move faster than carbon particles, so they collide harder.", h:"The solids stay in place and both tubes were at the same temperature."}
+   ],
+   factorHint:"The acid was identical in both tubes. What was different?",
+ },
+ { n:2, title:"3.0 M vs. 0.1 M HCl with magnesium",
+   tubes:[ {label:["20 drops 3.0 M HCl","piece of Mg"], solid:"mg", conc:"high"}, {label:["20 drops 0.1 M HCl","piece of Mg"], solid:"mg", conc:"low"} ],
+   faster:1, fasterOpts:["Test tube 1 (3.0 M)","Test tube 2 (0.1 M)","About the same"],
+   fasterHint:"Look back at your observations. Which tube bubbled more vigorously?",
+   factor:1, mech:"freq",
+   mechHint:"Concentration doesn't change how much energy each collision has. It changes how many particles there are to collide.",
+   expl:[
+    {t:"3.0 M acid has more H⁺ ions in each drop, so H⁺ ions strike the magnesium surface more often each second.", ok:true},
+    {t:"Particles in concentrated acid move faster and hit with more energy.", h:"Both acids were at the same temperature, so their particles move at the same speeds."},
+    {t:"Concentrated acid lowers the activation energy of the reaction.", h:"Only a catalyst changes the activation energy. Concentration changes how often collisions happen."},
+    {t:"Test tube 1 had more drops of acid.", h:"Both tubes had 20 drops. The difference is how many H⁺ ions are in each drop."},
+    {t:"H⁺ ions in concentrated acid are larger, so they are easier to hit.", h:"An H⁺ ion is the same size at any concentration."}
+   ],
+   factorHint:"Both tubes had the same metal and the same number of drops. Look at the labels on the acid.",
+ },
+ { n:3, title:"Alka-Seltzer piece vs. powder",
+   tubes:[ {label:["20 drops water","¼ tablet (one piece)"], solid:"tablet"}, {label:["20 drops water","¼ tablet, crushed"], solid:"powder"} ],
+   faster:2, fasterOpts:["Test tube 1 (piece)","Test tube 2 (powder)","About the same"],
+   fasterHint:"Look back at your observations. Which one fizzed faster?",
+   factor:2, mech:"freq",
+   mechHint:"The substance and the temperature were the same, so each collision is just as likely to be effective. What changed is how many particles can be reached.",
+   expl:[
+    {t:"Crushing exposes particles that were buried inside the tablet, so water can collide with more of them each second.", ok:true},
+    {t:"Crushing gives the tablet's particles more kinetic energy.", h:"The powder is at the same temperature as the piece. Crushing doesn't make particles move faster."},
+    {t:"Crushing breaks chemical bonds, which lowers the activation energy.", h:"Crushing only splits the solid into smaller pieces. The substance, and its activation energy, are unchanged."},
+    {t:"The powder contains more Alka-Seltzer than the piece.", h:"Both were ¼ of a tablet: the same amount in a different shape."},
+    {t:"Smaller pieces collide with more energy.", h:"Piece size doesn't change collision energy. Think about how many particles are exposed to the water."}
+   ],
+   factorHint:"Both were ¼ of a tablet in the same water. What did the mortar and pestle change?",
+ },
+ { n:4, title:"Alka-Seltzer in hot vs. ice-cold water",
+   tubes:[ {label:["20 drops hot water","¼ tablet"], solid:"tablet", temp:"hot"}, {label:["20 drops ice-cold water","¼ tablet"], solid:"tablet", temp:"cold"} ],
+   faster:1, fasterOpts:["Test tube 1 (hot)","Test tube 2 (ice cold)","About the same"],
+   fasterHint:"Look back at your observations. Which one fizzed faster?",
+   factor:3, mech:"both",
+   mechHint:"Temperature is the factor that does two things. Think about the particles' speed AND their energy.",
+   expl:[
+    {t:"Particles in hot water move faster, so they collide more often, and more of the collisions have enough energy to overcome the activation energy.", ok:true},
+    {t:"Hot water lowers the activation energy of the reaction.", h:"The activation energy stays the same. Hot particles have more energy, so more of them reach it."},
+    {t:"Particles expand when heated, so they collide more often.", h:"Particles don't get bigger when heated. They move faster."},
+    {t:"Hot particles move faster, so they collide more often, but each collision has the same energy as in cold water.", h:"Half right: faster particles also collide harder, so more collisions are effective."},
+    {t:"Hot water contains more water molecules than cold water.", h:"Both tubes had 20 drops. Temperature changes how fast particles move, not how many there are."}
+   ],
+   factorHint:"The tablet and the amount of water were the same. What was different about the water?",
+ },
+ { n:5, title:"Hydrogen peroxide with and without platinum",
+   tubes:[ {label:["20 drops H₂O₂","(no platinum)"], solid:"none", cont:"case"}, {label:["20 drops H₂O₂","platinum wheel"], solid:"pt", cont:"case"} ],
+   faster:2, fasterOpts:["Container 1 (no platinum)","Container 2 (platinum)","About the same"],
+   fasterHint:"Look back at your observations. Where did you see bubbles?",
+   factor:4, mech:"eff",
+   mechHint:"A catalyst doesn't change how often particles collide or how fast they move. It changes how many collisions can succeed.",
+   expl:[
+    {t:"Platinum provides an alternative pathway with a lower activation energy, so a greater proportion of collisions are effective.", ok:true},
+    {t:"Platinum gives the H₂O₂ molecules more kinetic energy.", h:"A catalyst doesn't heat up or speed up the particles. It lowers the energy needed to react."},
+    {t:"Platinum increases the number of collisions per second.", h:"Your notes say a catalyst does not increase collision frequency. What does it change?"},
+    {t:"Platinum reacts with the H₂O₂ and is used up.", h:"The platinum wheel is still there afterward. A catalyst is not consumed."},
+    {t:"Platinum adds more reactant particles to the container.", h:"Platinum isn't a reactant. The amount of H₂O₂ was the same in both."}
+   ],
+   factorHint:"The H₂O₂ was the same in both containers. What was added to one of them?",
+ }
+];
+const NOTICE = [
+ "Both tubes have the same acid, so H⁺ ions hit the graphite and the magnesium about equally often. Watch the <b>% effective</b> counter: collisions with graphite are never effective. Magnesium gives up electrons to H⁺ easily (low activation energy), so some collisions are effective: an Mg atom leaves as Mg²⁺ and H₂ gas bubbles away.",
+ "Same magnesium and same activation energy, so the <b>% effective</b> is about the same in both. But the 3.0 M acid has far more H⁺ ions per drop, so the magnesium is hit far more often. More <b>collisions per second</b> means more <b>effective collisions per second</b>. (Particle numbers are not to scale: the real ratio is 30 to 1.)",
+ "Both containers have the same number of tablet particles. In the whole piece, most particles are buried inside where water can't reach them. Crushing exposes them, so there are more <b>collisions per second</b> while the <b>% effective</b> stays about the same.",
+ "Hot particles move faster, so there are more <b>collisions per second</b>. They also carry more kinetic energy, so a greater <b>% of collisions are effective</b>. The graph shows why: at a higher temperature, more of the curve lies past the activation energy, E<sub>a</sub>, which itself does not change.",
+ "Same H₂O₂ at the same temperature, so collisions happen about equally often (check <b>collisions per second</b>). Platinum offers an alternative pathway with a lower activation energy, so a much greater <b>% of collisions are effective</b>. The platinum atoms are never used up."
+];
+
+// ===================== SETUP DIAGRAMS (static, no reaction shown) =====================
+function tubeSVG(t, x, idx){
+  const cont = t.cont || "tube";
+  let liq = "#d6ebfa";
+  if(t.temp==="hot") liq="#fbd9cf"; if(t.temp==="cold") liq="#cfe5ff";
+  if(t.conc==="high") liq="#cfe2f5";
+  let s = "";
+  if(cont==="tube"){
+    s += `<rect x="${x-22}" y="18" width="44" height="6" rx="2" fill="#c9d3df"/>`;
+    s += `<path d="M${x-20} 22 V150 a20 20 0 0 0 40 0 V22" fill="none" stroke="#7d8ba0" stroke-width="2.5"/>`;
+    s += `<path d="M${x-18.5} 100 V150 a18.5 18.5 0 0 0 37 0 V100 Z" fill="${liq}"/>`;
+    s += `<line x1="${x-18.5}" y1="100" x2="${x+18.5}" y2="100" stroke="#8fb3d6" stroke-width="1.5"/>`;
+  } else {
+    s += `<path d="M${x-34} 105 V150 q0 14 14 14 h40 q14 0 14 -14 V105" fill="none" stroke="#7d8ba0" stroke-width="2.5"/>`;
+    s += `<path d="M${x-32.5} 122 V150 q0 12.5 12.5 12.5 h40 q12.5 0 12.5 -12.5 V122 Z" fill="${liq}"/>`;
+    s += `<line x1="${x-32.5}" y1="122" x2="${x+32.5}" y2="122" stroke="#8fb3d6" stroke-width="1.5"/>`;
+  }
+  const by = cont==="tube" ? 160 : 156;
+  if(t.solid==="graphite") s += `<rect x="${x-7}" y="${by-16}" width="14" height="14" rx="1.5" fill="#2f3237" transform="rotate(12 ${x} ${by-9})"/>`;
+  if(t.solid==="mg") s += `<path d="M${x-12} ${by-4} q6 -14 12 -6 t12 -6" fill="none" stroke="#9aa3ad" stroke-width="5" stroke-linecap="round"/>`;
+  if(t.solid==="tablet") s += `<path d="M${x-12} ${by-2} L${x+10} ${by-2} L${x+12} ${by-14} L${x-4} ${by-18} Z" fill="#fff" stroke="#b8c0cc"/>`;
+  if(t.solid==="powder"){ let d=""; for(let i=0;i<34;i++){ const a=Math.random()*Math.PI, r=Math.random()*13; d+=`<circle cx="${(x+Math.cos(a)*r*1.1).toFixed(1)}" cy="${(by-1-Math.sin(a)*r*0.45).toFixed(1)}" r="1.6" fill="#fff" stroke="#b8c0cc" stroke-width=".5"/>`; } s+=d; }
+  if(t.solid==="pt"){ s += `<g transform="translate(${x} ${by-9})"><circle r="9" fill="#d8dce2" stroke="#7b8594" stroke-width="1.5"/>`; for(let k=0;k<6;k++){ const a=k*Math.PI/3; s+=`<line x1="0" y1="0" x2="${(9*Math.cos(a)).toFixed(1)}" y2="${(9*Math.sin(a)).toFixed(1)}" stroke="#7b8594"/>`; } s+=`<circle r="2.5" fill="#7b8594"/></g>`; }
+  if(t.temp==="hot"){ for(let k=-1;k<=1;k++) s+=`<path d="M${x+k*10} 14 q-4 -5 0 -10 t0 -10" fill="none" stroke="#e07a5f" stroke-width="1.8" stroke-linecap="round"/>`; }
+  if(t.temp==="cold"){ s+=`<rect x="${x-14}" y="103" width="9" height="9" rx="2" fill="#fff" stroke="#9cc3ea" transform="rotate(14 ${x-10} 107)"/><rect x="${x+3}" y="104" width="9" height="9" rx="2" fill="#fff" stroke="#9cc3ea" transform="rotate(-10 ${x+7} 108)"/>`; }
+  s += `<text x="${x}" y="190" text-anchor="middle" font-size="13" font-weight="700" fill="#1d2430">${cont==="tube"?"Test tube":"Container"} ${idx}</text>`;
+  s += `<text x="${x}" y="207" text-anchor="middle" font-size="12" fill="#3c4757">${t.label[0]}</text>`;
+  s += `<text x="${x}" y="223" text-anchor="middle" font-size="12" fill="#3c4757">${t.label[1]}</text>`;
+  return s;
+}
+function setupSVG(e){
+  return `<svg viewBox="0 0 340 232" role="img" aria-label="Setup for experiment ${e.n}">${tubeSVG(e.tubes[0],95,1)}${tubeSVG(e.tubes[1],245,2)}</svg>`;
+}
+
+// ===================== PARTICLE ENGINE =====================
+const W=320, H=220, RM=3.6, RA=7.2, SPEED=95;
+function gauss(){ let u=0,v=0; while(u===0)u=Math.random(); while(v===0)v=Math.random(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+function thermal(kT){ const s=Math.sqrt(kT); return {vx:gauss()*s, vy:gauss()*s, vz:gauss()*s}; }
+function block(cols, rows, cx, bottom){ const a=[]; for(let j=0;j<rows;j++) for(let i=0;i<cols;i++) a.push({x:cx+(i-(cols-1)/2)*2*RA, y:bottom-RA-j*2*RA}); return a; }
+
+class Panel{
+  constructor(canvas, cfg){
+    this.cv=canvas; this.cfg=cfg; this.ctx=canvas.getContext("2d");
+    this.reset();
+  }
+  reset(){
+    const c=this.cfg;
+    this.atoms = (c.atoms||[]).map(a=>({...a, alive:true, fade:1}));
+    this.floor = (c.floor||[]).map(a=>({...a, alive:true, fade:1, floor:true}));
+    this.parts=[]; for(let i=0;i<c.n;i++) this.parts.push(this.spawn());
+    this.fx=[]; this.bubbles=[]; this.t=0; this.events=[]; this.total=0; this.eff=0; this.regen=-1;
+  }
+  spawn(top){
+    const c=this.cfg, v=thermal(c.kT);
+    for(let tries=0;tries<60;tries++){
+      const p={x:RM+4+Math.random()*(W-2*RM-8), y:RM+4+Math.random()*((top?0.35:0.6)*H), ...v, col:c.color};
+      if(this.atoms.every(a=>!a.alive||Math.hypot(a.x-p.x,a.y-p.y)>RA+RM+2)) return p;
+    }
+    return {x:W/2,y:12,...v,col:c.color};
+  }
+  hit(kind, x, y, E, Ea, atom, p){
+    this.total++; this.events.push({t:this.t, e:false});
+    if(E>=Ea){
+      this.eff++; this.events[this.events.length-1].e=true;
+      this.fx.push({x,y,age:0,good:true});
+      this.bubbles.push({x, y:y-6, age:0, r:2.5+Math.random()*1.5});
+      return true;
+    }
+    this.fx.push({x,y,age:0,good:false});
+    return false;
+  }
+  step(dt){
+    const c=this.cfg; this.t+=dt;
+    const all = this.atoms.concat(this.floor);
+    for(const p of this.parts){
+      p.x += p.vx*SPEED*dt; p.y += p.vy*SPEED*dt;
+      // walls (thermal: sometimes resample speed so energies keep varying)
+      // keep a Maxwell distribution of energies: every particle gets a fresh thermal velocity about once every 1.5 s
+      if(Math.random()<dt/1.5) Object.assign(p, thermal(c.kT));
+      const th = () => null;
+      if(p.x<RM){ p.x=RM; const v=th(); if(v){p.vx=Math.abs(v.vx);p.vy=v.vy;} else p.vx=Math.abs(p.vx); }
+      if(p.x>W-RM){ p.x=W-RM; const v=th(); if(v){p.vx=-Math.abs(v.vx);p.vy=v.vy;} else p.vx=-Math.abs(p.vx); }
+      if(p.y<RM){ p.y=RM; const v=th(); if(v){p.vy=Math.abs(v.vy);p.vx=v.vx;} else p.vy=Math.abs(p.vy); }
+      if(p.y>H-RM){ p.y=H-RM; const v=th(); if(v){p.vy=-Math.abs(v.vy);p.vx=v.vx;} else p.vy=-Math.abs(p.vy); }
+      // a particle wedged between atoms (e.g. after fresh solid is added) is moved back out into the liquid
+      let deep=0; for(const a of this.atoms){ if(a.alive && Math.hypot(p.x-a.x,p.y-a.y)<RA+RM-1.2) deep++; }
+      if(deep>=2 || (deep===1 && p.y>H-RM-0.5)){ Object.assign(p, this.spawn(true)); continue; }
+      for(const a of all){
+        if(!a.alive) continue;
+        const dx=p.x-a.x, dy=p.y-a.y, d=Math.hypot(dx,dy);
+        if(d<RA+RM && d>0){
+          const nx=dx/d, ny=dy/d, vn=p.vx*nx+p.vy*ny;
+          p.x=a.x+nx*(RA+RM+0.01); p.y=a.y+ny*(RA+RM+0.01);
+          if(vn>=0) continue;
+          p.vx-=2*vn*nx; p.vy-=2*vn*ny;
+          // a particle rattling against the same atom only counts once per 0.3 s
+          if(p.lastAtom===a && this.t-p.lastHit<0.3){ break; }
+          p.lastHit=this.t; p.lastAtom=a;
+          const E=0.5*(p.vx*p.vx+p.vy*p.vy+p.vz*p.vz);
+          const Ea = a.floor ? c.floorEa : c.Ea;
+          if(this.hit("solid", a.x+nx*RA, a.y+ny*RA, E, Ea, a, p)){
+            if(!a.floor && c.consume){ a.alive=false; a.fade=1; }
+            Object.assign(p, this.spawn(true));
+          }
+          break;
+        }
+      }
+    }
+    if(c.pp){
+      const P=this.parts;
+      for(let i=0;i<P.length;i++) for(let j=i+1;j<P.length;j++){
+        const a=P[i], b=P[j], dx=b.x-a.x, dy=b.y-a.y, d=Math.hypot(dx,dy);
+        if(d<2*RM && d>0){
+          const nx=dx/d, ny=dy/d, rv=(b.vx-a.vx)*nx+(b.vy-a.vy)*ny;
+          const ov=(2*RM-d)/2; a.x-=nx*ov; a.y-=ny*ov; b.x+=nx*ov; b.y+=ny*ov;
+          if(rv>=0) continue;
+          const E=0.25*((b.vx-a.vx)**2+(b.vy-a.vy)**2+(b.vz-a.vz)**2);
+          a.vx+=rv*nx; a.vy+=rv*ny; b.vx-=rv*nx; b.vy-=rv*ny;
+          if(this.hit("pp",(a.x+b.x)/2,(a.y+b.y)/2,E,c.ppEa)){ Object.assign(a,this.spawn(true)); Object.assign(b,this.spawn(true)); }
+        }
+      }
+    }
+    for(const a of this.atoms) if(!a.alive) a.fade=Math.max(0,a.fade-dt*2);
+    if(c.consume && this.atoms.length){
+      const alive=this.atoms.filter(a=>a.alive).length;
+      if(alive < this.atoms.length*0.45 && this.regen<0) this.regen=this.t+1.2;
+      if(this.regen>0 && this.t>this.regen){ this.atoms.forEach(a=>{a.alive=true;a.fade=0;}); this.regen=-1;
+        this.parts.forEach(p=>{ if(this.atoms.some(a=>Math.hypot(a.x-p.x,a.y-p.y)<RA+RM+1)) Object.assign(p,this.spawn(true)); }); this.fx.push({x:W/2,y:H/2,age:0,msg:"fresh solid"}); }
+    }
+    for(const a of this.atoms) if(a.alive && a.fade<1) a.fade=Math.min(1,a.fade+dt*2);
+    this.fx.forEach(f=>f.age+=dt); this.fx=this.fx.filter(f=>f.age<(f.msg?1.2:0.45));
+    this.bubbles.forEach(b=>{b.age+=dt; b.y-=28*dt; b.x+=Math.sin(b.age*6)*0.3;}); this.bubbles=this.bubbles.filter(b=>b.y>-6);
+    const cut=this.t-6; while(this.events.length && this.events[0].t<cut) this.events.shift();
+  }
+  stats(){
+    const span=Math.min(6,Math.max(this.t,0.5));
+    const col=this.events.length/span, effr=this.events.filter(e=>e.e).length/span;
+    return {col, effr, pct: this.total? 100*this.eff/this.total : 0, total:this.total};
+  }
+  draw(){
+    const cv=this.cv, dpr=window.devicePixelRatio||1, cw=cv.clientWidth, ch=cw*H/W;
+    if(cv.width!==Math.round(cw*dpr)||cv.height!==Math.round(ch*dpr)){ cv.width=Math.round(cw*dpr); cv.height=Math.round(ch*dpr); cv.style.height=ch+"px"; }
+    const g=this.ctx, k=cv.width/W; g.setTransform(k,0,0,k,0,0);
+    const c=this.cfg;
+    g.fillStyle=c.bg||"#eaf3fb"; g.fillRect(0,0,W,H);
+    const drawAtom=(a,fill,stroke)=>{ g.globalAlpha=a.fade; g.beginPath(); g.arc(a.x,a.y,RA-0.4,0,7); g.fillStyle=fill; g.fill(); g.strokeStyle=stroke; g.lineWidth=1; g.stroke(); g.globalAlpha=1; };
+    for(const a of this.atoms) if(a.fade>0) drawAtom(a,c.atomFill,c.atomStroke);
+    for(const a of this.floor) drawAtom(a,c.floorFill,c.floorStroke);
+    if(c.floorLabel){ g.fillStyle="#3c4757"; g.font="600 10px system-ui"; g.textAlign="center"; g.fillText(c.floorLabel,W/2,H-RA-6); }
+    for(const b of this.bubbles){ g.beginPath(); g.arc(b.x,b.y,b.r,0,7); g.strokeStyle="rgba(60,110,170,.75)"; g.lineWidth=1; g.stroke(); g.fillStyle="rgba(255,255,255,.6)"; g.fill(); }
+    for(const p of this.parts){
+      g.strokeStyle=p.col; g.globalAlpha=0.28; g.lineWidth=2*RM*0.6; g.lineCap="round";
+      g.beginPath(); g.moveTo(p.x,p.y); g.lineTo(p.x-p.vx*SPEED*0.09,p.y-p.vy*SPEED*0.09); g.stroke(); g.globalAlpha=1;
+      g.beginPath(); g.arc(p.x,p.y,RM,0,7); g.fillStyle=p.col; g.fill();
+    }
+    for(const f of this.fx){
+      if(f.msg){ g.globalAlpha=1-f.age/1.2; g.fillStyle="#1e8a4c"; g.font="600 12px system-ui"; g.textAlign="center"; g.fillText("fresh piece of solid added",W/2,16); g.globalAlpha=1; continue; }
+      const r=4+f.age*26, al=1-f.age/0.45;
+      g.globalAlpha=al; g.beginPath(); g.arc(f.x,f.y,r,0,7);
+      if(f.good){ g.fillStyle="rgba(255,200,40,.55)"; g.fill(); g.strokeStyle="#e0a000"; g.lineWidth=2; g.stroke(); }
+      else { g.strokeStyle="rgba(90,100,120,.6)"; g.lineWidth=1; g.stroke(); }
+      g.globalAlpha=1;
+    }
+  }
+}
+
+// ===================== PANEL CONFIGS =====================
+const H_ION="#d6453d", WATER="#3b82c4", H2O2="#7a4fc4";
+function cfgs(n){
+  const mg = {atomFill:"#b9c0c9", atomStroke:"#7d8794"};
+  const tab = {atomFill:"#ffffff", atomStroke:"#9aa6b6"};
+  if(n===1) return [
+    {title:"Test tube 1: graphite", n:24, kT:1, color:H_ION, atoms:block(16,3,W/2,H+RA), Ea:Infinity, consume:true, atomFill:"#33363c", atomStroke:"#111",
+     legend:[[H_ION,"H⁺ ion"],["#33363c","C atom (graphite)"]]},
+    {title:"Test tube 2: magnesium", n:24, kT:1, color:H_ION, atoms:block(16,3,W/2,H+RA), Ea:2.5, consume:true, ...mg,
+     legend:[[H_ION,"H⁺ ion"],["#b9c0c9","Mg atom"],["bub","H₂ gas"]]}
+  ];
+  if(n===2) return [
+    {title:"Test tube 1: 3.0 M HCl", n:40, kT:1, color:H_ION, atoms:block(16,3,W/2,H+RA), Ea:2.5, consume:true, ...mg,
+     legend:[[H_ION,"H⁺ ion"],["#b9c0c9","Mg atom"],["bub","H₂ gas"]]},
+    {title:"Test tube 2: 0.1 M HCl", n:5, kT:1, color:H_ION, atoms:block(16,3,W/2,H+RA), Ea:2.5, consume:true, ...mg,
+     legend:[[H_ION,"H⁺ ion"],["#b9c0c9","Mg atom"],["bub","H₂ gas"]]}
+  ];
+  if(n===3){
+    const clumps=[]; const spots=[[46,H+RA],[118,H+RA],[196,H+RA],[272,H+RA],[80,150],[160,160],[240,150],[120,95],[205,100]];
+    spots.forEach(([x,b])=>clumps.push(...block(2,2,x,b)));
+    return [
+    {title:"Test tube 1: one piece", n:24, kT:1, color:WATER, atoms:block(6,6,W/2,H+RA), Ea:2.5, consume:true, ...tab,
+     legend:[[WATER,"water molecule"],["#ffffff","tablet particle"],["bub","CO₂ gas"]]},
+    {title:"Test tube 2: crushed", n:24, kT:1, color:WATER, atoms:clumps, Ea:2.5, consume:true, ...tab,
+     legend:[[WATER,"water molecule"],["#ffffff","tablet particle"],["bub","CO₂ gas"]]}
+  ];}
+  if(n===4) return [
+    {title:"Test tube 1: hot water", n:24, kT:2, color:WATER, atoms:block(12,3,W/2,H+RA), Ea:4, consume:true, ...tab, bg:"#fbeee9",
+     legend:[[WATER,"water molecule"],["#ffffff","tablet particle"],["bub","CO₂ gas"]]},
+    {title:"Test tube 2: ice-cold water", n:24, kT:1, color:WATER, atoms:block(12,3,W/2,H+RA), Ea:4, consume:true, ...tab, bg:"#e6f1ff",
+     legend:[[WATER,"water molecule"],["#ffffff","tablet particle"],["bub","CO₂ gas"]]}
+  ];
+  if(n===5){
+    const floor=[]; for(let x=RA;x<=W-RA+0.1;x+=2*RA) floor.push({x,y:H-2}); // mostly sunk into the bottom so no crevices trap particles
+    return [
+    {title:"Container 1: no platinum", n:18, kT:1, color:H2O2, floor, floorEa:5, pp:true, ppEa:5, floorFill:"#dfe7ee", floorStroke:"#aebccb", floorLabel:"plastic container bottom",
+     legend:[[H2O2,"H₂O₂ molecule"],["bub","O₂ gas"]]},
+    {title:"Container 2: platinum wheel", n:18, kT:1, color:H2O2, floor, floorEa:1.8, pp:true, ppEa:5, floorFill:"#d8dce2", floorStroke:"#6f7a88", floorLabel:"platinum surface",
+     legend:[[H2O2,"H₂O₂ molecule"],["#d8dce2","Pt atom"],["bub","O₂ gas"]]}
+  ];}
+}
+
+// ===================== GRAPHS =====================
+// hump-shaped distribution drawn like the class notes: the peak moves right and flattens as temperature rises
+const fE=(E,kT)=>{ if(E<=0) return 0; const a=1.6*Math.sqrt(kT); return Math.sqrt(2/Math.PI)*E*E*Math.exp(-E*E/(2*a*a))/(a*a*a); };
+function distSVG(curves, eas, title){
+  const X0=46,X1=390,Y0=200,Y1=44, Emax=9, fmax=0.42;
+  const sx=E=>X0+(X1-X0)*E/Emax, sy=f=>Y0-(Y0-Y1)*Math.min(f,fmax)/fmax;
+  let s=`<svg viewBox="0 0 410 240" role="img" aria-label="${title}"><text x="205" y="17" text-anchor="middle" font-size="13" font-weight="700" fill="#1d2430">${title}</text>`;
+  s+=`<line x1="${X0}" y1="${Y0}" x2="${X1}" y2="${Y0}" stroke="#333"/><line x1="${X0}" y1="${Y0}" x2="${X0}" y2="${Y1-6}" stroke="#333"/>`;
+  s+=`<text x="${(X0+X1)/2}" y="${Y0+28}" text-anchor="middle" font-size="12" fill="#333">Kinetic energy of collision</text>`;
+  s+=`<text transform="translate(16 ${(Y0+Y1)/2}) rotate(-90)" text-anchor="middle" font-size="12" fill="#333">Number of collisions</text>`;
+  curves.forEach(cv=>{
+    const ea=cv.shadeFrom; if(ea!=null){ let d=`M${sx(ea)} ${Y0}`; for(let E=ea;E<=Emax;E+=0.05) d+=` L${sx(E).toFixed(1)} ${sy(fE(E,cv.kT)).toFixed(1)}`; d+=` L${sx(Emax)} ${Y0} Z`; s+=`<path d="${d}" fill="${cv.shade}"/>`; }
+  });
+  curves.forEach(cv=>{ let d=""; for(let E=0;E<=Emax;E+=0.05) d+=(d?" L":"M")+sx(E).toFixed(1)+" "+sy(fE(E,cv.kT)).toFixed(1); s+=`<path d="${d}" fill="none" stroke="${cv.col}" stroke-width="2.5"/>`;
+    if(cv.lab) s+=`<text x="${sx(cv.lab[0])}" y="${sy(cv.lab[1])}" font-size="12" font-weight="700" fill="${cv.col}">${cv.lab[2]}</text>`; });
+  eas.forEach(e=>{ s+=`<line x1="${sx(e.E)}" y1="${Y0}" x2="${sx(e.E)}" y2="${Y1+10}" stroke="${e.col}" stroke-width="1.8" stroke-dasharray="5 3"/><text x="${sx(e.E)+4}" y="${Y1+e.dy+12}" font-size="12" fill="${e.col}">${e.t}</text>`; });
+  s+=`</svg>`; return s;
+}
+function profileSVG(){
+  const X0=46,X1=390,Y0=200,Y1=30;
+  let s=`<svg viewBox="0 0 410 240" role="img" aria-label="Energy profile with and without catalyst"><text x="205" y="17" text-anchor="middle" font-size="13" font-weight="700" fill="#1d2430">Energy profile: 2 H₂O₂ → 2 H₂O + O₂</text>`;
+  s+=`<line x1="${X0}" y1="${Y0}" x2="${X1}" y2="${Y0}" stroke="#333"/><line x1="${X0}" y1="${Y0}" x2="${X0}" y2="${Y1-6}" stroke="#333"/>`;
+  s+=`<text x="${(X0+X1)/2}" y="${Y0+28}" text-anchor="middle" font-size="12" fill="#333">Reaction progress</text><text transform="translate(16 ${(Y0+Y1)/2}) rotate(-90)" text-anchor="middle" font-size="12" fill="#333">Potential energy</text>`;
+  const r=130, p=178, path=(peak)=>{ let d=""; for(let i=0;i<=100;i++){ const t=i/100, x=X0+10+t*(X1-X0-20); const base=r+(p-r)*(1/(1+Math.exp(-(t-0.5)*14))); const y=base-(base-peak)*Math.exp(-((t-0.5)**2)/0.012); d+=(d?" L":"M")+x.toFixed(1)+" "+y.toFixed(1);} return d; };
+  s+=`<path d="${path(42)}" fill="none" stroke="#7a4fc4" stroke-width="2.5"/><path d="${path(102)}" fill="none" stroke="#1f5fbf" stroke-width="2.5"/>`;
+  s+=`<text x="${X0+205}" y="52" font-size="12" font-weight="700" fill="#7a4fc4">without platinum</text><text x="${X0+222}" y="108" font-size="12" font-weight="700" fill="#1f5fbf">with platinum</text>`;
+  s+=`<line x1="${X0+24}" y1="${r}" x2="${X0+24}" y2="46" stroke="#7a4fc4" stroke-width="1.5" marker-end="url(#ah)"/><text x="${X0+30}" y="70" font-size="11" fill="#7a4fc4">E<tspan font-size="8" dy="2">a</tspan></text>`;
+  s+=`<line x1="${X0+62}" y1="${r}" x2="${X0+62}" y2="106" stroke="#1f5fbf" stroke-width="1.5" marker-end="url(#ah2)"/><text x="${X0+68}" y="102" font-size="11" fill="#1f5fbf">lower E<tspan font-size="8" dy="2">a</tspan></text>`;
+  s+=`<defs><marker id="ah" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#7a4fc4"/></marker><marker id="ah2" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#1f5fbf"/></marker></defs>`;
+  s+=`<text x="${X0+14}" y="${r+16}" font-size="11" fill="#333">H₂O₂</text><text x="${X1-90}" y="${p+16}" font-size="11" fill="#333">H₂O + O₂</text></svg>`;
+  return s;
+}
+function graphsFor(n){
+  if(n===4) return `<div class="graphs one">${distSVG([{kT:1,col:"#1f5fbf",lab:[2.9,0.37,"Cold water"]},{kT:2,col:"#d6453d",lab:[5.45,0.17,"Hot water"],shadeFrom:5.2,shade:"rgba(214,69,61,.22)"},{kT:1,col:"#1f5fbf",shadeFrom:5.2,shade:"rgba(31,95,191,.35)"}],[{E:5.2,col:"#333",t:"Eₐ (same for both)",dy:8}],"Collision energies in cold vs. hot water")}</div>`;
+  if(n===5) return `<div class="graphs">${profileSVG()}${distSVG([{kT:1,col:"#333",shadeFrom:3.1,shade:"rgba(31,95,191,.25)"},{kT:1,col:"#333",shadeFrom:5.4,shade:"rgba(122,79,196,.55)"}],[{E:3.1,col:"#1f5fbf",t:"Eₐ with Pt",dy:8},{E:5.4,col:"#7a4fc4",t:"Eₐ without Pt",dy:8}],"Effective collisions with and without Pt")}</div>`;
+  return "";
+}
+
+// ===================== UI =====================
+const state = EXPS.map(()=>({done:false, answers:{}, order:null, tries:0}));
+let cur = 0, panels=[], running=true, speed=1;
+// experiments are presented in a different random order each time the page opens
+const ORDER = shuffle([0,1,2,3,4]);
+
+function renderSteps(){
+  const nav=$("steps"); nav.innerHTML="";
+  ORDER.forEach(i=>{ const e=EXPS[i]; const b=document.createElement("button"); b.textContent="Exp "+e.n; if(i===cur)b.classList.add("active"); if(state[i].done)b.classList.add("done"); b.onclick=()=>show(i); nav.appendChild(b); });
+  const b=document.createElement("button"); b.textContent="Summary"; if(cur===5)b.classList.add("active"); b.onclick=()=>show(5); nav.appendChild(b);
+}
+function opt(name, value, text, checked){ return `<label><input type="radio" name="${name}" value="${value}" ${checked?"checked":""}><span>${text}</span></label>`; }
+
+function show(i){
+  cur=i; renderSteps(); panels=[];
+  window.scrollTo({top:0});
+  if(i===5) return renderSummary();
+  const e=EXPS[i], st=state[i];
+  if(!st.order) st.order=shuffle(e.expl.map((_,k)=>k));
+  if(st.done && st.correct) st.answers={...st.correct};
+  const a=st.answers;
+  $("main").innerHTML = `
+  <div class="card">
+    <h2>Experiment ${e.n}: ${e.title}</h2>
+    <div class="top">
+      <div class="setup">${setupSVG(e)}</div>
+      <div>
+        <div class="q" id="q1"><b>1. Based on your observations, which reacted faster?</b>
+          <div class="opts">${e.fasterOpts.map((t,k)=>opt("faster",k+1,t,a.faster==k+1)).join("")}</div><div class="fb"></div></div>
+        <div class="q" id="q2"><b>2. Which rate factor was tested?</b>
+          <select id="selFactor"><option value="">Choose…</option>${FACTORS.map((f,k)=>`<option value="${k}" ${a.factor==k?"selected":""}>${f}</option>`).join("")}</select><div class="fb"></div></div>
+        <div class="q" id="q3"><b>3. How does this factor speed up the reaction?</b>
+          <div class="opts">${MECH.map(m=>opt("mech",m.id,m.t,a.mech===m.id)).join("")}</div><div class="fb"></div></div>
+        <div class="q" id="q4"><b>4. Choose the best explanation.</b>
+          <div class="opts col">${st.order.map(k=>opt("expl",k,e.expl[k].t,a.expl!==undefined&&a.expl!==""&&+a.expl===k)).join("")}</div><div class="fb"></div></div>
+        <button class="btn" id="btnCheck">Check my answers</button>
+        <div id="checkMsg"></div>
+      </div>
+    </div>
+  </div>
+  <div class="card" id="particleCard"></div>`;
+  $("btnCheck").onclick=()=>check(i);
+  if(st.done){ check(i,true); }
+  else renderLocked();
+}
+function renderLocked(){
+  $("particleCard").innerHTML=`<h2>At the particle level</h2><div class="locked"><span class="lock">🔒</span><span>Answer all four questions correctly to unlock the particle view of this experiment.</span></div>`;
+}
+function readAnswers(i){
+  const q=n=>{ const el=document.querySelector(`input[name=${n}]:checked`); return el?el.value:""; };
+  const a=state[i].answers;
+  a.faster=q("faster"); a.factor=$("selFactor").value; a.mech=q("mech"); a.expl=q("expl");
+  return a;
+}
+function mark(id, ok, text){ const q=$(id); q.classList.remove("ok","no"); q.classList.add(ok?"ok":"no"); q.querySelector(".fb").innerHTML=text; }
+function check(i, silent){
+  const e=EXPS[i], st=state[i], a=readAnswers(i);
+  if(!a.faster||a.factor===""||!a.mech||a.expl===""){ $("checkMsg").innerHTML=`<div class="msg info">Answer all four questions first.</div>`; return; }
+  if(!silent) st.tries++;
+  const r1 = +a.faster===e.faster, r2 = +a.factor===e.factor, r3 = a.mech===e.mech, ex=e.expl[+a.expl], r4=!!ex.ok;
+  mark("q1", r1, r1?"Correct.":e.fasterHint);
+  mark("q2", r2, r2?"Correct.":e.factorHint);
+  mark("q3", r3, r3?"Correct.":e.mechHint);
+  mark("q4", r4, r4?"Correct.":ex.h);
+  const all=r1&&r2&&r3&&r4;
+  if(all){
+    const first=!st.done; st.done=true; st.correct={...a}; renderSteps();
+    $("checkMsg").innerHTML=`<div class="msg good">All correct! The particle view below is unlocked.</div>`;
+    renderParticles(i);
+    if(first && !silent) setTimeout(()=>$("particleCard").scrollIntoView({behavior:"smooth",block:"start"}),250);
+  } else {
+    const nOk=[r1,r2,r3,r4].filter(Boolean).length;
+    $("checkMsg").innerHTML=`<div class="msg bad">${nOk} of 4 correct. Read the hints in red, change your answers, and check again.</div>`;
+  }
+}
+
+function renderParticles(i){
+  const e=EXPS[i], cs=cfgs(e.n);
+  const legend=l=>l.map(([c,t])=>c==="bub"?`<span><i style="background:#fff;border:1.5px solid #3c6eaa"></i>${t}</span>`:`<span><i style="background:${c};border:1px solid #8893a2"></i>${t}</span>`).join("")
+    + `<span><i style="background:rgba(255,200,40,.8);border:1.5px solid #e0a000"></i>effective collision</span><span><i style="background:#fff;border:1px solid #8893a2"></i>collision, not effective</span>`;
+  $("particleCard").innerHTML=`<h2>At the particle level</h2>
+    <p class="intro">This is what you couldn't see. Each ring is a collision. Yellow bursts are effective collisions that lead to a reaction.</p>
+    <div class="ctrl"><button class="btn ghost" id="btnPause">Pause</button>
+      <label>Speed <select id="selSpeed" style="width:auto"><option value="0.5">Slow</option><option value="1" selected>Normal</option><option value="2">Fast</option></select></label>
+      <button class="btn ghost" id="btnRestart">Restart counters</button></div>
+    <div class="panels">${cs.map((c,k)=>`
+      <div class="panel"><h3>${c.title}</h3><canvas class="sim" id="cv${k}"></canvas>
+        <div class="legend">${legend(c.legend)}</div>
+        <div class="stats">
+          <div class="stat"><span>Collisions per second</span><b id="s${k}a">0</b><div class="bar"><div id="s${k}ab"></div></div></div>
+          <div class="stat"><span>% of collisions effective</span><b id="s${k}b">0%</b><div class="bar"><div id="s${k}bb" style="background:#e0a000"></div></div></div>
+          <div class="stat"><span>Effective collisions per second (rate)</span><b id="s${k}c">0</b><div class="bar"><div id="s${k}cb" style="background:#1e8a4c"></div></div></div>
+        </div></div>`).join("")}
+    </div>
+    ${graphsFor(e.n)}
+    <div class="notice"><b>What to notice:</b> ${NOTICE[i]}</div>
+    <div class="next"><span>Done exploring?</span><button class="btn big" id="btnNext"></button></div>`;
+  const nextI = ORDER.find(k=>!state[k].done);
+  $("btnNext").textContent = nextI!==undefined ? `Go on to Experiment ${EXPS[nextI].n} →` : "See the Summary →";
+  $("btnNext").onclick=()=>show(nextI!==undefined?nextI:5);
+  panels = cs.map((c,k)=>new Panel($("cv"+k), c));
+  running=true; speed=1;
+  $("btnPause").onclick=()=>{ running=!running; $("btnPause").textContent=running?"Pause":"Play"; };
+  $("selSpeed").onchange=ev=>speed=+ev.target.value;
+  $("btnRestart").onclick=()=>panels.forEach(p=>p.reset());
+}
+
+function renderSummary(){
+  const doneN=state.filter(s=>s.done).length;
+  const rows=EXPS.map((e,i)=>`<tr><td>${e.n}. ${e.title}</td><td>${state[i].done?FACTORS[e.factor]:"<i>not finished</i>"}</td><td>${state[i].done?{freq:"↑ frequency of collisions",eff:"↑ proportion of effective collisions",both:"↑ frequency AND ↑ proportion of effective collisions"}[e.mech]:""}</td><td>${state[i].done?e.expl.find(x=>x.ok).t:""}</td><td>${state[i].tries||"–"}</td></tr>`).join("");
+  $("main").innerHTML=`<div class="card"><h2>Summary</h2>
+    ${doneN===5?`<div class="done-banner">All five experiments complete.</div>`:`<p class="intro">${doneN} of 5 experiments complete. Finish the rest to fill in the table.</p>`}
+    <p>To speed up a reaction, you must increase the <b>frequency of collisions</b>, the <b>proportion of effective collisions</b>, or both.</p>
+    <div style="overflow-x:auto"><table class="sum"><thead><tr><th>Experiment</th><th>Rate factor</th><th>How it speeds up the reaction</th><th>Explanation</th><th>Checks needed</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+}
+
+let last=performance.now();
+function loop(now){
+  const dt=Math.min(0.05,(now-last)/1000); last=now;
+  if(running && panels.length){
+    const sub=Math.ceil(dt*speed/0.004);
+    for(let s=0;s<sub;s++) panels.forEach(p=>p.step(dt*speed/sub));
+  }
+  panels.forEach((p,k)=>{
+    p.draw();
+    const st=p.stats(), el=$("s"+k+"a"); if(!el) return;
+    const maxC = Math.max(...panels.map(q=>q.stats().col),1);
+    el.textContent=st.col.toFixed(1); $("s"+k+"ab").style.width=(100*st.col/maxC)+"%";
+    $("s"+k+"b").textContent=st.total? Math.round(st.pct)+"%" : "–"; $("s"+k+"bb").style.width=st.pct+"%";
+    const maxE = Math.max(...panels.map(q=>q.stats().effr),0.5);
+    $("s"+k+"c").textContent=st.effr.toFixed(1); $("s"+k+"cb").style.width=(100*st.effr/maxE)+"%";
+  });
+  requestAnimationFrame(loop);
+}
+show(ORDER[0]);
+requestAnimationFrame(loop);
+window.__rates = {state, EXPS, ORDER, panels:()=>panels, show};
+})();
+</script>
+</body>
+</html>
