@@ -204,7 +204,10 @@ function tubeSVG(t, x, idx){
   if(t.solid==="mg") s += `<path d="M${x-12} ${by-4} q6 -14 12 -6 t12 -6" fill="none" stroke="#9aa3ad" stroke-width="5" stroke-linecap="round"/>`;
   if(t.solid==="tablet") s += `<path d="M${x-12} ${by-2} L${x+10} ${by-2} L${x+12} ${by-14} L${x-4} ${by-18} Z" fill="#fff" stroke="#b8c0cc"/>`;
   if(t.solid==="powder"){ let d=""; for(let i=0;i<34;i++){ const a=Math.random()*Math.PI, r=Math.random()*13; d+=`<circle cx="${(x+Math.cos(a)*r*1.1).toFixed(1)}" cy="${(by-1-Math.sin(a)*r*0.45).toFixed(1)}" r="1.6" fill="#fff" stroke="#b8c0cc" stroke-width=".5"/>`; } s+=d; }
-  if(t.solid==="pt"){ s += `<g transform="translate(${x} ${by-9})"><circle r="9" fill="#d8dce2" stroke="#7b8594" stroke-width="1.5"/>`; for(let k=0;k<6;k++){ const a=k*Math.PI/3; s+=`<line x1="0" y1="0" x2="${(9*Math.cos(a)).toFixed(1)}" y2="${(9*Math.sin(a)).toFixed(1)}" stroke="#7b8594"/>`; } s+=`<circle r="2.5" fill="#7b8594"/></g>`; }
+  if(t.solid==="pt"){ // dark grey gear-shaped catalyst disc, like the one in the lens case
+    s += `<rect x="${x-21}" y="${by-4}" width="42" height="5" rx="2" fill="#3a3a40"/>`;
+    for(let k=0;k<6;k++) s += `<rect x="${(x-20.5+k*7).toFixed(1)}" y="${by-20}" width="6" height="18" rx="3" fill="${k%2?"#55555c":"#3a3a40"}" stroke="#26262a" stroke-width=".6"/>`;
+  }
   if(t.temp==="hot"){ for(let k=-1;k<=1;k++) s+=`<path d="M${x+k*10} 14 q-4 -5 0 -10 t0 -10" fill="none" stroke="#e07a5f" stroke-width="1.8" stroke-linecap="round"/>`; }
   if(t.temp==="cold"){ s+=`<rect x="${x-14}" y="103" width="9" height="9" rx="2" fill="#fff" stroke="#9cc3ea" transform="rotate(14 ${x-10} 107)"/><rect x="${x+3}" y="104" width="9" height="9" rx="2" fill="#fff" stroke="#9cc3ea" transform="rotate(-10 ${x+7} 108)"/>`; }
   s += `<text x="${x}" y="190" text-anchor="middle" font-size="13" font-weight="700" fill="#1d2430">${cont==="tube"?"Test tube":"Container"} ${idx}</text>`;
@@ -329,8 +332,9 @@ class Panel{
     g.fillStyle=c.bg||"#eaf3fb"; g.fillRect(0,0,W,H);
     const drawAtom=(a,fill,stroke)=>{ g.globalAlpha=a.fade; g.beginPath(); g.arc(a.x,a.y,RA-0.4,0,7); g.fillStyle=fill; g.fill(); g.strokeStyle=stroke; g.lineWidth=1; g.stroke(); g.globalAlpha=1; };
     for(const a of this.atoms) if(a.fade>0) drawAtom(a,c.atomFill,c.atomStroke);
+    if(c.floorBase){ g.fillStyle=c.floorBase; g.fillRect(0,H-9,W,9); for(const a of this.floor) g.fillRect(a.x-RA,a.y,2*RA,H-a.y); }
     for(const a of this.floor) drawAtom(a,c.floorFill,c.floorStroke);
-    if(c.floorLabel){ g.fillStyle="#3c4757"; g.font="600 10px system-ui"; g.textAlign="center"; g.fillText(c.floorLabel,W/2,H-RA-6); }
+    if(c.floorLabel){ g.fillStyle="#3c4757"; g.font="600 10px system-ui"; g.textAlign="center"; g.fillText(c.floorLabel,W/2,c.floorLabelY||H-RA-6); }
     for(const b of this.bubbles){ g.beginPath(); g.arc(b.x,b.y,b.r,0,7); g.strokeStyle="rgba(60,110,170,.75)"; g.lineWidth=1; g.stroke(); g.fillStyle="rgba(255,255,255,.6)"; g.fill(); }
     for(const p of this.parts){
       g.strokeStyle=p.col; g.globalAlpha=0.28; g.lineWidth=2*RM*0.6; g.lineCap="round";
@@ -382,11 +386,13 @@ function cfgs(n){
   ];
   if(n===5){
     const floor=[]; for(let x=RA;x<=W-RA+0.1;x+=2*RA) floor.push({x,y:H-2}); // mostly sunk into the bottom so no crevices trap particles
+    // the catalyst disc is ridged like a gear: the same atoms, raised in rounded teeth
+    const teeth=[0,0,0,13,16,13]; const ridged=floor.map((a,k)=>({x:a.x,y:a.y-teeth[k%teeth.length]}));
     return [
     {title:"Container 1: no platinum", n:18, kT:1, color:H2O2, floor, floorEa:5, pp:true, ppEa:5, floorFill:"#dfe7ee", floorStroke:"#aebccb", floorLabel:"plastic container bottom",
      legend:[[H2O2,"H₂O₂ molecule"],["bub","O₂ gas"]]},
-    {title:"Container 2: platinum wheel", n:18, kT:1, color:H2O2, floor, floorEa:1.8, pp:true, ppEa:5, floorFill:"#d8dce2", floorStroke:"#6f7a88", floorLabel:"platinum surface",
-     legend:[[H2O2,"H₂O₂ molecule"],["#d8dce2","Pt atom"],["bub","O₂ gas"]]}
+    {title:"Container 2: platinum wheel", n:18, kT:1, color:H2O2, floor:ridged, floorEa:1.8, pp:true, ppEa:5, floorFill:"#4d4d54", floorStroke:"#26262a", floorBase:"#3a3a40", floorLabel:"ridged surface of the platinum wheel", floorLabelY:H-32,
+     legend:[[H2O2,"H₂O₂ molecule"],["#4d4d54","Pt atom on the wheel"],["bub","O₂ gas"]]}
   ];}
 }
 
@@ -431,8 +437,8 @@ function graphsFor(n){
 // ===================== UI =====================
 const state = EXPS.map(()=>({done:false, answers:{}, order:null, tries:0}));
 let cur = 0, panels=[], running=true, speed=1;
-// experiments are presented in a different random order each time the page opens
-const ORDER = shuffle([0,1,2,3,4]);
+// experiments are presented in lab-sheet order, 1 to 5 (students can jump to any of them)
+const ORDER = [0,1,2,3,4];
 
 function renderSteps(){
   const nav=$("steps"); nav.innerHTML="";
