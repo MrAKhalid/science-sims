@@ -1,4 +1,3 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <!doctype html>
 <html lang="en">
 <head>
@@ -187,8 +186,15 @@ footer { color: var(--muted); font-size: .8rem; text-align: center; margin-top: 
   <!-- STEP 4: results -->
   <section class="card hidden" id="results">
     <div class="step-label">Step 4</div>
-    <h2>Top up the tank</h2>
+    <h2 id="resultsTitle">Start filling the tank</h2>
     <div id="resultBody"></div>
+  </section>
+
+  <!-- STEP 5: add concentrates and finish filling -->
+  <section class="card hidden" id="step5">
+    <div class="step-label">Step 5</div>
+    <h2>Add Part A and Part B, then top up the tank</h2>
+    <div id="step5Body"></div>
   </section>
 
   <footer>Students do not adjust pH — your teacher will do that.</footer>
@@ -223,6 +229,8 @@ const SETTINGS = {
   stockStrength: 100,
   // Round concentrate volumes to the nearest this many mL.
   roundMl: 5,
+  // Add Part A/B once this fraction of the top-up water is in the tank.
+  addConcAtFraction: 0.75,
   // EC model from the Chapter 8 table (0.5x ≈ 1000, 1x ≈ 1800, 2x ≈ 3400 µS):
   //   EC = tapWaterEc + ecPerX × concentration
   tapWaterEc: 200,   // µS of plain tap water
@@ -291,7 +299,7 @@ $("ecBtn").addEventListener("click", submitEc);
 $("ec").addEventListener("keydown", e => { if (e.key === "Enter") submitEc(); });
 $("changeEc").addEventListener("click", () => {
   ecNow = null; chosen = null;
-  ["stepEcDone", "step1", "step1done", "step2", "results"].forEach(id => $(id).classList.add("hidden"));
+  ["stepEcDone", "step1", "step1done", "step2", "results", "step5"].forEach(id => $(id).classList.add("hidden"));
   $("stepEc").classList.remove("hidden");
   $("ec").focus();
 });
@@ -333,6 +341,7 @@ $("modalYes").addEventListener("click", () => {
   $("step1done").classList.remove("hidden");
   $("step2").classList.remove("hidden");
   $("results").classList.add("hidden");
+  $("step5").classList.add("hidden");
   $("height").focus();
 });
 $("changeConc").addEventListener("click", () => {
@@ -341,6 +350,7 @@ $("changeConc").addEventListener("click", () => {
   $("step1done").classList.add("hidden");
   $("step2").classList.add("hidden");
   $("results").classList.add("hidden");
+  $("step5").classList.add("hidden");
 });
 $("calcBtn").addEventListener("click", calculate);
 $("height").addEventListener("keydown", e => { if (e.key === "Enter") calculate(); });
@@ -363,6 +373,8 @@ function calculate() {
   const targetEc = Math.round(xToEc(c));
   const out = $("resultBody");
   $("results").classList.remove("hidden");
+  $("step5").classList.add("hidden");
+  $("resultsTitle").textContent = "Top up the tank";
   const offPct = Math.round((cNow / c - 1) * 100);
   const offTarget = Math.abs(offPct) > 15;
 
@@ -378,6 +390,10 @@ function calculate() {
   const concL = Math.max(0, need) / SETTINGS.stockStrength;  // each of Part A and Part B
   const concMl = roundTo(concL * 1000, SETTINGS.roundMl);
   const fillH = Math.round(MAX_H * 2) / 2;                    // nearest 0.5 cm
+  const concExact = heightForVolume(vNow + vAdd * SETTINGS.addConcAtFraction);
+  // Round down to the nearest 10 cm; if that's at or below the current level, try 5 cm, then 0.5 cm.
+  const concH = [10, 5].map(s => Math.floor(concExact / s) * s).find(v => v > h) ?? Math.round(concExact * 2) / 2;
+  const concTxt = Number.isInteger(concH) ? String(concH) : fmt1(concH);
   const waterOnly = concMl <= 0;
   const finalEc = Math.round(xToEc(waterOnly ? cNow * vNow / MAX_L : c));
   const tooStrong = waterOnly && finalEc > targetEc * 1.1;
@@ -389,29 +405,11 @@ function calculate() {
 
   expectedEc = waterOnly ? finalEc : targetEc;
   stillStrong = tooStrong;
-  const steps = (waterOnly
-    ? `<li>Add water to <b>${fmt1(fillH)} cm</b>.</li>`
-    : `<li>Add <b>${concMl} mL Part A</b>.</li>
-       <li>Rinse the container, then add <b>${concMl} mL Part B</b>.</li>
-       <li>Add water to <b>${fmt1(fillH)} cm</b>.</li>`)
-    + `<li>Stir well, measure the EC, and enter it in the <b>final check</b> below.</li>`;
-
-  out.innerHTML = `${notices}
-    <div class="result-layout">
-      <div>
-        <div class="big-row">
-          <div class="big a"><div class="lbl">Part A</div><div class="val">${concMl} mL</div><div class="note">Calcium nitrate</div></div>
-          <div class="big b"><div class="lbl">Part B</div><div class="val">${concMl} mL</div><div class="note">Plant-Prod</div></div>
-          <div class="big fill"><div class="lbl">${waterOnly ? "Add plain water until the stick reads" : "Then add water until the stick reads"}</div><div class="val">${fmt1(fillH)} cm</div></div>
-        </div>
-      </div>
-      ${tankSvg(h, MAX_H)}
-    </div>
-
+  const procedure = items => `
     <h2 style="margin-top:10px">Procedure</h2>
     <p class="hint" style="margin:0 0 4px">Wear safety glasses and stir frequently.</p>
-    <ol class="procedure">${steps}</ol>
-
+    <ol class="procedure">${items}</ol>`;
+  const finish = `
     <div class="final-check">
       <div class="step-label">Final check</div>
       <label for="finalEc">EC after topping up</label>
@@ -428,6 +426,51 @@ function calculate() {
     <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap">
       <button class="btn secondary" type="button" onclick="resetAll()">Start over (next tank)</button>
     </div>`;
+  const measure = `<li>Stir well, measure the EC, and enter it in the <b>final check</b> below.</li>`;
+
+  if (waterOnly) {
+    out.innerHTML = `${notices}
+      <div class="result-layout">
+        <div><div class="big-row">
+          <div class="big fill"><div class="lbl">Add plain water until the stick reads</div><div class="val">${fmt1(fillH)} cm</div></div>
+        </div></div>
+        ${tankSvg(h, MAX_H)}
+      </div>
+      ${procedure(`<li>Add water to <b>${fmt1(fillH)} cm</b>.</li>${measure}`)}
+      ${finish}`;
+  } else {
+    $("resultsTitle").textContent = "Start filling the tank";
+    out.innerHTML = `${notices}
+      <div class="result-layout">
+        <div><div class="big-row">
+          <div class="big fill"><div class="lbl">Fill the tank until the stick reads about</div><div class="val">${concTxt} cm</div></div>
+        </div></div>
+        ${tankSvg(h, concH, "add A + B")}
+      </div>
+      ${procedure(`<li>Start filling the tank with water.</li>
+        <li>When the water reaches about <b>${concTxt} cm</b>, proceed to the next step.</li>`)}
+      <div style="margin-top:16px">
+        <button class="btn" id="toStep5" type="button">Next step</button>
+      </div>`;
+    $("step5Body").innerHTML = `
+      <div class="result-layout">
+        <div><div class="big-row">
+          <div class="big a"><div class="lbl">Part A</div><div class="val">${concMl} mL</div><div class="note">Calcium nitrate</div></div>
+          <div class="big b"><div class="lbl">Part B</div><div class="val">${concMl} mL</div><div class="note">Plant-Prod</div></div>
+          <div class="big fill"><div class="lbl">Fill the tank until the stick reads</div><div class="val">${fmt1(fillH)} cm</div></div>
+        </div></div>
+        ${tankSvg(concH, MAX_H)}
+      </div>
+      ${procedure(`<li>Add <b>${concMl} mL Part A</b>.</li>
+        <li>Rinse the container, then add <b>${concMl} mL Part B</b>.</li>
+        <li>Keep filling to <b>${fmt1(fillH)} cm</b>.</li>${measure}`)}
+      ${finish}`;
+    $("toStep5").addEventListener("click", e => {
+      e.target.classList.add("hidden");
+      $("step5").classList.remove("hidden");
+      $("step5").scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
   $("results").scrollIntoView({ behavior: "smooth", block: "start" });
 
   function showErr(m) { err.textContent = m; err.classList.remove("hidden"); $("results").classList.add("hidden"); }
@@ -459,7 +502,7 @@ function resetAll() {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-function tankSvg(hNow, hFill) {
+function tankSvg(hNow, hFill, lineLabel = "fill line") {
   // simple side view of the tapered tank, 120 x 170
   const W = 120, Ht = 170, top = 12, bot = 160;
   const topHalf = 50, botHalf = 50 * (r0 / r1);
@@ -475,12 +518,10 @@ function tankSvg(hNow, hFill) {
     <polygon points="${poly(0, hNow)}" fill="var(--water)"/>
     <line x1="${cx - half(hFill) - 4}" y1="${y(hFill)}" x2="${cx + half(hFill) + 4}" y2="${y(hFill)}" stroke="var(--accent)" stroke-width="2" stroke-dasharray="4 3"/>
     <polyline points="${cx - topHalf},${top} ${cx - botHalf},${bot} ${cx + botHalf},${bot} ${cx + topHalf},${top}" fill="none" stroke="var(--muted)" stroke-width="2.5" stroke-linejoin="round"/>
-    <text x="${cx}" y="${y(hFill) - 4}" text-anchor="middle" font-size="10" font-weight="700" fill="var(--accent)">fill line</text>
+    <text x="${cx}" y="${y(hFill) - 4}" text-anchor="middle" font-size="10" font-weight="700" fill="var(--accent)">${lineLabel}</text>
     <text x="${cx}" y="${Math.min(y(hNow) + 13, bot - 4)}" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">now</text>
   </svg>`;
 }
 </script>
 </body>
 </html>
-
-</body></html>
