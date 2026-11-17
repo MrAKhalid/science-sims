@@ -273,7 +273,7 @@ tr.r-good td:last-child{color:var(--good)} tr.r-bad td:last-child{color:var(--ba
       </div>
       <label>5. Percent error</label>
       <div class="fieldrow"><input id="cP" inputmode="decimal" autocomplete="off"><span class="unit">%</span></div>
-      <p class="muted">% error = |experimental − accepted| ÷ |accepted| × 100%. Enter numbers only (scientific notation like 1.8e4 is fine). Use a minus sign where needed.</p>
+      <p class="muted">% error = (experimental − accepted) ÷ accepted × 100%. Keep the sign: a negative % error means your value is smaller in size than the accepted value, a positive one means it is larger. Enter numbers only (scientific notation like 1.8e4 is fine).</p>
       <div class="btnrow"><button class="btn go" id="btnSubmit">Submit lab (one attempt)</button></div>
     </div>
     <div id="report"></div>
@@ -652,7 +652,7 @@ function expected(){
   const H = -Vsum*C_WATER*dT/mol;
   const sfH = Math.min(sfM, sfDT, sfN, 3);
   const Hset = [H];
-  return {r, m:Vsum, sfM, Ti, dpT, dT, sfDT, mol, sfN, H, Hset, sfH, pe: Math.abs(H/1000 - r.dH)/Math.abs(r.dH)*100};
+  return {r, m:Vsum, sfM, Ti, dpT, dT, sfDT, mol, sfN, H, Hset, sfH, pe: (H/1000 - r.dH)/r.dH*100};
 }
 function refreshCalc(){
   const n = nb(), r = rxnById(n.rxn), miss = [];
@@ -757,13 +757,18 @@ function buildReport(){
       else if(closeTo(v*1000,E.H,0.03)||closeTo(v/1000,E.H,0.03)) addC("ΔHₓ", x.s+" "+u, corr, "bad","Off by a factor of 1000. Check J vs kJ.");
       else if(hit(Hown)) addC("ΔHₓ", x.s+" "+u, corr, "warn","You calculated this correctly from your own earlier answers, but one of those steps was wrong (see above).");
       else addC("ΔHₓ", x.s+" "+u, corr, "bad","Incorrect value. Rearrange nΔHₓ = −mcΔT."); }
-    // % error: also accept it worked out from the student's own ΔHx, and accept a negative sign
+    // % error is signed: (experimental − accepted) ÷ accepted × 100%. Also accept it worked out from the student's own ΔHx.
     const pe = parseNum($("cP").value);
-    const own = (x && (u==="kJ/mol"||u==="J/mol")) ? Math.abs((u==="J/mol"? x.v/1000 : x.v) - E.r.dH)/Math.abs(E.r.dH)*100 : null;
-    const okPe = p2 => [E.pe, own].some(t => t!==null && (closeTo(Math.abs(p2),t,0.03) || Math.abs(Math.abs(p2)-t)<=0.15));
-    const peShow = (own!==null ? own : E.pe).toFixed(1)+" %";
+    const own = (x && (u==="kJ/mol"||u==="J/mol")) ? ((u==="J/mol"? x.v/1000 : x.v) - E.r.dH)/E.r.dH*100 : null;
+    const near = (a,t) => closeTo(a,t,0.03) || Math.abs(a-t)<=0.15;
+    const okPe = p2 => [E.pe, own].some(t => t!==null && near(p2,t));
+    const signOnly = p2 => !okPe(p2) && [E.pe, own].some(t => t!==null && Math.abs(t)>0.15 && near(-p2,t));
+    const ref = own!==null ? own : E.pe;
+    const peShow = (ref>0?"+":"")+ref.toFixed(1)+" %";
     if(!pe) addC("% error","—",peShow,"bad","Not answered.");
-    else addC("% error", pe.s+" %", peShow, okPe(pe.v)?"good":"bad", okPe(pe.v) ? "Correct." : `Compare your ΔHₓ to the accepted ${E.r.dH>0?"+":""}${E.r.dH} kJ/mol.`);
+    else if(okPe(pe.v)) addC("% error", pe.s+" %", peShow, "good", "Correct.");
+    else if(signOnly(pe.v)) addC("% error", pe.s+" %", peShow, "bad", `Right size, wrong sign. Your ΔHₓ is ${ref<0?"smaller":"larger"} in size than the accepted value, so the % error should be ${ref<0?"negative":"positive"}.`);
+    else addC("% error", pe.s+" %", peShow, "bad", `Use (experimental − accepted) ÷ accepted × 100%, with the accepted ${E.r.dH>0?"+":""}${E.r.dH} kJ/mol.`);
   }
   let best = "";
   if(r && S.TfTrue!==null && S.bAdded){
