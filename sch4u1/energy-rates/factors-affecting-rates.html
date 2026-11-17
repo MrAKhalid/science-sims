@@ -437,8 +437,8 @@ function graphsFor(n){
 // ===================== UI =====================
 const state = EXPS.map(()=>({done:false, answers:{}, order:null, tries:0}));
 let cur = 0, panels=[], running=true, speed=1;
-// experiments are presented in a different random order each time the page opens
-const ORDER = shuffle([0,1,2,3,4]);
+// experiments are presented in lab-sheet order, 1 to 5 (students can jump to any of them)
+const ORDER = [0,1,2,3,4];
 
 function renderSteps(){
   const nav=$("steps"); nav.innerHTML="";
