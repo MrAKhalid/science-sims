@@ -79,7 +79,7 @@
   .eq { font-size: 28px; font-weight: 700; color: var(--accent); text-align: center; padding: 12px 8px; margin: 2px 0 6px; background: #eeedfb; border: 2px solid var(--accent); border-radius: 10px; line-height: 1.2; }
   .eq sub { font-size: 60%; }
   .small { font-size: 13px; color: var(--muted); margin: 6px 0 0; }
-  canvas#vecdiag { width: 100%; height: 210px; display: block; background: #fbfbff; border: 1px solid var(--line); border-radius: 8px; }
+  canvas#vecdiag { width: 100%; height: 140px; display: block; background: #fbfbff; border: 1px solid var(--line); border-radius: 8px; }
   canvas#fgraph { width: 100%; height: 230px; display: block; margin-top: 10px; background: #fbfbff; border: 1px solid var(--line); border-radius: 8px; }
   .banner {
     position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%);
@@ -118,6 +118,17 @@
   .seg button:last-child { border-right: 0; }
   .seg button.on { background: var(--accent); color: #fff; font-weight: 600; }
   canvas#ggraph { width: 100%; height: 230px; display: block; background: #fbfbff; border: 1px solid var(--line); border-radius: 8px; }
+  aside.compact { gap: 8px; }
+  .toggles { margin-left: auto; display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; font-size: 14px; color: var(--muted); }
+  .toggles label { display: inline-flex; gap: 4px; align-items: center; color: var(--ink); font-weight: 600; cursor: pointer; }
+  .toggles input { accent-color: var(--accent); }
+  aside.compact .card { padding: 8px 12px; }
+  aside.compact .card h2 { margin-bottom: 6px; }
+  aside.compact .slider { margin: 2px 0 8px; }
+  aside.compact .eq { font-size: 24px; padding: 8px; margin-bottom: 8px; }
+  .mrow { display: grid; grid-template-columns: 64px 1fr; gap: 8px; align-items: center; font-size: 14px; margin: 4px 0; }
+  .mrow .track { height: 13px; background: #f0eff7; border-radius: 4px; }
+  .mrow .fill { height: 100%; border-radius: 4px; transition: width .12s; }
   .op { text-align: center; color: var(--muted); font-weight: 700; margin: -4px 0 -4px; }
   .no { color: var(--bad); font-weight: 600; }
 </style>
@@ -139,7 +150,7 @@
           <canvas class="scene" id="ship"></canvas>
           <div class="banner hidden" id="shipBanner"></div>
         </div>
-        <p class="hint">An ocean liner is heading straight for an iceberg. When you press Go, a sideways push acts on the ship for a while. You choose how hard the push is and how long it lasts. Can you change the ship's momentum enough to steer clear?</p>
+        <p class="hint">Press Go and a sideways force pushes on the ship. Choose how big the force is and how long it acts. Can you change the ship's momentum enough to miss the iceberg?</p>
         <div class="bar">
           <button class="btn primary" id="shipGo">Go</button>
           <button class="btn" id="shipReset">Reset</button>
@@ -151,43 +162,42 @@
             </select>
           </label>
           <span id="shipClock" hidden></span>
+          <span class="toggles">Show:
+            <label><input type="checkbox" data-v="pi" checked><span style="color:var(--c-pi)"><span class="v">p</span><sub>i</sub></span></label>
+            <label><input type="checkbox" data-v="dp" checked><span style="color:var(--c-dp)">&Delta;<span class="v">p</span></span></label>
+            <label><input type="checkbox" data-v="pf" checked><span style="color:var(--c-pf)"><span class="v">p</span><sub>f</sub></span></label>
+            <label><input type="checkbox" data-v="F" checked><span style="color:var(--c-F)"><span class="v">F</span></span></label>
+            <label><input type="checkbox" data-v="path" checked>wake</label>
+          </span>
         </div>
       </div>
 
-      <aside>
+      <aside class="compact">
         <div class="card">
           <h2>Controls</h2>
           <div class="slider">
-            <label for="sF"><span>How hard: size of the force</span><output id="oF"></output></label>
+            <label for="sF"><span>Size of the force, <span class="v">F</span></span><output id="oF"></output></label>
             <input type="range" id="sF" min="0" max="40" step="0.5" value="10">
           </div>
           <div class="slider">
-            <label for="sT"><span>How long: time the force acts</span><output id="oT"></output></label>
+            <label for="sT"><span>Time the force acts, &Delta;t</span><output id="oT"></output></label>
             <input type="range" id="sT" min="0" max="10" step="0.1" value="4">
           </div>
-          <label class="chk"><input type="checkbox" id="lockJ"> Keep the impulse the same (trade force for time)</label>
+          <label class="chk"><input type="checkbox" id="lockJ"> Keep the impulse constant</label>
+        </div>
+
+        <div class="card">
+          <h2>Impulse</h2>
+          <div class="eq">Impulse = <span class="v">F</span>&Delta;t = &Delta;<span class="v">p</span></div>
+          <div id="shipRead"></div>
         </div>
 
         <div class="card">
           <h2>Momentum vectors</h2>
           <canvas id="vecdiag"></canvas>
-          <p class="small" style="color:var(--ink)">The impulse arrow points the same way as the force. Add it to the momentum before (tip to tail) and you get the momentum after. A bigger impulse turns the ship more.</p>
+          <p class="small" style="color:var(--ink);margin-top:6px"><span class="v">p</span><sub>f</sub> = <span class="v">p</span><sub>i</sub> + &Delta;<span class="v">p</span> &nbsp;(&Delta;<span class="v">p</span> points the same way as <span class="v">F</span>)</p>
         </div>
 
-        <div class="card">
-          <h2>Impulse</h2>
-          <div class="eq">Impulse = F&Delta;t = &Delta;p</div>
-          <div id="shipRead"></div>
-        </div>
-
-        <details class="card">
-          <summary><h2>Show on ship</h2></summary>
-          <label class="vec"><input type="checkbox" data-v="pi" checked><span class="sw" style="border-color:var(--c-pi)"></span><span class="nm">Momentum before</span></label>
-          <label class="vec"><input type="checkbox" data-v="dp" checked><span class="sw" style="border-color:var(--c-dp)"></span><span class="nm">Impulse</span><span class="ds">change in momentum</span></label>
-          <label class="vec"><input type="checkbox" data-v="pf" checked><span class="sw" style="border-color:var(--c-pf)"></span><span class="nm">Momentum now</span></label>
-          <label class="vec"><input type="checkbox" data-v="F" checked><span class="sw" style="border-color:var(--c-F)"></span><span class="nm">Force</span></label>
-          <label class="vec"><input type="checkbox" data-v="path" checked><span class="sw" style="border-color:#7aa6c9"></span><span class="nm">Wake</span></label>
-        </details>
       </aside>
     </div>
   </section>
@@ -374,6 +384,46 @@
     c.restore();
   }
 
+  // parts: plain strings, or {v: "p", sub: "i"} for a vector symbol with an arrow over it
+  function rlabel(c, x, y, parts, color, size = 13, bg = true, align = "center") {
+    c.save();
+    const fN = `600 ${size}px system-ui, sans-serif`, fV = `italic 700 ${size + 1}px system-ui, sans-serif`, fS = `600 ${Math.round(size * 0.72)}px system-ui, sans-serif`;
+    const items = parts.map(pt => {
+      if (typeof pt === "string") { c.font = fN; return { t: pt, w: c.measureText(pt).width }; }
+      c.font = fV; const lw = c.measureText(pt.v).width + 1;
+      c.font = fS; const sw = pt.sub ? c.measureText(pt.sub).width + 1 : 0;
+      return { v: pt.v, sub: pt.sub, lw, w: lw + sw };
+    });
+    const total = items.reduce((a, b) => a + b.w, 0);
+    let x0 = align === "center" ? x - total / 2 : align === "right" ? x - total : x;
+    const cw = c.canvas.clientWidth || 9999;
+    x0 = Math.max(4, Math.min(cw - total - 6, x0));
+    if (bg) {
+      c.fillStyle = "rgba(255,255,255,.88)"; c.beginPath();
+      c.roundRect ? c.roundRect(x0 - 4, y - size * 1.25, total + 8, size * 1.75, 4) : c.rect(x0 - 4, y - size * 1.25, total + 8, size * 1.75);
+      c.fill();
+    }
+    c.fillStyle = color; c.strokeStyle = color; c.textAlign = "left"; c.textBaseline = "alphabetic";
+    let cx = x0;
+    for (const it of items) {
+      if (it.t !== undefined) { c.font = fN; c.fillText(it.t, cx, y); }
+      else {
+        c.font = fV; c.fillText(it.v, cx, y);
+        const ay = y - size * 0.95, a1 = cx + 1, a2 = cx + it.lw;
+        c.lineWidth = 1.3; c.beginPath(); c.moveTo(a1, ay); c.lineTo(a2, ay); c.stroke();
+        c.beginPath(); c.moveTo(a2 + 1, ay); c.lineTo(a2 - 3, ay - 2.5); c.lineTo(a2 - 3, ay + 2.5); c.closePath(); c.fill();
+        if (it.sub) { c.font = fS; c.fillText(it.sub, cx + it.lw, y + size * 0.3); }
+      }
+      cx += it.w;
+    }
+    c.restore();
+  }
+  const L_PI = ["initial momentum (", { v: "p", sub: "i" }, ")"];
+  const L_PF = ["final momentum (", { v: "p", sub: "f" }, ")"];
+  const L_P = ["momentum (", { v: "p" }, ")"];
+  const L_DP = ["impulse = Δ", { v: "p" }];
+  const L_F = ["force (", { v: "F" }, ")"];
+
   function tlabel(c, x, y, text, color, size = 13, bg = true) {
     c.save();
     c.font = `600 ${size}px system-ui, sans-serif`;
@@ -545,13 +595,11 @@
     const dpn = dpNow(), pn = Math.hypot(PI0, dpn), angn = Math.atan2(dpn, PI0) * 180 / Math.PI;
     const live = S.phase !== "idle";
     const forceOn = S.phase === "run" && S.t < S.dt && S.F > 0;
+    const row = (name, frac, col) => `<div class="mrow"><span>${name}</span><div class="track"><div class="fill" style="width:${(Math.max(0, Math.min(1, frac)) * 100).toFixed(1)}%;background:${col}"></div></div></div>`;
     $("shipRead").innerHTML =
-      meter("Force", S.F / 40e6, "#36b158", "") +
-      `<div class="op">×</div>` +
-      meter("Time", S.dt / 10, "#7a8aa8", "") +
-      `<div class="op">=</div>` +
-      meter("Impulse", J / 4e8, "#f09a2b", live ? "" : "planned") +
-      `<p class="small">Change in momentum = impulse, so this bar is also how much the momentum changes.</p>`;
+      row("Force", S.F / 40e6, "#36b158") +
+      row("× Time", S.dt / 10, "#7a8aa8") +
+      row("= Δ<span class='v'>p</span>", J / 4e8, "#f09a2b");
   }
 
   function meter(name, frac, col, note, mark) {
@@ -600,12 +648,16 @@
   const wx = x => (x - VIEW.x) * k, wy = y => (y - VIEW.y) * k;
 
   function resizeShip() {
+    shipCv.style.width = "100%";
     sW = shipCv.clientWidth; if (!sW) return;
+    // keep the whole tab on one laptop screen: limit the canvas height to what fits under the header and buttons
+    const maxH = window.innerWidth > 960 ? Math.max(300, window.innerHeight - 216) : Infinity;
+    if (sW * VIEW.aspect > maxH) { sW = Math.floor(maxH / VIEW.aspect); shipCv.style.width = sW + "px"; shipCv.style.margin = "0 auto"; }
     sH = Math.round(sW * VIEW.aspect);
     sc = setupCanvas(shipCv, sW, sH);
     k = sW / VIEW.w;
     const vd = $("vecdiag");
-    vd._c = setupCanvas(vd, vd.clientWidth, 210);
+    vd._c = setupCanvas(vd, vd.clientWidth, 140);
   }
 
   function drawOcean(time) {
@@ -723,13 +775,14 @@
     if (S.show.F && S.F > 0 && (idle || (S.phase === "run" && S.t < S.dt))) {
       const FL = (S.F / 40e6) * 130 * k + 12;
       arrow(sc, cx - 60 * k, cy - FL * 0.25, cx - 60 * k, cy - FL * 0.25 + FL, "#36d158", 3.5, idle);
-      tlabel(sc, cx - 60 * k, cy - FL * 0.25 + FL + 18, "force", "#138a2c");
+      rlabel(sc, cx - 60 * k, cy - FL * 0.25 + FL + 20, L_F, "#138a2c", 12);
     }
-    if (S.show.pi) { arrow(sc, cx, cy, piX, piY, "#6f8bff", 3.5); tlabel(sc, (cx + piX) / 2 + 40 * k, cy - 10, "before", "#1f3fe0"); }
-    if (S.show.dp && dp > 0) { arrow(sc, piX, piY, tipX, tipY, "#ffa733", 3.5, idle); tlabel(sc, tipX + 38, (piY + tipY) / 2 + 6, "impulse", "#b86400"); }
+    if (S.show.pi) { arrow(sc, cx, cy, piX, piY, "#6f8bff", 3.5); rlabel(sc, (cx + piX) / 2 + 40 * k, cy - 11, L_PI, "#1f3fe0", 12); }
+    if (S.show.dp && dp > 0) { arrow(sc, piX, piY, tipX, tipY, "#ffa733", 3.5, idle); rlabel(sc, tipX + 10, (piY + tipY) / 2 + 6, L_DP, "#b86400", 12, true, "left"); }
     if (S.show.pf) {
       arrow(sc, cx, cy, tipX, tipY, "#ff5cf0", 3.5, idle && dp > 0);
-      if (dp > PI0 * 0.06) tlabel(sc, (cx + tipX) / 2 - 8, (cy + tipY) / 2 + 24, "after", "#b0109f");
+      const fin = idle || S.phase !== "run" || S.t >= S.dt;
+      rlabel(sc, (cx + tipX) / 2 - 8, Math.max(cy, (cy + tipY) / 2) + 26, fin ? L_PF : L_P, "#b0109f", 12);
     }
   }
 
@@ -775,7 +828,7 @@
 
   function drawVecDiag() {
     const cv = $("vecdiag"), c = cv._c; if (!c) return;
-    const W = cv.clientWidth, H = 210;
+    const W = cv.clientWidth, H = 140;
     c.clearRect(0, 0, W, H);
     const idle = S.phase === "idle";
     const J = S.F * S.dt;
@@ -792,12 +845,12 @@
     for (let x = ox; x < W; x += 20) { c.beginPath(); c.moveTo(x, 8); c.lineTo(x, H - 4); c.stroke(); }
     for (let y = oy % 20; y < H; y += 20) { c.beginPath(); c.moveTo(4, y); c.lineTo(W - 4, y); c.stroke(); }
     arrow(c, ox, oy, piX, oy, "#1f3fe0", 3);
-    tlabel(c, (ox + piX) / 2, oy - 9, "momentum before", "#1f3fe0", 13, false);
+    rlabel(c, (ox + piX) / 2, oy - 9, L_PI, "#1f3fe0", 13, false);
     if (dp > 0) {
       arrow(c, piX, oy, piX, tipY, "#d97a00", 3, idle);
-      tlabel(c, piX - 34, Math.max(oy + 18, (oy + tipY) / 2 + 5), "impulse", "#b86400", 13, false);
+      rlabel(c, piX - 6, tipY - oy > 60 ? (oy + tipY) / 2 + 5 : tipY + 20, L_DP, "#b86400", 13, true, "right");
       arrow(c, ox, oy, piX, tipY, "#d61fd0", 3, idle);
-      tlabel(c, (ox + piX) / 2 - 20, (oy + tipY) / 2 + 26, "momentum after", "#b0109f", 13, false);
+      rlabel(c, ox + 2, Math.max(oy + 60, (oy + tipY) / 2 + 30), L_PF, "#b0109f", 13, true, "left");
       // angle arc
       const th = Math.atan2(tipY - oy, piX - ox);
       if (false) {
