@@ -18,6 +18,9 @@ sch4u1/<unit>/<sim>.html   chemistry sims (organic, structure-properties, energy
 3. Open `assets/sims.js`, click the pencil, add one line in that unit:
    `{ title: "Inclined Plane", file: "inclined-plane.html", blurb: "Friction and forces on a ramp." },`
 4. Commit. The site updates in about a minute.
+5. Full screen button: open the new sim's HTML and paste this line just above `</body>` (near the very end):
+   `<script src="../../assets/fullscreen.js" defer></script>`
+   (Or ask Claude to add the sim, and it will do this for you.)
 
 ## One-time GitHub Pages setup
 
