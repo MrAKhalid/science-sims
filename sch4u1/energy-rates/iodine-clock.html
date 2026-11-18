@@ -1,0 +1,642 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Iodine Clock Reaction</title>
+<style>
+:root{
+  color-scheme:light;
+  --bg:#eef1f5; --panel:#fff; --ink:#1d2430; --muted:#5b6575; --line:#d5dbe4;
+  --accent:#1f5fbf; --accent2:#e2e9f6; --good:#1e8a4c; --goodbg:#e3f4ea; --bad:#b3261e; --badbg:#fbe7e5;
+  --warn:#8a5a00; --warnbg:#fff3d6;
+  --io3:#2f7fd8; --hso3:#e0a100; --iminus:#8e4fc9; --i2:#8a4b14; --blue:#1b2466;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.4}
+header{background:#14325f;color:#fff;padding:10px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
+header h1{font-size:18px;margin:0;font-weight:700}
+.steps{display:flex;gap:6px;flex-wrap:wrap}
+.steps button{background:#24477f;color:#fff;border:0;border-radius:6px;padding:7px 11px;font-size:14px;cursor:pointer;font-weight:600}
+.steps button.active{background:#fff;color:#14325f}
+.steps button.done::after{content:" ✓";color:#7fe0a5}
+.steps button.active.done::after{color:var(--good)}
+.steps button.lockd{opacity:.6}
+main{max-width:1180px;margin:0 auto;padding:14px 16px 40px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:14px}
+h2{font-size:17px;margin:0 0 8px}
+h3{font-size:15px;margin:0 0 6px}
+.intro{color:var(--muted);margin:0 0 8px}
+.two{display:grid;grid-template-columns:minmax(300px,1fr) minmax(300px,1fr);gap:16px;align-items:start}
+@media (max-width:800px){ .two{grid-template-columns:minmax(0,1fr)} }
+.two > *{min-width:0}
+svg{max-width:100%}
+.scene svg{width:100%;height:auto;display:block;background:linear-gradient(#f7f9fc,#eef2f7);border:1px solid var(--line);border-radius:8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.chip{border:1px solid #aab4c3;background:#fff;border-radius:16px;padding:5px 11px;font-size:14px;cursor:pointer;color:var(--ink)}
+.chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.chip.ran::after{content:" ✓";color:var(--good)}
+.chip.on.ran::after{color:#b9f0cf}
+.cond{font-size:14px;color:var(--muted);margin:4px 0 8px}
+.watch{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:10px}
+.digits{font:700 34px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:#11161f;color:#7CFFB2;padding:8px 14px;border-radius:8px;min-width:150px;text-align:center;letter-spacing:1px}
+.btn{background:var(--accent);color:#fff;border:0;border-radius:6px;padding:9px 16px;font-size:15px;font-weight:600;cursor:pointer}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.ghost{background:var(--accent2);color:var(--accent)}
+.btn.stop{background:#c0392b;font-size:18px;padding:12px 22px}
+.msg{padding:8px 12px;border-radius:6px;margin-top:10px;font-size:14px}
+.msg.good{background:var(--goodbg);color:var(--good)} .msg.bad{background:var(--badbg);color:var(--bad)} .msg.info{background:var(--accent2);color:#1a3d78} .msg.warn{background:var(--warnbg);color:var(--warn)}
+table.data{border-collapse:collapse;width:100%;font-size:14px}
+table.data th,table.data td{border:1px solid var(--line);padding:5px 7px;text-align:center}
+table.data th{background:var(--accent2);font-weight:600}
+table.data tr.sel td{background:#f3f7ff}
+.recipe{font-size:13px}
+details summary{cursor:pointer;color:var(--accent);font-weight:600;margin:8px 0}
+.q{margin:0 0 12px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:#fafbfd}
+.q > b{display:block;margin-bottom:6px}
+.q.ok{border-color:#9fd4b4;background:var(--goodbg)}
+.q.no{border-color:#eab3ad;background:var(--badbg)}
+.opts{display:flex;flex-direction:column;gap:6px}
+.opts label{display:flex;gap:6px;align-items:flex-start;background:#fff;border:1px solid var(--line);border-radius:6px;padding:6px 10px;cursor:pointer}
+.opts label input{margin-top:3px;flex:none}
+.opts.row{flex-direction:row;flex-wrap:wrap}
+.opts.row label{flex:1 1 120px}
+.fb{margin-top:6px;font-size:14px}
+.q.ok .fb{color:var(--good)} .q.no .fb{color:var(--bad)}
+.num{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.num input{font-size:15px;padding:6px 8px;border:1px solid #aab4c3;border-radius:6px;width:150px}
+.qrow{display:flex;gap:8px;align-items:center;margin-top:8px}
+.locked{display:flex;align-items:center;gap:12px;color:var(--muted);padding:18px;border:2px dashed var(--line);border-radius:10px;background:#f7f8fa}
+.locked .lock{font-size:28px}
+.eq{font-size:16px;background:#f6f8fb;border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin:6px 0;overflow-x:auto;white-space:nowrap}
+.eq .tag{font-family:system-ui,sans-serif;font-size:13px;font-weight:700;margin-left:10px;color:var(--muted)}
+.eq .tag.slow{color:#b3261e}
+.note{font-size:13px;color:var(--muted)}
+.notice{background:#fffdf3;border:1px solid #eadfb8;border-radius:8px;padding:10px 12px;margin:10px 0}
+.notice b{color:#6b5200}
+canvas.sim{width:100%;display:block;border-radius:8px;border:1px solid var(--line)}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13px;color:var(--muted);margin-top:6px}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+.bars{display:grid;grid-template-columns:auto 1fr auto;gap:5px 8px;align-items:center;font-size:13px;margin-top:8px}
+.bars .track{height:12px;background:#e6e9ef;border-radius:6px;overflow:hidden}
+.bars .fill{height:100%;width:0}
+.bars .v{font-variant-numeric:tabular-nums;min-width:92px;text-align:right}
+.counters{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
+.counter{background:#fff;border:1px solid var(--line);border-radius:6px;padding:5px 6px;text-align:center}
+.counter span{display:block;font-size:11px;color:var(--muted);line-height:1.2}
+.counter b{font-size:18px;font-variant-numeric:tabular-nums}
+.counter.flash{background:#fff4cc;transition:background 0s}
+.counter{transition:background .5s}
+.ticker{font-size:13px;color:var(--muted);min-height:20px;margin-top:6px}
+.ctrl{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin:8px 0}
+.ctrl select{font-size:14px;padding:5px;border-radius:6px;border:1px solid #aab4c3}
+.graph svg{width:100%;height:auto;background:#fff;border:1px solid var(--line);border-radius:8px;margin-top:8px}
+.next{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:12px 18px;margin-top:18px;padding:18px;background:var(--goodbg);border:2px solid #9fd4b4;border-radius:10px;font-size:19px;font-weight:700;color:var(--good)}
+.btn.big{font-size:20px;padding:14px 26px;background:var(--good);border-radius:8px;box-shadow:0 2px 0 #14633a}
+.toggle{display:flex;gap:8px;align-items:center;font-size:14px;margin:6px 0}
+</style>
+</head>
+<body>
+<header>
+  <h1>Iodine Clock Reaction</h1>
+  <nav class="steps" id="steps"></nav>
+</header>
+<main id="main"></main>
+
+<script>
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const shuffle = a => { a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+function gauss(){ let u=0,v=0; while(u===0)u=Math.random(); while(v===0)v=Math.random(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+const sig = (x,n=3) => { if(!isFinite(x)) return "—"; if(x===0) return "0"; const e=Math.floor(Math.log10(Math.abs(x))); const d=Math.max(0,n-1-e); return x.toFixed(d); };
+
+// ===================== THE SIX BEAKERS (Flinn chart) =====================
+// Solution A (400 mL beaker, 200 mL total) + Solution B (10 mL 0.20 M Na2S2O5, 30 mL starch, 40 mL water) = 280 mL
+const VT = 280;
+const HSO3_0 = 2 * 10 * 0.20 / VT;          // each S2O5^2- gives 2 HSO3- → 0.0143 mol/L
+const BEAKERS = [
+  {n:1, kio3:50,  water:150, acid:0,  T:22, Tlab:"Room temp", base:6.0, purpose:"Control"},
+  {n:2, kio3:100, water:100, acid:0,  T:22, Tlab:"Room temp", base:3.0, purpose:"Concentration"},
+  {n:3, kio3:25,  water:175, acid:0,  T:22, Tlab:"Room temp", base:12.0, purpose:"Concentration"},
+  {n:4, kio3:50,  water:150, acid:0,  T:45, Tlab:"Warm (45 °C)", base:4.0, purpose:"Temperature"},
+  {n:5, kio3:50,  water:150, acid:0,  T:10, Tlab:"Cool (10 °C)", base:8.0, purpose:"Temperature"},
+  {n:6, kio3:50,  water:140, acid:10, T:22, Tlab:"Room temp", base:2.0, purpose:"Catalyst"},
+];
+BEAKERS.forEach(b => { b.c = b.kio3*0.20/VT; b.trials=[]; });
+const avg = b => b.trials.length ? b.trials.reduce((a,x)=>a+x,0)/b.trials.length : null;
+
+// ===================== STATE =====================
+const state = { tab:0, sel:0, done:{}, correct:{} };
+const TABS = [
+  {id:"lab",   t:"1. Lab Bench"},
+  {id:"in",    t:"2. Inside the Beaker"},
+  {id:"rate",  t:"3. Rate & Order"},
+  {id:"mech",  t:"4. Mechanism"},
+  {id:"tc",    t:"5. Temperature & Catalyst"},
+];
+
+function renderSteps(){
+  const nav=$("steps"); nav.innerHTML="";
+  TABS.forEach((t,i)=>{ const b=document.createElement("button"); b.textContent=t.t;
+    if(i===state.tab) b.classList.add("active"); if(tabDone(i)) b.classList.add("done"); if(lockMsg(i)) b.classList.add("lockd");
+    b.onclick=()=>show(i); nav.appendChild(b); });
+}
+function lockMsg(i){
+  const need = i===2 ? [0,1,2] : i===4 ? [0,3,4,5] : [];
+  const miss = need.filter(k=>!BEAKERS[k].trials.length).map(k=>k+1);
+  return miss.length ? `Run beaker${miss.length>1?"s":""} ${miss.join(", ")} on the Lab Bench first. These questions use your own times.` : "";
+}
+const QS = {}; // tab -> question ids
+function tabDone(i){ if(i===0) return BEAKERS.every(b=>b.trials.length); const q=QS[i]||[]; return q.length>0 && q.every(id=>state.correct[id]); }
+
+let stopAnim = () => {};
+function show(i){
+  stopAnim(); stopAnim=()=>{};
+  state.tab=i; renderSteps(); const m=$("main"); window.scrollTo(0,0);
+  if(i===0) return renderLab(m);
+  const lm=lockMsg(i);
+  if(lm){ m.innerHTML=`<div class="card"><div class="locked"><span class="lock">🔒</span><div>${lm}</div></div></div>`; return; }
+  [null,renderInside,renderRate,renderMech,renderTC][i](m);
+}
+function nextBanner(i){
+  if(i>=TABS.length-1) return `<div class="next" id="nextBox" style="display:none">All done! You've explained the iodine clock.</div>`;
+  return `<div class="next" id="nextBox" style="display:none"><span>Section complete.</span><button class="btn big" id="btnNext">Go on to ${TABS[i+1].t.replace(/^\d\.\s*/,"")} →</button></div>`;
+}
+function refreshNext(){
+  const box=$("nextBox"); if(!box) return; const ok=tabDone(state.tab);
+  box.style.display = ok ? "" : "none"; const b=$("btnNext"); if(b) b.onclick=()=>show(state.tab+1);
+  renderSteps();
+}
+
+// ===================== QUESTION HELPERS =====================
+function mcq(id, prompt, options, {shuf=true, multi=false, row=false}={}){
+  const opts = shuf ? shuffle(options) : options;
+  const type = multi ? "checkbox" : "radio";
+  return `<div class="q ${state.correct[id]?"ok":""}" id="q_${id}" data-kind="${multi?"multi":"mc"}"><b>${prompt}</b>
+    <div class="opts ${row?"row":""}">${opts.map((o,k)=>`<label><input type="${type}" name="${id}" value="${options.indexOf(o)}"><span>${o.t}</span></label>`).join("")}</div>
+    <div class="qrow"><button class="btn ghost" data-check="${id}">Check</button></div><div class="fb">${state.correct[id]?"Correct.":""}</div></div>`;
+}
+function numq(id, prompt, unit){
+  return `<div class="q ${state.correct[id]?"ok":""}" id="q_${id}" data-kind="num"><b>${prompt}</b>
+    <div class="num"><input type="text" inputmode="decimal" id="in_${id}" autocomplete="off"> <span>${unit||""}</span><button class="btn ghost" data-check="${id}">Check</button></div><div class="fb">${state.correct[id]?"Correct.":""}</div></div>`;
+}
+const CHECKS = {}; // id -> fn(value) => {ok, msg}
+function mark(id, ok, text){ const q=$("q_"+id); q.classList.remove("ok","no"); q.classList.add(ok?"ok":"no"); q.querySelector(".fb").innerHTML=text; if(ok) state.correct[id]=true; refreshNext(); }
+function wireChecks(root, opts){
+  root.querySelectorAll("[data-check]").forEach(b => b.onclick = () => {
+    const id=b.dataset.check, q=$("q_"+id), kind=q.dataset.kind; let v;
+    if(kind==="num"){ v=parseNum($("in_"+id).value); if(v===null) return mark(id,false,"Enter a number. Scientific notation like 2.4e-3 or 2.4 × 10⁻³ is fine."); }
+    else if(kind==="mc"){ const s=q.querySelector("input:checked"); if(!s) return mark(id,false,"Choose an answer first."); v=+s.value; }
+    else { v=[...q.querySelectorAll("input:checked")].map(x=>+x.value).sort(); if(!v.length) return mark(id,false,"Choose at least one."); }
+    const r=CHECKS[id](v); mark(id, r.ok, r.msg);
+    if(r.ok && opts && opts.after) opts.after(id);
+  });
+}
+function parseNum(s){
+  s=String(s).trim().replace(/−/g,"-").replace(/,/g,"").replace(/\s+/g,"");
+  const sup={"⁰":"0","¹":"1","²":"2","³":"3","⁴":"4","⁵":"5","⁶":"6","⁷":"7","⁸":"8","⁹":"9","⁻":"-"};
+  s=s.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹⁻]/g,c=>sup[c]);
+  let m=s.match(/^(-?\d*\.?\d+)(?:[x×*]10\^?(-?\d+)|e(-?\d+))?$/i);
+  if(!m) return null; const e=m[2]!==undefined?+m[2]:(m[3]!==undefined?+m[3]:0); return parseFloat(m[1])*Math.pow(10,e);
+}
+const mcCheck = (options) => v => { const o=options[v]; return o.ok ? {ok:true,msg:o.why||"Correct."} : {ok:false,msg:o.h||"Not quite. Try again."}; };
+
+// ===================== TAB 1: LAB BENCH =====================
+let run = null; // {b, t0, tc, phase, stopped}
+function renderLab(m){
+  const b=BEAKERS[state.sel];
+  m.innerHTML=`<div class="card"><h2>Lab Bench</h2>
+  <p class="intro">For each beaker, pour Solution B into Solution A. The stopwatch starts when you pour. Press <b>Stop</b> the moment the blue colour appears. Run each beaker at least once; repeat trials are averaged.</p>
+  <div class="two"><div>
+    <div class="chips" id="chips">${BEAKERS.map((x,i)=>`<button class="chip ${i===state.sel?"on":""} ${x.trials.length?"ran":""}" data-i="${i}">Beaker ${x.n}</button>`).join("")}</div>
+    <div class="cond" id="cond"></div>
+    <div class="scene" id="scene"></div>
+    <div class="watch"><div class="digits" id="digits">0.00 s</div>
+      <button class="btn" id="btnPour">Pour ${b.n}B into ${b.n}A</button>
+      <button class="btn stop" id="btnStop" disabled>Stop</button>
+      <button class="btn ghost" id="btnReset" disabled>Rinse &amp; reset</button></div>
+    <div id="labMsg"></div>
+  </div><div>
+    <h3>Data table</h3>
+    <div style="overflow-x:auto"><table class="data" id="dtable"></table></div>
+    <p class="note">[KIO₃] is the concentration after Solutions A and B are mixed (280 mL total).</p>
+    <details><summary>How the solutions were made (Flinn chart)</summary>
+    <div style="overflow-x:auto"><table class="data recipe"><tr><th>Solution A</th>${BEAKERS.map(x=>`<th>${x.n}A</th>`).join("")}</tr>
+      <tr><td>KIO₃, 0.20 M</td>${BEAKERS.map(x=>`<td>${x.kio3} mL</td>`).join("")}</tr>
+      <tr><td>Distilled water</td>${BEAKERS.map(x=>`<td>${x.water} mL</td>`).join("")}</tr>
+      <tr><td>H₂SO₄, 0.1 M</td>${BEAKERS.map(x=>`<td>${x.acid} mL</td>`).join("")}</tr>
+      <tr><td>Temperature</td>${BEAKERS.map(x=>`<td>${x.T===22?"Room":x.T+" °C"}</td>`).join("")}</tr></table></div>
+    <p class="note">Solution B (every beaker): 10 mL of 0.20 M sodium metabisulfite (Na₂S₂O₅), 30 mL of starch solution and 40 mL of distilled water. <i>Note: sulfuric acid is a catalyst for this reaction.</i></p>
+    </details>
+  </div></div>${nextBanner(0)}</div>`;
+  $("chips").querySelectorAll(".chip").forEach(c=>c.onclick=()=>{ if(run && run.phase!=="done" && run.phase!=="idle") return; state.sel=+c.dataset.i; run=null; renderLab(m); });
+  $("btnPour").onclick=pour; $("btnStop").onclick=stopWatch; $("btnReset").onclick=()=>{ run=null; renderLab(m); };
+  drawCond(); drawTable(); drawScene(0,0,false,0); refreshNext();
+}
+function drawCond(){
+  const b=BEAKERS[state.sel];
+  $("cond").innerHTML=`<b>Beaker ${b.n}</b> (${b.purpose}): ${b.kio3} mL KIO₃ + ${b.water} mL water${b.acid?` + ${b.acid} mL H₂SO₄`:""}, ${b.Tlab.toLowerCase()}. Trials so far: ${b.trials.length}`;
+}
+function drawTable(){
+  const rows=BEAKERS.map((b,i)=>{ const t=b.trials; const a=avg(b);
+    return `<tr class="${i===state.sel?"sel":""}"><td>${b.n}</td><td>${b.c.toFixed(4)}</td><td>${b.Tlab}</td><td>${b.acid?"Yes":"No"}</td>${[0,1,2].map(k=>`<td>${t[k]!=null?t[k].toFixed(2):""}</td>`).join("")}<td><b>${a!=null?a.toFixed(2):""}</b></td></tr>`; }).join("");
+  $("dtable").innerHTML=`<tr><th>Beaker</th><th>[KIO₃] (mol/L)</th><th>Temperature</th><th>Catalyst added?</th><th>Trial 1 (s)</th><th>Trial 2 (s)</th><th>Trial 3 (s)</th><th>Average (s)</th></tr>${rows}`;
+}
+// scene: pour progress p (0..1), mixed level, blue amount (0..1), tilt
+function drawScene(p, mixed, stirring, blue, tick){
+  const b=BEAKERS[state.sel];
+  const W=460,H=300, floor=268;
+  // beaker A (400 mL) geometry
+  const ax=70, aw=150, atop=96, ah=floor-atop; const aV=400;
+  const lvlA = v => floor - ah*(v/aV)*0.92;
+  const vA = 200 + 80*mixed;
+  const colA = blue>0 ? `rgb(${Math.round(232-(232-27)*blue)},${Math.round(240-(240-36)*blue)},${Math.round(250-(250-102)*blue)})` : "#e8f0fa";
+  // beaker B (250 mL)
+  const bw=96, bh=120, bVmax=250;
+  const tilt = p<=0?0: p>=1?0: Math.min(1, p*3, (1-p)*3);
+  const bx0=300, by0=floor-bh;
+  const bx = bx0 - (bx0-(ax+aw-10))*Math.min(1,p*3) * (p<1?1:0);
+  const by = by0 - 70*Math.min(1,p*3) * (p<1?1:0);
+  const vB = p>=1 ? 0 : 80*(1-Math.max(0,(p-0.3)/0.7));
+  const ang = -78*tilt;
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Beaker ${b.n}A and ${b.n}B">`;
+  s+=`<rect x="0" y="${floor}" width="${W}" height="${H-floor}" fill="#c9b9a2"/>`;
+  // bath
+  if(b.T!==22){
+    const hot=b.T>22;
+    s+=`<rect x="${ax-22}" y="${floor-110}" width="${aw+44}" height="110" rx="6" fill="${hot?"rgba(230,120,90,.25)":"rgba(140,190,240,.35)"}" stroke="${hot?"#d0745a":"#6aa0d8"}"/>`;
+    s+=`<text x="${ax+aw/2}" y="${floor-114}" text-anchor="middle" font-size="12" fill="${hot?"#a4462c":"#2c5f99"}">${hot?"warm water bath":"ice bath"}</text>`;
+    if(!hot) for(let k=0;k<5;k++) s+=`<rect x="${ax-16+k*42}" y="${floor-40-(k%2)*30}" width="14" height="14" rx="2" fill="#f4fbff" stroke="#9cc3e6" transform="rotate(${k*17} ${ax-9+k*42} ${floor-33-(k%2)*30})"/>`;
+  }
+  // beaker A liquid
+  const yl=lvlA(vA);
+  s+=`<path d="M${ax+3} ${yl} L${ax+aw-3} ${yl} L${ax+aw-3} ${floor-6} Q${ax+aw-3} ${floor-2} ${ax+aw-8} ${floor-2} L${ax+8} ${floor-2} Q${ax+3} ${floor-2} ${ax+3} ${floor-6} Z" fill="${colA}"/>`;
+  if(blue>0 && blue<1) s+=`<circle cx="${ax+aw/2}" cy="${(yl+floor)/2}" r="${10+60*blue}" fill="rgba(27,36,102,${0.5*blue})"/>`;
+  s+=`<path d="M${ax} ${atop} L${ax} ${floor-6} Q${ax} ${floor} ${ax+6} ${floor} L${ax+aw-6} ${floor} Q${ax+aw} ${floor} ${ax+aw} ${floor-6} L${ax+aw} ${atop} M${ax-6} ${atop} L${ax+6} ${atop}" fill="none" stroke="#5f6f84" stroke-width="2.5"/>`;
+  for(let k=1;k<=3;k++){ const y=lvlA(k*100); s+=`<line x1="${ax+aw-22}" y1="${y}" x2="${ax+aw-4}" y2="${y}" stroke="#8796a8"/><text x="${ax+aw-26}" y="${y+4}" text-anchor="end" font-size="9" fill="#8796a8">${k*100}</text>`; }
+  s+=`<text x="${ax+aw/2}" y="${atop-8}" text-anchor="middle" font-size="14" font-weight="700" fill="#1d2430">${b.n}A</text>`;
+  // thermometer
+  s+=`<rect x="${ax+18}" y="${atop-30}" width="7" height="${floor-atop+18}" rx="3.5" fill="#fff" stroke="#999"/><rect x="${ax+19.5}" y="${floor-40-(b.T-5)*1.6}" width="4" height="${40+(b.T-5)*1.6-12}" fill="#d33"/><circle cx="${ax+21.5}" cy="${floor-14}" r="6" fill="#d33"/>`;
+  s+=`<text x="${ax+12}" y="${atop-20}" text-anchor="end" font-size="11" fill="#555">${b.T.toFixed(1)} °C</text>`;
+  // stirring rod
+  if(mixed>0){ const off = stirring ? Math.sin((tick||0)/90)*30 : 0; s+=`<line x1="${ax+aw/2+20+off}" y1="${atop+10}" x2="${ax+aw/2+20+off*0.4}" y2="${floor-10}" stroke="#b9c7d6" stroke-width="5" stroke-linecap="round"/>`; }
+  // pour stream
+  if(p>0.3 && p<1){ s+=`<path d="M${bx+6} ${by+8} Q${ax+aw-35} ${by+20} ${ax+aw-40} ${yl}" stroke="#d9e6f5" stroke-width="7" fill="none" stroke-linecap="round"/>`; }
+  // beaker B
+  if(p<1){
+    const yb = vB/bVmax;
+    s+=`<g transform="translate(${bx} ${by}) rotate(${ang} 0 0)">`;
+    s+=`<path d="M3 ${bh-(bh-6)*yb*0.95} L${bw-3} ${bh-(bh-6)*yb*0.95} L${bw-3} ${bh-5} L3 ${bh-5} Z" fill="#e8f0fa" opacity="${vB>0?1:0}"/>`;
+    s+=`<path d="M0 0 L0 ${bh-5} Q0 ${bh} 5 ${bh} L${bw-5} ${bh} Q${bw} ${bh} ${bw} ${bh-5} L${bw} 0 M-6 0 L6 0" fill="none" stroke="#5f6f84" stroke-width="2.5"/>`;
+    s+=`<text x="${bw/2}" y="-8" text-anchor="middle" font-size="14" font-weight="700" fill="#1d2430">${b.n}B</text></g>`;
+  }
+  s+=`<text x="${W-10}" y="${H-10}" text-anchor="end" font-size="11" fill="#5b4a32">A: 200 mL · B: 80 mL</text></svg>`;
+  $("scene").innerHTML=s;
+}
+function pour(){
+  const b=BEAKERS[state.sel];
+  if(b.trials.length>=3){ $("labMsg").innerHTML=`<div class="msg info">Three trials recorded for this beaker. Choose another beaker.</div>`; return; }
+  const tc = b.base*(1+0.035*gauss()) + 0.08*gauss();
+  run={b, t0:performance.now(), tc:Math.max(0.8,tc), phase:"run", stoppedAt:null, early:0};
+  $("btnPour").disabled=true; $("btnStop").disabled=false; $("btnReset").disabled=true;
+  document.querySelectorAll(".chip").forEach(c=>c.disabled=true);
+  $("labMsg").innerHTML=`<div class="msg info">Stirring… watch for the colour change.</div>`;
+  const step=(now)=>{
+    if(!run || run.phase==="idle") return;
+    const t=(now-run.t0)/1000;
+    const p=Math.min(1,t/1.1); const mixed=Math.min(1,Math.max(0,(t-0.35)/0.75));
+    const blue = t<run.tc?0:Math.min(1,(t-run.tc)/0.35);
+    if(run.phase==="run") $("digits").textContent=t.toFixed(2)+" s";
+    drawScene(p, mixed, run.phase==="run", blue, now);
+    if(run.phase==="run" && t>run.tc+4 && !run.late){ run.late=true; $("labMsg").innerHTML=`<div class="msg warn">It's blue! Press Stop as soon as you see the change.</div>`; }
+    if(run.phase==="run" || blue<1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+function stopWatch(){
+  if(!run || run.phase!=="run") return;
+  const t=(performance.now()-run.t0)/1000;
+  if(t<run.tc){ run.early++; $("labMsg").innerHTML=`<div class="msg warn">Not yet. The solution is still colourless. Wait for the blue colour.</div>`; return; }
+  run.phase="done"; const b=run.b; const rec=Math.round(t*100)/100; b.trials.push(rec);
+  $("digits").textContent=rec.toFixed(2)+" s";
+  $("btnStop").disabled=true; $("btnReset").disabled=false;
+  document.querySelectorAll(".chip").forEach(c=>c.disabled=false);
+  const lag=t-run.tc;
+  $("labMsg").innerHTML=`<div class="msg good">Recorded ${rec.toFixed(2)} s for beaker ${b.n}.${lag>0.6?` Your reaction time added about ${lag.toFixed(1)} s. Repeat trials help average this out.`:""}</div>`;
+  drawTable(); drawCond();
+  document.querySelectorAll(".chip").forEach((c,i)=>c.classList.toggle("ran",!!BEAKERS[i].trials.length));
+  refreshNext();
+}
+
+// ===================== TAB 2: INSIDE THE BEAKER =====================
+const COL={io3:"#2f7fd8",hso3:"#e0a100",im:"#8e4fc9",i2:"#8a4b14",blue:"#1b2466"};
+function renderInside(m){
+  QS[1]=["in1","in2","in3"];
+  const o1=[
+    {t:"Yes. I₂ is made the whole time, but it is destroyed almost as soon as it forms, so it never builds up.", ok:true, why:"Correct. The reaction is running from the moment you mix. The colour is just the signal that one reactant has run out."},
+    {t:"No. Nothing reacts until the blue colour appears.", h:"Watch the counters. Steps 1 and 2 fire from the very start."},
+    {t:"No. I₂ only forms once all the HSO₃⁻ is gone.", h:"Look at the Step 2 counter during the colourless period. I₂ is being made; something keeps removing it."},
+    {t:"Yes, and it builds up slowly, which is why the colour slowly darkens.", h:"The colour change is sudden, not gradual. Check the [I₂] bar during the colourless period."}];
+  const o2=[
+    {t:"The time it takes for all of the HSO₃⁻ to be used up", ok:true, why:"Correct. Every beaker starts with the same [HSO₃⁻], so a shorter time means HSO₃⁻ was used up faster: a faster rate."},
+    {t:"The time it takes for the reaction to start", h:"The reaction starts as soon as the solutions are mixed."},
+    {t:"The time it takes for all of the IO₃⁻ to be used up", h:"Check the IO₃⁻ bar when the blue appears. Most of the IO₃⁻ is still there."},
+    {t:"The time it takes for the starch to react", h:"Starch is only an indicator. Which bar reaches zero right when the colour appears?"}];
+  const o3=[
+    {t:"It is an indicator. It forms a blue-black complex with I₂, so we can see when I₂ starts to build up.", ok:true, why:"Correct. Starch doesn't change the rate; it just makes the I₂ visible."},
+    {t:"It is a catalyst that speeds up the reaction.", h:"Flinn's catalyst is the sulfuric acid in beaker 6. Every beaker has the same starch."},
+    {t:"It reacts with HSO₃⁻ to remove it.", h:"Step 3 shows what removes the I₂. What does the starch do once I₂ is left over?"},
+    {t:"It is a reactant that makes the I₂.", h:"I₂ comes from IO₃⁻ and I⁻ in step 2. Starch only shows the I₂."}];
+  CHECKS.in1=mcCheck(o1); CHECKS.in2=mcCheck(o2); CHECKS.in3=mcCheck(o3);
+  m.innerHTML=`<div class="card"><h2>Inside the Beaker</h2>
+  <p class="intro">The solution looks colourless for several seconds, then turns blue-black all at once. Here is what is happening in the beaker the whole time. Play it in slow motion.</p>
+  <div class="two"><div>
+    <div class="ctrl"><label>Beaker <select id="inB">${BEAKERS.map((b,i)=>`<option value="${i}">${b.n} (${b.purpose.toLowerCase()})</option>`).join("")}</select></label>
+      <label>Speed <select id="inSp"><option value="0.25">¼× (slow motion)</option><option value="0.5">½×</option><option value="1">1× (real time)</option></select></label>
+      <button class="btn" id="inPlay">▶ Mix</button><button class="btn ghost" id="inReset">Reset</button></div>
+    <canvas class="sim" id="cv" width="560" height="340"></canvas>
+    <div class="legend"><span><i style="background:${COL.io3}"></i>IO₃⁻</span><span><i style="background:${COL.hso3}"></i>HSO₃⁻</span><span><i style="background:${COL.im}"></i>I⁻</span><span><i style="background:${COL.i2}"></i>I₂</span><span><i style="background:${COL.blue}"></i>I₂–starch (blue-black)</span></div>
+    <p class="note">Cartoon view: particle numbers are not to scale.</p>
+  </div><div>
+    <div class="eq">IO₃⁻ + 3 HSO₃⁻ → I⁻ + 3 SO₄²⁻ + 3 H⁺ <span class="tag slow">Step 1 (slow)</span></div>
+    <div class="eq">IO₃⁻ + 5 I⁻ + 6 H⁺ → 3 I₂ + 3 H₂O <span class="tag">Step 2</span></div>
+    <div class="eq">I₂ + HSO₃⁻ + H₂O → 2 I⁻ + SO₄²⁻ + 3 H⁺ <span class="tag">Step 3 (very fast)</span></div>
+    <div class="eq">I₂ + starch → blue-black complex <span class="tag">only once HSO₃⁻ is gone</span></div>
+    <div class="counters"><div class="counter" id="c1"><span>Step 1 (slow)</span><b>0</b></div><div class="counter" id="c2"><span>Step 2: I₂ made</span><b>0</b></div><div class="counter" id="c3"><span>Step 3: I₂ destroyed</span><b>0</b></div></div>
+    <div class="ticker" id="ticker">&nbsp;</div>
+    <div class="bars" id="bars"></div>
+    <div class="graph" id="graph"></div>
+  </div></div>
+  <h3 style="margin-top:14px">Questions</h3>
+  ${mcq("in1","1. During the colourless period, is I₂ being produced?",o1)}
+  ${mcq("in2","2. So what does the clock time actually measure?",o2)}
+  ${mcq("in3","3. What is the job of the starch?",o3)}
+  ${nextBanner(1)}</div>`;
+  wireChecks(m);
+  initInside();
+  refreshNext();
+}
+let IN=null;
+function initInside(){
+  const cv=$("cv"), ctx=cv.getContext("2d");
+  const reset=()=>{
+    const b=BEAKERS[+$("inB").value];
+    const nH=36, nIO = Math.round(nH*b.c/HSO3_0); // same IO3- : HSO3- ratio as the real beaker
+    const parts=[]; const W=cv.width,H=cv.height;
+    const add=(type)=>{ const q={type,x:20+Math.random()*(W-40),y:20+Math.random()*(H-40),vx:(Math.random()-.5)*40,vy:(Math.random()-.5)*40,flash:0,age:0}; ((IN && IN.add===add) ? IN.parts : parts).push(q); return q; };
+    for(let i=0;i<nIO;i++) add("io3"); for(let i=0;i<nH;i++) add("hso3");
+    // schedule: 12 cycles evenly spread over the clock time
+    // each cycle = step 1 (IO3- + 3 HSO3- -> I-), step 2 (IO3- + I- -> I2, shown as 3 I2), then step 3 three times (I2 + HSO3- -> 2 I-)
+    const cycles=[]; const N=nH/6; for(let k=0;k<N;k++) cycles.push({t:b.base*(k+0.15+0.3*Math.random())/N, stage:0});
+    IN={b, parts, cycles, t:0, playing:false, last:null, c1:0,c2:0,c3:0, hist:[], blueAt:null, post:0, add, W, H};
+    drawInside(ctx); drawBars(); drawGraph(); $("ticker").innerHTML="&nbsp;"; ["c1","c2","c3"].forEach(id=>$(id).querySelector("b").textContent="0");
+    $("inPlay").textContent="▶ Mix";
+  };
+  $("inB").onchange=reset; $("inReset").onclick=reset;
+  $("inPlay").onclick=()=>{ if(!IN) return; if(IN.t>0 && IN.blueAt!==null && IN.t>IN.blueAt+3) reset(); IN.playing=!IN.playing; $("inPlay").textContent=IN.playing?"❚❚ Pause":"▶ Play"; IN.last=null; };
+  reset();
+  let raf;
+  const loop=(now)=>{
+    raf=requestAnimationFrame(loop);
+    if(!IN) return;
+    const dtReal = IN.last==null?0:Math.min(0.05,(now-IN.last)/1000); IN.last=now;
+    const sp=+$("inSp").value; const dt=dtReal*sp;
+    moveParts(dtReal);
+    if(IN.playing){ IN.t+=dt; simEvents(dt); if(IN.blueAt!==null && IN.t>IN.blueAt+3){ IN.playing=false; $("inPlay").textContent="↺ Mix again"; } }
+    drawInside(ctx); drawBars(); if(IN.playing) drawGraph();
+  };
+  raf=requestAnimationFrame(loop);
+  stopAnim=()=>{ cancelAnimationFrame(raf); IN=null; };
+}
+function moveParts(dt){
+  const {W,H}=IN;
+  IN.parts.forEach(p=>{ p.vx+=(Math.random()-.5)*120*dt; p.vy+=(Math.random()-.5)*120*dt; const s=Math.hypot(p.vx,p.vy), mx=45; if(s>mx){p.vx*=mx/s;p.vy*=mx/s;}
+    p.x+=p.vx*dt; p.y+=p.vy*dt; if(p.x<10){p.x=10;p.vx=Math.abs(p.vx);} if(p.x>W-10){p.x=W-10;p.vx=-Math.abs(p.vx);} if(p.y<10){p.y=10;p.vy=Math.abs(p.vy);} if(p.y>H-10){p.y=H-10;p.vy=-Math.abs(p.vy);}
+    if(p.flash>0) p.flash-=dt; p.age+=dt; });
+  IN.parts=IN.parts.filter(p=>!(p.dead && p.flash<=0));
+}
+const pick=(type)=>{ const a=IN.parts.filter(p=>p.type===type && !p.dead); return a.length? a[Math.floor(Math.random()*a.length)] : null; };
+function bump(id){ const el=$(id); if(!el) return; el.querySelector("b").textContent=IN[id]; el.classList.add("flash"); setTimeout(()=>el&&el.classList.remove("flash"),120); }
+function simEvents(dt){
+  const t=IN.t, b=IN.b;
+  IN.cycles.forEach(c=>{
+    const sc=b.base/6;
+    if(c.stage===0 && t>=c.t){ // step 1: IO3- + 3 HSO3- -> I-
+      const io=pick("io3"); if(io){ io.type="im"; io.flash=0.5; for(let k=0;k<3;k++){ const h=pick("hso3"); if(h){ h.dead=true; h.flash=0.3; } } IN.c1++; bump("c1"); $("ticker").textContent="Step 1 (slow): IO₃⁻ reacted with HSO₃⁻ to make I⁻."; }
+      c.stage=1; c.t2=t+0.3*sc;
+    }
+    if(c.stage===1 && t>=c.t2){ // step 2: IO3- + I- -> I2
+      const io=pick("io3"), im=pick("im"); c.i2=[];
+      if(io&&im){ im.dead=true; im.flash=0; io.dead=true; io.flash=0.2; for(let k=0;k<3;k++){ const n=IN.add("i2"); n.x=io.x+(k-1)*12; n.y=io.y+(k%2)*8; n.flash=0.6; c.i2.push(n); } IN.c2+=3; bump("c2"); $("ticker").textContent="Step 2: I₂ formed…"; }
+      c.stage=2; c.t3=t+0.08*sc; c.k3=0;
+    }
+    while(c.stage===2 && t>=c.t3){ // step 3: I2 + HSO3- -> 2 I-, one I2 at a time
+      const h=pick("hso3"), i2=c.i2[c.k3];
+      if(h && i2 && !i2.dead){ h.dead=true; h.flash=0.3; i2.type="im"; i2.flash=0.6; const n=IN.add("im"); n.x=i2.x+6; n.y=i2.y; IN.c3++; bump("c3"); $("ticker").textContent="Step 3: …and destroyed by HSO₃⁻ almost immediately."; }
+      c.k3++; c.t3+=0.05*sc; if(c.k3>=3) c.stage=3;
+    }
+  });
+  const hLeft = IN.parts.filter(p=>p.type==="hso3"&&!p.dead).length;
+  if(hLeft===0 && IN.blueAt===null && t>=b.base && IN.cycles.every(c=>c.stage===3)){ IN.blueAt=t; $("ticker").innerHTML="<b>All the HSO₃⁻ is gone.</b> Nothing destroys I₂ now, so it builds up and turns the starch blue-black."; }
+  if(IN.blueAt!==null){ // step 2 continues, I2 now survives and binds starch
+    IN.post+=dt; const every=0.3*b.base/6;
+    while(IN.post>every && (IN.nPost||0)<10){ IN.post-=every; IN.nPost=(IN.nPost||0)+1; const io=pick("io3"), im=pick("im"); if(io&&im){ im.dead=true; io.dead=true; io.flash=0; for(let k=0;k<3;k++){ const n=IN.add("i2s"); n.x=io.x+(k-1)*12; n.y=io.y; n.flash=0.5; } IN.c2+=3; bump("c2"); } }
+  }
+  IN.hist.push({t, h:conc().hso3, i2:conc().i2});
+}
+function conc(){
+  const b=IN.b, t=IN.t;
+  const hso3 = Math.max(0, HSO3_0*(1 - Math.min(1,t/b.base)));
+  const used = HSO3_0 - hso3;
+  const io3 = b.c - used/3;
+  const i2 = IN.blueAt===null ? (t>0? 2e-7 : 0) : Math.min(b.c*0.25, 0.0009*(t-IN.blueAt)*(6/b.base));
+  return {io3,hso3,i2};
+}
+function drawInside(ctx){
+  const {W,H}=IN; const blue=IN.blueAt===null?0:Math.min(1,(IN.t-IN.blueAt)/0.6);
+  ctx.fillStyle=`rgb(${Math.round(240-(240-150)*blue)},${Math.round(246-(246-162)*blue)},${Math.round(252-(252-222)*blue)})`; ctx.fillRect(0,0,W,H);
+  IN.parts.forEach(p=>{
+    const glow=p.flash>0; ctx.save();
+    if(p.dead){ ctx.globalAlpha=Math.max(0,p.flash/0.3); }
+    if(glow){ ctx.shadowColor="#ffd400"; ctx.shadowBlur=14; }
+    if(p.type==="i2"||p.type==="i2s"){ ctx.fillStyle=p.type==="i2s"?COL.blue:COL.i2; ctx.beginPath(); ctx.arc(p.x-3.5,p.y,4.5,0,7); ctx.arc(p.x+3.5,p.y,4.5,0,7); ctx.fill(); if(p.type==="i2s"){ ctx.strokeStyle="rgba(27,36,102,.35)"; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(p.x,p.y,11,0,7); ctx.stroke(); } }
+    else { ctx.fillStyle=COL[p.type==="im"?"im":p.type]; ctx.beginPath(); ctx.arc(p.x,p.y,p.type==="im"?3.5:4.5,0,7); ctx.fill(); }
+    ctx.restore();
+  });
+  ctx.fillStyle="#1d2430"; ctx.font="bold 14px system-ui"; ctx.fillText(`t = ${IN.t.toFixed(2)} s`,10,20);
+  if(IN.blueAt!==null){ ctx.fillStyle="#1b2466"; ctx.fillText(`Blue at ${IN.blueAt.toFixed(2)} s`,10,38); }
+}
+function drawBars(){
+  const c=conc(); const b=IN.b; const mx=Math.max(BEAKERS[1].c,HSO3_0);
+  const row=(lab,v,col,max)=>`<span>${lab}</span><div class="track"><div class="fill" style="width:${Math.min(100,100*v/max)}%;background:${col}"></div></div><span class="v">${v<1e-5&&v>0?"≈ 0":sig(v,3)} mol/L</span>`;
+  $("bars").innerHTML = row("[IO₃⁻]",c.io3,COL.io3,mx)+row("[HSO₃⁻]",c.hso3,COL.hso3,mx)+row("[I₂]",c.i2,COL.i2,mx*0.25);
+}
+function drawGraph(){
+  const b=IN.b, T=b.base+3; const X0=44,X1=380,Y0=170,Y1=20;
+  const sx=t=>X0+(X1-X0)*t/T, syH=v=>Y0-(Y0-Y1)*v/HSO3_0, syI=v=>Y0-(Y0-Y1)*v/(HSO3_0*0.25);
+  let s=`<svg viewBox="0 0 400 210"><line x1="${X0}" y1="${Y0}" x2="${X1}" y2="${Y0}" stroke="#333"/><line x1="${X0}" y1="${Y0}" x2="${X0}" y2="${Y1-6}" stroke="#333"/>`;
+  s+=`<text x="${(X0+X1)/2}" y="${Y0+30}" text-anchor="middle" font-size="12">Time (s)</text><text transform="translate(14 ${(Y0+Y1)/2}) rotate(-90)" text-anchor="middle" font-size="12">Concentration</text>`;
+  for(let k=0;k<=T;k+=(T>10?3:1)) s+=`<text x="${sx(k)}" y="${Y0+14}" text-anchor="middle" font-size="10" fill="#555">${k}</text>`;
+  s+=`<line x1="${sx(b.base)}" y1="${Y0}" x2="${sx(b.base)}" y2="${Y1}" stroke="${COL.blue}" stroke-dasharray="4 3"/><text x="${sx(b.base)+4}" y="${Y1+10}" font-size="11" fill="${COL.blue}">turns blue</text>`;
+  if(IN.hist.length>1){
+    const pts=IN.hist.filter((_,i)=>i%2===0);
+    s+=`<polyline fill="none" stroke="${COL.hso3}" stroke-width="2.5" points="${pts.map(p=>sx(p.t).toFixed(1)+","+syH(p.h).toFixed(1)).join(" ")}"/>`;
+    s+=`<polyline fill="none" stroke="${COL.i2}" stroke-width="2.5" points="${pts.map(p=>sx(p.t).toFixed(1)+","+syI(p.i2).toFixed(1)).join(" ")}"/>`;
+  }
+  s+=`<text x="${X1-4}" y="${Y0-34}" text-anchor="end" font-size="11" fill="${COL.hso3}">— [HSO₃⁻]</text><text x="${X1-4}" y="${Y0-20}" text-anchor="end" font-size="11" fill="${COL.i2}">— [I₂] (enlarged)</text></svg>`;
+  $("graph").innerHTML=s;
+}
+
+// ===================== TAB 3: RATE & ORDER =====================
+function renderRate(m){
+  QS[2]=["r1","r2","r3","r4","r5"];
+  const t1=avg(BEAKERS[0]), t2=avg(BEAKERS[1]), t3=avg(BEAKERS[2]);
+  const R=[t1,t2,t3].map(t=>HSO3_0/t);
+  const ratio=R[1]/R[0];
+  CHECKS.r1=v=>{ const want=HSO3_0/t1; if(Math.abs(v-want)/want<=0.03) return {ok:true,msg:`Correct: ${sig(want)} mol/(L·s).`};
+    if(Math.abs(v-want*1000)/(want*1000)<=0.03) return {ok:false,msg:"Check your units: [HSO₃⁻] is in mol/L, not mmol/L."};
+    if(Math.abs(v-t1/HSO3_0)/(t1/HSO3_0)<=0.03) return {ok:false,msg:"You divided time by concentration. Rate = Δ[HSO₃⁻] ÷ Δt."};
+    if(Math.abs(v-HSO3_0/2/t1)/(HSO3_0/2/t1)<=0.03) return {ok:false,msg:"Use [HSO₃⁻] = 0.0143 mol/L. Each S₂O₅²⁻ already gave two HSO₃⁻."};
+    return {ok:false,msg:`Rate = Δ[HSO₃⁻] ÷ Δt. All 0.0143 mol/L is used up in your average time for beaker 1 (${t1.toFixed(2)} s).`}; };
+  CHECKS.r2=v=>{ const want=HSO3_0/t1/3; if(Math.abs(v-want)/want<=0.03) return {ok:true,msg:`Correct: ${sig(want)} mol/(L·s). IO₃⁻ disappears ⅓ as fast because the mole ratio is 1 : 3.`};
+    if(Math.abs(v-want*9)/(want*9)<=0.03) return {ok:false,msg:"You multiplied by 3. For every 3 HSO₃⁻ used, only 1 IO₃⁻ is used, so IO₃⁻ disappears more slowly."};
+    return {ok:false,msg:"Use the mole ratio from the overall reaction: 1 IO₃⁻ for every 3 HSO₃⁻."}; };
+  CHECKS.r3=v=>{ if(Math.abs(v-ratio)/ratio<=0.06 || Math.abs(v-Math.round(ratio*10)/10)<0.051) return {ok:true,msg:`Correct. With your times the rate was multiplied by about ${ratio.toFixed(2)}.`};
+    if(Math.abs(v-1/ratio)<0.08) return {ok:false,msg:"Rate is fastest in beaker 2, so the factor should be greater than 1. Divide rate 2 by rate 1."};
+    return {ok:false,msg:"Divide the rate for beaker 2 by the rate for beaker 1."}; };
+  CHECKS.r4=v=>{ if(v===1) return {ok:true,msg:"Correct. 2ˣ = 2, so x = 1. The reaction is first order with respect to IO₃⁻. Check beaker 3: half the [IO₃⁻] gave about half the rate."};
+    if(v===2) return {ok:false,msg:"If x were 2, doubling [IO₃⁻] would make the rate 4 times faster. Did it?"};
+    if(v===0) return {ok:false,msg:"If x were 0, changing [IO₃⁻] wouldn't change the rate at all. Did it?"};
+    if(Math.abs(v-1)<0.3) return {ok:false,msg:"Close! Measured times are never perfect (reaction time, for example), so round x to the nearest whole number."};
+    return {ok:false,msg:"Solve 2ˣ = (rate factor). Orders are usually whole numbers: 0, 1 or 2."}; };
+  const o5=[
+    {t:"[HSO₃⁻] was the same (0.0143 mol/L) in every beaker, so we never saw how changing it affects the rate.", ok:true, why:"Correct. To find an order, that reactant's concentration has to change while everything else stays the same."},
+    {t:"HSO₃⁻ is a product, and products are not in the rate law.", h:"HSO₃⁻ is a reactant. It's used up in steps 1 and 3."},
+    {t:"HSO₃⁻ is used up completely, so it has no order.", h:"Every reactant gets used up eventually. What would you need to change in the experiment to find its order?"},
+    {t:"The order for HSO₃⁻ must be the same as for IO₃⁻.", h:"Orders are found experimentally for each reactant separately. Which beakers would show the effect of HSO₃⁻?"}];
+  CHECKS.r5=mcCheck(o5);
+  m.innerHTML=`<div class="card"><h2>Rate &amp; Order</h2>
+  <p class="intro">Overall reaction (until the HSO₃⁻ runs out):</p>
+  <div class="eq">IO₃⁻(aq) + 3 HSO₃⁻(aq) → I⁻(aq) + 3 SO₄²⁻(aq) + 3 H⁺(aq)</div>
+  <div class="notice"><b>Key idea:</b> the blue colour appears the instant all of the HSO₃⁻ is used up. Every beaker starts with [HSO₃⁻] = <b>0.0143 mol/L</b> (each Na₂S₂O₅ gives 2 HSO₃⁻ in water). So in each beaker, Δ[HSO₃⁻] = 0.0143 mol/L and Δt = your clock time.</div>
+  ${numq("r1",`1. Using your average time for beaker 1 (${t1.toFixed(2)} s), calculate the average rate of disappearance of HSO₃⁻.`,"mol/(L·s)")}
+  ${numq("r2","2. Use the balanced equation to find the rate of disappearance of IO₃⁻ in beaker 1.","mol/(L·s)")}
+  <h3 style="margin-top:14px">Method of initial rates</h3>
+  <div style="overflow-x:auto"><table class="data" style="max-width:640px"><tr><th>Beaker</th><th>[IO₃⁻] (mol/L)</th><th>[HSO₃⁻] (mol/L)</th><th>Your average time (s)</th><th>Rate of HSO₃⁻ disappearance (mol/(L·s))</th></tr>
+  ${[0,1,2].map(i=>`<tr><td>${i+1}</td><td>${BEAKERS[i].c.toFixed(4)}</td><td>0.0143</td><td>${[t1,t2,t3][i].toFixed(2)}</td><td>${sig(R[i])}</td></tr>`).join("")}</table></div>
+  <p class="note">Compare beakers 1 and 2: [IO₃⁻] was doubled (0.0357 → 0.0714 mol/L) and nothing else changed.</p>
+  ${numq("r3","3. By what factor did the rate change from beaker 1 to beaker 2?","")}
+  ${numq("r4","4. Use 2ˣ = (rate factor) to find x, the order with respect to IO₃⁻.","")}
+  ${mcq("r5","5. Why can't this data tell you the order with respect to HSO₃⁻?",o5)}
+  ${nextBanner(2)}</div>`;
+  wireChecks(m); refreshNext();
+}
+
+// ===================== TAB 4: MECHANISM =====================
+function renderMech(m){
+  QS[3]=["m1","m2","m3","m4"];
+  const o1=[{t:"Step 1",ok:true,why:"Correct. Step 1 is the slow \"bottleneck,\" so it controls how fast HSO₃⁻ is used up."},{t:"Step 2",h:"Look at the labels. Which step is the slowest?"},{t:"Step 3",h:"Step 3 is the fastest step. The slowest step determines the overall rate."}];
+  const sp=[{t:"IO₃⁻"},{t:"HSO₃⁻"},{t:"I⁻"},{t:"I₂"},{t:"SO₄²⁻"}];
+  CHECKS.m2=v=>{ const k=v.join(",");
+    if(k==="2,3") return {ok:true,msg:"Correct. I⁻ is produced in step 1 then consumed in step 2. I₂ is produced in step 2 then consumed in step 3. Intermediates are produced, then consumed."};
+    if(v.includes(0)||v.includes(1)) return {ok:false,msg:"IO₃⁻ and HSO₃⁻ are reactants: they are only ever consumed. An intermediate is produced first, then consumed."};
+    if(v.includes(4)) return {ok:false,msg:"SO₄²⁻ is only ever produced, so it's a product."};
+    return {ok:false,msg:"There are two. Look for species that appear on the right side of one step and the left side of a later step."}; };
+  const o3=[{t:"Yes. IO₃⁻ is a reactant in the slow step, so changing [IO₃⁻] changes the overall rate, as we saw.",ok:true,why:"Correct. The rate-determining step involves IO₃⁻, which agrees with the rate depending on [IO₃⁻]."},
+    {t:"No. IO₃⁻ appears in two steps, so it should be second order.",h:"Only the slow step controls the rate. Does IO₃⁻ appear in the slow step?"},
+    {t:"No. The rate should depend on I₂ because that's what we see.",h:"I₂ is an intermediate. Intermediates never appear in the overall rate law."},
+    {t:"Yes, because the coefficient of IO₃⁻ in the overall equation is 1.",h:"Orders are never taken from the overall equation's coefficients. Look at which step is rate-determining."}];
+  const o4=[{t:"Step 3 is much faster than step 2, so every I₂ is destroyed as soon as it forms. Once the HSO₃⁻ runs out, I₂ suddenly builds up.",ok:true,why:"Correct. That's the \"clock\": step 3 hides the I₂ until its reactant, HSO₃⁻, is gone."},
+    {t:"Step 1 suddenly speeds up when the solution gets warm enough.",h:"The temperature barely changes. Which reactant reaches zero right when the colour appears?"},
+    {t:"The starch takes several seconds to dissolve before it can turn blue.",h:"The starch is already dissolved in Solution B. What stops I₂ from building up before the blue appears?"},
+    {t:"All the IO₃⁻ is used up, then the I₂ is released.",h:"Most of the IO₃⁻ is still there when it turns blue. Check the bars on the Inside the Beaker tab."}];
+  CHECKS.m1=mcCheck(o1); CHECKS.m3=mcCheck(o3); CHECKS.m4=mcCheck(o4);
+  m.innerHTML=`<div class="card"><h2>Mechanism</h2>
+  <p class="intro">Chemists propose this mechanism for the iodine clock:</p>
+  <div class="eq">IO₃⁻ + 3 HSO₃⁻ → I⁻ + 3 SO₄²⁻ + 3 H⁺ <span class="tag slow">Step 1 (slow)</span></div>
+  <div class="eq">IO₃⁻ + 5 I⁻ + 6 H⁺ → 3 I₂ + 3 H₂O <span class="tag">Step 2 (fast)</span></div>
+  <div class="eq">I₂ + HSO₃⁻ + H₂O → 2 I⁻ + SO₄²⁻ + 3 H⁺ <span class="tag">Step 3 (very fast)</span></div>
+  <p class="note">These are simplified steps. Real elementary steps involve only one or two particles, so each of these is really several elementary steps. That's why you can't write a rate law from their coefficients.</p>
+  ${mcq("m1","1. Which step is the rate-determining step?",o1,{shuf:false,row:true})}
+  ${mcq("m2","2. Which species are reaction intermediates? (Choose all that apply.)",sp,{shuf:false,multi:true,row:true})}
+  ${mcq("m3","3. You found the reaction is first order with respect to IO₃⁻. Does this mechanism agree?",o3)}
+  ${mcq("m4","4. Why does the blue colour appear suddenly instead of gradually?",o4)}
+  ${nextBanner(3)}</div>`;
+  wireChecks(m); refreshNext();
+}
+
+// ===================== TAB 5: TEMPERATURE & CATALYST =====================
+const fE=(E,kT)=>{ if(E<=0) return 0; const a=1.6*Math.sqrt(kT); return Math.sqrt(2/Math.PI)*E*E*Math.exp(-E*E/(2*a*a))/(a*a*a); };
+function distSVG(){
+  const X0=46,X1=390,Y0=200,Y1=44, Emax=9, fmax=0.5, Ea=5.2;
+  const sx=E=>X0+(X1-X0)*E/Emax, sy=f=>Y0-(Y0-Y1)*Math.min(f,fmax)/fmax;
+  const curves=[{kT:283/295*0.8,col:"#1f5fbf",lab:"Cool (10 °C)"},{kT:1,col:"#555",lab:"Room temp"},{kT:318/295*1.45,col:"#d6453d",lab:"Warm (45 °C)"}];
+  let s=`<svg viewBox="0 0 410 240" role="img" aria-label="Collision energies"><text x="205" y="17" text-anchor="middle" font-size="13" font-weight="700" fill="#1d2430">Collision energies in the slow step</text>`;
+  s+=`<line x1="${X0}" y1="${Y0}" x2="${X1}" y2="${Y0}" stroke="#333"/><line x1="${X0}" y1="${Y0}" x2="${X0}" y2="${Y1-6}" stroke="#333"/>`;
+  s+=`<text x="${(X0+X1)/2}" y="${Y0+28}" text-anchor="middle" font-size="12" fill="#333">Kinetic energy of collision</text><text transform="translate(16 ${(Y0+Y1)/2}) rotate(-90)" text-anchor="middle" font-size="12" fill="#333">Number of collisions</text>`;
+  curves.forEach(cv=>{ let d=`M${sx(Ea)} ${Y0}`; for(let E=Ea;E<=Emax;E+=0.05) d+=` L${sx(E).toFixed(1)} ${sy(fE(E,cv.kT)).toFixed(1)}`; d+=` L${sx(Emax)} ${Y0} Z`; s+=`<path d="${d}" fill="${cv.col}" opacity=".13"/>`; });
+  curves.forEach((cv,i)=>{ let d=""; let pk=[0,0]; for(let E=0;E<=Emax;E+=0.05){ const f=fE(E,cv.kT); if(f>pk[1]) pk=[E,f]; d+=(d?" L":"M")+sx(E).toFixed(1)+" "+sy(f).toFixed(1);} s+=`<path d="${d}" fill="none" stroke="${cv.col}" stroke-width="2.5"/><line x1="${X1-110}" y1="${Y1+30+i*16}" x2="${X1-92}" y2="${Y1+30+i*16}" stroke="${cv.col}" stroke-width="3"/><text x="${X1-86}" y="${Y1+34+i*16}" font-size="11" font-weight="700" fill="${cv.col}">${cv.lab}</text>`; });
+  s+=`<line x1="${sx(Ea)}" y1="${Y0}" x2="${sx(Ea)}" y2="${Y1+4}" stroke="#333" stroke-dasharray="5 3"/><text x="${sx(Ea)+4}" y="${Y1+14}" font-size="12">Eₐ (step 1)</text></svg>`;
+  return s;
+}
+function peSVG(cat){
+  const X0=50,X1=520,Y0=280,Y1=30;
+  const R=150, I1=175, I2=212, P=250, A1=50, A2=128, A3=178, A1c=105;
+  const seg=[[0,R],[0.2,R],[0.3,cat?A1c:A1],[0.4,I1],[0.52,A2],[0.63,I2],[0.74,A3],[0.85,P],[1,P]];
+  const x=t=>X0+20+t*(X1-X0-40);
+  // smooth path through points with cosine interpolation
+  let d=""; for(let i=0;i<=300;i++){ const t=i/300; let k=0; while(k<seg.length-2 && t>seg[k+1][0]) k++; const [ta,ya]=seg[k],[tb,yb]=seg[k+1]; const u=(t-ta)/(tb-ta); const y=ya+(yb-ya)*(1-Math.cos(Math.PI*u))/2; d+=(d?" L":"M")+x(t).toFixed(1)+" "+y.toFixed(1); }
+  let s=`<svg viewBox="0 0 560 330" role="img" aria-label="Potential energy diagram"><defs><marker id="ar" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#333"/></marker></defs>`;
+  s+=`<line x1="${X0}" y1="${Y0}" x2="${X1}" y2="${Y0}" stroke="#333"/><line x1="${X0}" y1="${Y0}" x2="${X0}" y2="${Y1-10}" stroke="#333"/>`;
+  s+=`<text x="${(X0+X1)/2}" y="${Y0+26}" text-anchor="middle" font-size="12">Reaction progress</text><text transform="translate(18 ${(Y0+Y1)/2}) rotate(-90)" text-anchor="middle" font-size="12">Potential energy (kJ)</text>`;
+  if(cat){ let d0=""; const s0=seg.map(p=>p.slice()); s0[2][1]=A1; for(let i=0;i<=80;i++){ const t=0.2+i/80*0.2; let k=0; while(k<s0.length-2 && t>s0[k+1][0]) k++; const [ta,ya]=s0[k],[tb,yb]=s0[k+1]; const u=(t-ta)/(tb-ta); const y=ya+(yb-ya)*(1-Math.cos(Math.PI*u))/2; d0+=(d0?" L":"M")+x(t).toFixed(1)+" "+y.toFixed(1);} s+=`<path d="${d0}" fill="none" stroke="#999" stroke-width="2" stroke-dasharray="6 4"/><text x="${x(0.3)+8}" y="${A1-4}" text-anchor="start" text-anchor="middle" font-size="11" fill="#777">without catalyst</text>`; }
+  s+=`<path d="${d}" fill="none" stroke="${cat?"#1e8a4c":"#1f5fbf"}" stroke-width="3"/>`;
+  const a1=cat?A1c:A1;
+  // labels
+  s+=`<text x="${x(0.06)}" y="${R+16}" text-anchor="middle" font-size="12">Reactants</text><text x="${x(0.9)}" y="${P+16}" text-anchor="middle" font-size="12">Products</text>`;
+  [[0.3,a1,"AC₁"],[0.52,A2,"AC₂"],[0.74,A3,"AC₃"]].forEach(([t,y,l])=>s+=`<circle cx="${x(t)}" cy="${y}" r="3.5" fill="#333"/><text x="${x(t)}" y="${y-8}" text-anchor="middle" font-size="11" font-weight="700">${l}</text>`);
+  [[0.4,I1,"I⁻"],[0.63,I2,"I₂"]].forEach(([t,y,l])=>s+=`<text x="${x(t)}" y="${y+18}" text-anchor="middle" font-size="10" fill="#8e4fc9">intermediate (${l})</text>`);
+  s+=`<line x1="${x(0.17)}" y1="${a1}" x2="${x(0.3)}" y2="${a1}" stroke="#b3261e" stroke-dasharray="3 3"/><line x1="${x(0.17)}" y1="${R}" x2="${x(0.17)}" y2="${a1+3}" stroke="#b3261e" stroke-width="1.8" marker-end="url(#ar)"/><text x="${x(0.17)-6}" y="${(R+a1)/2+4}" text-anchor="end" font-size="13" fill="#b3261e" font-weight="700">Eₐ₁${cat?" (lower)":""}</text>`;
+  s+=`<line x1="${x(0.42)}" y1="${A2}" x2="${x(0.52)}" y2="${A2}" stroke="#777" stroke-dasharray="3 3"/><line x1="${x(0.42)}" y1="${I1}" x2="${x(0.42)}" y2="${A2+3}" stroke="#555" stroke-width="1.5" marker-end="url(#ar)"/><text x="${x(0.42)-9}" y="${(I1+A2)/2+4}" text-anchor="end" font-size="13" font-weight="700" stroke="#fff" stroke-width="4" paint-order="stroke">Eₐ₂</text>`;
+  s+=`<line x1="${x(0.65)}" y1="${A3}" x2="${x(0.74)}" y2="${A3}" stroke="#777" stroke-dasharray="3 3"/><line x1="${x(0.65)}" y1="${I2}" x2="${x(0.65)}" y2="${A3+3}" stroke="#555" stroke-width="1.5" marker-end="url(#ar)"/><text x="${x(0.65)-9}" y="${(I2+A3)/2+6}" text-anchor="end" font-size="13" font-weight="700" stroke="#fff" stroke-width="4" paint-order="stroke">Eₐ₃</text>`;
+  s+=`<line x1="${x(0.97)}" y1="${R}" x2="${x(0.97)}" y2="${P-3}" stroke="#333" stroke-width="1.5" marker-end="url(#ar)"/><line x1="${x(0.86)}" y1="${R}" x2="${x(1)}" y2="${R}" stroke="#999" stroke-dasharray="3 3"/><text x="${x(0.97)+5}" y="${(R+P)/2+4}" font-size="12">ΔH</text>`;
+  s+=`<text x="${X1}" y="${Y1}" text-anchor="end" font-size="11" fill="#555">AC = activated complex</text></svg>`;
+  return s;
+}
+function renderTC(m){
+  QS[4]=["t1","t2","t3","t4"];
+  const MECH=[{t:"It increases the frequency of collisions (collisions per second)"},{t:"It increases the proportion of collisions that are effective"},{t:"Both: more collisions per second AND a greater proportion are effective"}];
+  const tA=avg(BEAKERS[3]), tC=avg(BEAKERS[4]), t6=avg(BEAKERS[5]), t1=avg(BEAKERS[0]);
+  CHECKS.t1=v=>v===2?{ok:true,msg:"Correct. Warmer particles move faster, so they collide more often, and a much larger proportion of collisions have at least Eₐ for step 1 (see the shaded areas)."}:{ok:false,msg:v===0?"That's part of it. Look at the shaded areas past Eₐ on the graph. What else changes?":"That's the bigger part. But faster-moving particles also collide more often."};
+  const o2=[{t:"Step 1, because it is the rate-determining step",ok:true,why:"Correct. Lowering Eₐ₁ speeds up the bottleneck, so the whole reaction speeds up."},{t:"Step 3, because it destroys the I₂",h:"Step 3 is already very fast. Speeding it up doesn't change how fast HSO₃⁻ is used up overall."},{t:"Step 2, because it makes the I₂",h:"The overall rate is set by the slowest step. Which one is that?"},{t:"It doesn't matter which step",h:"Only the slow step limits the overall rate."}];
+  CHECKS.t2=mcCheck(o2);
+  CHECKS.t3=v=>v===1?{ok:true,msg:"Correct. The particles move at the same speeds, but with a lower Eₐ a greater proportion of collisions are effective."}:{ok:false,msg:v===0?"Adding a catalyst doesn't make particles move faster or collide more often. What does a lower Eₐ change?":"The temperature is the same, so collision frequency doesn't change. Only one of these effects applies."};
+  const o4=[{t:"It provides a different pathway with a lower activation energy for the slow step.",ok:true,why:"Correct. That's why beaker 6 turned blue fastest."},{t:"It gives the particles more kinetic energy.",h:"Beaker 6 was at room temperature, like beaker 1. A catalyst changes the pathway, not the particles' energy."},{t:"It increases the concentration of IO₃⁻.",h:"Beaker 6 had the same 50 mL of KIO₃ as beaker 1."},{t:"It makes ΔH more negative, so the reaction gives off more energy.",h:"A catalyst doesn't change the reactants or products, so ΔH stays the same."}];
+  CHECKS.t4=mcCheck(o4);
+  m.innerHTML=`<div class="card"><h2>Temperature &amp; Catalyst</h2>
+  <p class="intro">Your average times: beaker 1 (room temp) ${t1.toFixed(2)} s, beaker 4 (warm) ${tA.toFixed(2)} s, beaker 5 (cool) ${tC.toFixed(2)} s, beaker 6 (sulfuric acid catalyst) ${t6.toFixed(2)} s.</p>
+  <div class="two"><div>
+    <div class="graph">${distSVG()}</div>
+    <p class="note">Shaded area = collisions with at least Eₐ for step 1 (effective collisions).</p>
+    ${mcq("t1","1. Why did beaker 4 (warm) turn blue faster than beaker 5 (cool)?",MECH.map(x=>x),{shuf:false})}
+  </div><div>
+    <label class="toggle"><input type="checkbox" id="catTog"> Show the pathway with the catalyst (H₂SO₄)</label>
+    <div class="graph" id="pe">${peSVG(false)}</div>
+    ${mcq("t2","2. To speed up the overall reaction, which step's activation energy must the catalyst lower?",o2)}
+    ${mcq("t3","3. How does the catalyst in beaker 6 speed up the reaction?",MECH.map(x=>x),{shuf:false})}
+    ${mcq("t4","4. Which statement best describes what the sulfuric acid catalyst does?",o4)}
+  </div></div>
+  ${nextBanner(4)}</div>`;
+  $("catTog").onchange=e=>$("pe").innerHTML=peSVG(e.target.checked);
+  wireChecks(m); refreshNext();
+}
+
+// ===================== START =====================
+window.__clock={state,BEAKERS,show,CHECKS,HSO3_0,IN:()=>IN};
+show(0);
+})();
+</script>
+<script src="../../assets/fullscreen.js?v=202611181200" defer></script>
+</body>
+</html>
