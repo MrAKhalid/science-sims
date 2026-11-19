@@ -1,0 +1,1432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spring Energy Challenge</title>
+<style>
+  :root {
+    --bg: #f4f3fb; --panel: #ffffff; --ink: #1d1d2b; --muted: #61617a; --line: #dcdbea;
+    --accent: #4b47c9; --scene: #eef4fb; --ok: #18794e; --warn: #a3470b; --bad: #b42318;
+    --c-e: #2a6fdb; --c-k: #d61fd0; --c-g: #e07b00; --c-th: #b5361f;
+    color-scheme: light;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  body { background: var(--bg); color: var(--ink); font: 15px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; padding-block: 8px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .wrap { max-width: 1360px; margin: 0 auto; }
+  header { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin-bottom: 8px; }
+  h1 { font-size: 17px; margin: 0; }
+  header p { margin: 0; color: var(--muted); font-size: 14px; }
+  .badge { background: var(--accent); color: #fff; border-radius: 999px; padding: 2px 10px; font-size: 13px; font-weight: 700; }
+  header .sp { flex: 1; }
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; align-items: start; }
+  .stuck { border-top: 1px solid var(--line); padding-top: 8px; margin-top: 8px; }
+  .stucklbl { font-weight: 600; color: var(--muted); }
+  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+  .main { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; }
+  .card h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 6px; }
+  .stage { padding: 6px; }
+  canvas#scene { width: 100%; display: block; border-radius: 8px; background: var(--scene); }
+  .bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 6px; }
+  .btn { border: 1px solid var(--line); background: var(--panel); color: var(--ink); padding: 5px 12px; border-radius: 8px; font: inherit; font-weight: 600; cursor: pointer; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn:hover { filter: brightness(0.96); }
+  .btn:disabled { opacity: .45; cursor: default; }
+  select, input[type=text] { font: inherit; padding: 5px 8px; border-radius: 8px; border: 1px solid #c9c8db; background: #fff; color: var(--ink); }
+  .gchip { margin-left: auto; font-size: 14px; color: var(--muted); }
+  .gchip b { color: var(--ink); }
+  .simmsg { font-size: 13px; color: var(--muted); }
+  #probText { font-size: 16px; line-height: 1.5; }
+  #question { font-size: 16px; font-weight: 700; margin-top: 6px; }
+  .answer { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; }
+  .answer label { font-weight: 600; }
+  #ans { width: 170px; font-variant-numeric: tabular-nums; }
+  .fb { margin-top: 8px; font-size: 14.5px; min-height: 1.2em; }
+  .fb.ok { color: var(--ok); font-weight: 600; }
+  .fb.warn { color: var(--warn); font-weight: 600; }
+  .fb.bad { color: var(--bad); font-weight: 600; }
+  aside { display: flex; flex-direction: column; gap: 8px; }
+  .bigeq { font-size: 30px; font-weight: 800; text-align: center; letter-spacing: .01em; margin: 2px 0 6px; font-family: Cambria, "Times New Roman", serif; }
+  .forms { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 10px; font-size: 14px; font-family: Cambria, "Times New Roman", serif; }
+  .forms span { white-space: nowrap; }
+  ol.steps { margin: 0; padding-left: 20px; font-size: 13.5px; }
+  ol.steps li { margin: 2px 0; }
+  #helpBox { font-size: 14.5px; }
+  #helpCard.hidden { display: none; }
+  details.steps summary { cursor: pointer; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 700; }
+  details.steps[open] summary { margin-bottom: 6px; }
+  .hint { background: #f6f5ff; border-left: 3px solid var(--accent); padding: 6px 10px; border-radius: 6px; margin-bottom: 6px; }
+  .sol { font-family: Cambria, "Times New Roman", serif; font-size: 16px; }
+  .sol .ln { margin: 5px 0; overflow-x: auto; white-space: nowrap; padding: 1px 0; }
+  .sol .note { font-family: system-ui, sans-serif; font-size: 13px; color: var(--muted); white-space: normal; }
+  .sol h4 { font-family: system-ui, sans-serif; font-size: 13px; margin: 10px 0 2px; color: var(--accent); }
+  .frac { display: inline-flex; flex-direction: column; vertical-align: middle; text-align: center; margin: 0 2px; }
+  .frac > span { padding: 0 4px; }
+  .frac > span:first-child { border-bottom: 1.5px solid currentColor; }
+  .sqrt { display: inline-flex; align-items: stretch; vertical-align: middle; }
+  .sqrt > .rad { border-top: 1.5px solid currentColor; padding: 2px 3px 0; }
+  .sqrt > .sym { font-size: 1.5em; line-height: 1; align-self: center; }
+  .circ { display: inline-block; border: 2px solid var(--accent); border-radius: 50%; padding: 4px 12px; font-weight: 700; }
+  .eqhl { color: var(--accent); }
+  .modal { position: fixed; inset: 0; background: rgba(20,20,40,.45); display: flex; align-items: center; justify-content: center; z-index: 10; padding: 16px; }
+  .modal.hidden { display: none; }
+  .modal .box { background: #fff; border-radius: 16px; padding: 20px 22px; max-width: 820px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,.25); }
+  .modal h2 { margin: 0 0 4px; font-size: 20px; }
+  .modal p { margin: 0 0 12px; color: var(--muted); }
+  .lvls { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  @media (max-width: 760px) { .lvls { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 460px) { .lvls { grid-template-columns: 1fr; } }
+  .lvl { border: 2px solid var(--line); background: #fafaff; border-radius: 12px; padding: 12px; text-align: left; cursor: pointer; font: inherit; color: var(--ink); }
+  .lvl:hover { border-color: var(--accent); }
+  .lvl b { display: block; font-size: 22px; color: var(--accent); }
+  .lvl span { font-size: 13px; color: var(--muted); }
+  sub, sup { line-height: 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Spring Energy Challenge</h1>
+    <span id="lvlBadge" class="badge">Level –</span>
+    <p>Springs, friction and hills: solve for the missing value</p>
+    <span class="sp"></span>
+    <button id="fsBtn" class="btn" title="Full screen">⛶ Full screen</button>
+    <button id="newBtn" class="btn primary">New problem</button>
+  </header>
+  <div class="layout">
+    <div class="main">
+      <div class="card stage">
+        <canvas id="scene" aria-label="Diagram of the block, spring and surfaces"></canvas>
+        <div class="bar">
+          <button id="runBtn" class="btn">▶ Run</button>
+          <button id="resetBtn" class="btn">↺ Reset</button>
+          <label>Speed <select id="speedSel"><option value="1">1×</option><option value="0.5">½×</option><option value="0.25" selected>¼×</option><option value="0.1">0.1×</option></select></label>
+          <span id="simMsg" class="simmsg"></span>
+          <span id="gChip" class="gchip"></span>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Problem</h2>
+        <div id="probText"></div>
+        <div id="question"></div>
+        <div class="answer">
+          <label for="ans">Your answer</label>
+          <input id="ans" type="text" inputmode="decimal" autocomplete="off" placeholder="e.g. 14 or 1.4e1">
+          <select id="unitSel" aria-label="Unit"></select>
+          <button id="checkBtn" class="btn primary">Check</button>
+        </div>
+        <div id="feedback" class="fb"></div>
+        <div class="bar stuck">
+          <span class="stucklbl">Stuck?</span>
+          <button id="hintBtn" class="btn">Give me a hint</button>
+          <button id="solBtn" class="btn">Show solution</button>
+        </div>
+      </div>
+      <div id="helpCard" class="card hidden">
+        <h2>Help</h2>
+        <div id="helpBox"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="chooser" class="modal">
+  <div class="box">
+    <h2>Choose a difficulty level</h2>
+    <p>A new random problem is made each time. Every value can change: surfaces, lengths, angle, spring, mass, start point and even g.</p>
+    <div class="lvls">
+      <button class="lvl" data-l="1"><b>Level 1</b><span>Warm-up. Two kinds of energy, with at most one rough surface.</span></button>
+      <button class="lvl" data-l="2"><b>Level 2</b><span>Quiz level. Friction on the flat and on the hill, forwards or backwards.</span></button>
+      <button class="lvl" data-l="3"><b>Level 3</b><span>Challenge. A head start on the hill, a spring caught mid-compression, quadratics.</span></button>
+      <button class="lvl" data-l="4"><b>Level 4</b><span>Round trips. The block comes back: find the second compression, the return speed, or how far it gets.</span></button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const RETRY = { retry: true };
+const fail = () => { throw RETRY; };
+const rnd = (a, b) => a + Math.random() * (b - a);
+const rint = (a, b) => Math.floor(rnd(a, b + 1));
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const chance = p => Math.random() < p;
+const D2R = Math.PI / 180;
+function wpick(list) { // [[item, weight], ...]
+  const tot = list.reduce((s, x) => s + x[1], 0); let r = Math.random() * tot;
+  for (const [it, w] of list) { if ((r -= w) < 0) return it; }
+  return list[list.length - 1][0];
+}
+
+/* ---------- numbers, sig digs, units ---------- */
+function fmtSF(x, sf) {
+  if (x === 0) return '0';
+  const xr = Number(x.toPrecision(sf));
+  const e = Math.floor(Math.log10(Math.abs(xr)));
+  const dec = sf - 1 - e;
+  return dec > 0 ? xr.toFixed(dec) : String(Math.round(xr));
+}
+const SUPD = { '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹', '-': '⁻' };
+function fmtN(x, sf = 4) {
+  if (x === 0) return '0';
+  const a = Math.abs(x);
+  if (a >= 1e5 || a < 1e-3) {
+    const e = Math.floor(Math.log10(a)); const m = x / Math.pow(10, e);
+    return fmtSF(m, sf) + ' × 10' + String(e).split('').map(c => SUPD[c]).join('');
+  }
+  return fmtSF(x, sf);
+}
+const SUPR = { '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4', '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9', '⁻': '-', '⁺': '+' };
+function parseNum(str) {
+  let s = String(str).trim();
+  s = s.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹⁻⁺]+/g, m => '^' + [...m].map(c => SUPR[c]).join(''));
+  s = s.replace(/\s+/g, '').replace(/−/g, '-');
+  if (!s.includes('.') && /^\-?\d*,\d+/.test(s)) s = s.replace(',', '.');
+  const re = /^([+-]?)(\d*\.?\d*)(?:[eE]([+-]?\d+)|[x×X*·]10\^?([+-]?\d+))?$/;
+  const mt = s.match(re);
+  if (!mt || !/\d/.test(mt[2])) return null;
+  const mant = mt[2]; const exp = parseInt(mt[3] ?? mt[4] ?? '0', 10);
+  let min, max;
+  if (mant.includes('.')) {
+    const d = mant.replace('.', '').replace(/^0+/, '');
+    min = max = Math.max(1, d.length);
+  } else {
+    const d = mant.replace(/^0+/, '');
+    if (!d) { min = max = 1; } else {
+      const tz = d.match(/0*$/)[0].length;
+      min = Math.max(1, d.length - tz); max = d.length;
+    }
+  }
+  const value = parseFloat((mt[1] || '') + mant) * Math.pow(10, exp);
+  if (!isFinite(value)) return null;
+  return { value, min, max, mant, exp };
+}
+const UNITS = [
+  { id: '', label: '— choose a unit —' },
+  { id: 'none', label: 'no unit', dim: '1', f: 1 },
+  { id: 'kg', label: 'kg', dim: 'M', f: 1 }, { id: 'g', label: 'g', dim: 'M', f: 1e-3 },
+  { id: 'N/m', label: 'N/m', dim: 'K', f: 1 }, { id: 'kN/m', label: 'kN/m', dim: 'K', f: 1e3 },
+  { id: 'm', label: 'm', dim: 'L', f: 1 }, { id: 'cm', label: 'cm', dim: 'L', f: 1e-2 }, { id: 'mm', label: 'mm', dim: 'L', f: 1e-3 },
+  { id: 'm/s', label: 'm/s', dim: 'V', f: 1 }, { id: 'km/h', label: 'km/h', dim: 'V', f: 1 / 3.6 },
+  { id: 'm/s²', label: 'm/s²', dim: 'A', f: 1 }, { id: 'N/kg', label: 'N/kg', dim: 'A', f: 1 },
+  { id: '°', label: '° (degrees)', dim: 'ANG', f: 1 },
+  { id: 'J', label: 'J', dim: 'E', f: 1 }, { id: 'N', label: 'N', dim: 'F', f: 1 }, { id: 's', label: 's', dim: 'T', f: 1 }, { id: 'W', label: 'W', dim: 'P', f: 1 },
+];
+const UNIT = Object.fromEntries(UNITS.map(u => [u.id, u]));
+const KIND = {
+  len: { dim: 'L', si: 'm' }, k: { dim: 'K', si: 'N/m' }, mass: { dim: 'M', si: 'kg' }, mu: { dim: '1', si: '' },
+  ang: { dim: 'ANG', si: '°' }, g: { dim: 'A', si: 'm/s²' }, v: { dim: 'V', si: 'm/s' },
+};
+function prefUnit(kind, val) {
+  if (kind === 'len') return val < 1 && chance(0.55) ? 'cm' : 'm';
+  if (kind === 'k') return val >= 1000 ? 'kN/m' : 'N/m';
+  if (kind === 'mass') return val < 1 && chance(0.5) ? 'g' : 'kg';
+  if (kind === 'mu') return 'none';
+  if (kind === 'ang') return '°';
+  if (kind === 'g') return 'm/s²';
+  return 'm/s';
+}
+function withUnit(str, unit) { return unit === 'none' ? str : unit === '°' ? str + '°' : str + ' ' + unit; }
+
+/* ---------- materials ---------- */
+const MATS = {
+  ice: { name: 'ice', adj: 'icy', col: '#a8dcf2', edge: '#5aaed0' },
+  grass: { name: 'grass', adj: 'grassy', mu: [0.15, 0.35], col: '#2fae4a', edge: '#1d7a31' },
+  wood: { name: 'wood', adj: 'wooden', mu: [0.2, 0.4], col: '#c08a50', edge: '#8a5a2b' },
+  carpet: { name: 'carpet', adj: 'carpeted', mu: [0.3, 0.5], col: '#a560c4', edge: '#6f3a87' },
+  concrete: { name: 'concrete', adj: 'concrete', mu: [0.35, 0.55], col: '#a3a3a3', edge: '#6c6c6c' },
+  sand: { name: 'sand', adj: 'sandy', mu: [0.4, 0.6], col: '#e3c16a', edge: '#b4923e' },
+  snow: { name: 'snow', adj: 'snowy', mu: [0.05, 0.15], col: '#f4f8fc', edge: '#90a6bd' },
+};
+const ROUGH = ['grass', 'wood', 'carpet', 'concrete', 'sand', 'snow'];
+function roughExcept(...ex) { return pick(ROUGH.filter(r => !ex.includes(r))); }
+
+/* ---------- scenario building ---------- */
+function base(level, type) { return { level, type, vars: {}, flats: [], hill: null, markers: [], stages: [], cands: [], dir: 'fwd', vi: 0 }; }
+function addVar(S, key, sym, kind, val, o = {}) {
+  S.vars[key] = { key, sym, kind, val, sf: o.sf || 3, unit: o.unit || prefUnit(kind, val), name: o.name || sym, hidden: !!o.hidden, given: true };
+  return key;
+}
+const sfr = () => pick([2, 3, 3]);
+function gVar(S) {
+  const p = wpick([['Earth', S.level === 1 ? 6 : 5], ['the Moon', 1], ['Mars', 1.3], ['X', 1.5]]);
+  let val = p === 'Earth' ? 9.8 : p === 'the Moon' ? 1.62 : p === 'Mars' ? 3.71 : Number(rnd(4, 22).toPrecision(3));
+  S.planet = p === 'X' ? 'Planet X' : p;
+  addVar(S, 'g', 'g', 'g', val, { sf: 3, name: 'the gravitational field strength (g) on this planet' });
+}
+function muVar(S, mat) {
+  const key = 'mu_' + mat;
+  if (!S.vars[key]) addVar(S, key, `μ<sub>${MATS[mat].name}</sub>`, 'mu', rnd(...MATS[mat].mu), { sf: S.level === 1 ? 2 : pick([2, 2, 3]), name: `the coefficient of kinetic friction between the block and the ${MATS[mat].name}` });
+  return key;
+}
+function thetaVar(S, hidden) {
+  const sf = S.level >= 2 && chance(0.3) ? 3 : 2;
+  const val = sf === 2 ? rint(12, 40) : Math.round(rnd(12, 40) * 10) / 10;
+  addVar(S, 'theta', 'θ', 'ang', val, { sf: val >= 10 ? sf : sf - 1, hidden, name: 'the angle of the hill' });
+}
+function blockVars(S, o = {}) {
+  addVar(S, 'm', 'm', 'mass', o.m ?? rnd(0.4, 15), { sf: sfr(), name: 'the mass of the block' });
+  addVar(S, 'k', 'k', 'k', o.k ?? rnd(150, 3000), { sf: sfr(), name: 'the spring constant' });
+}
+// term builders. side is set by position in the equation.
+const tEe = (dx = 'dx') => ({ kind: 'e', coef: .5, cs: '½', fs: ['k', [dx, 2]] });
+const tEk = (v) => ({ kind: 'k', coef: .5, cs: '½', fs: ['m', [v, 2]] });
+const tEg = (d = 'dh') => ({ kind: 'g', coef: 1, cs: '', fs: ['m', 'g', ['h', d]] });
+const tWf = (S, mat, dist, hill) => ({ kind: 'f', mat, hill: !!hill, coef: 1, cs: '', fs: [muVar(S, mat), 'm', 'g'].concat(hill ? [['cos', 'theta']] : []).concat([dist, ['c180']]) });
+// dist may be a key or ['sum', [k1, k2]]
+
+/* text helpers */
+function D(S, key) { const v = S.vars[key]; return v.disp; }
+function blockP(S, cap = true) { return (cap ? 'A ' : 'a ') + (S.U === 'm' ? '' : D(S, 'm') + ' ') + 'block'; }
+function springP(S) { return S.U === 'k' ? 'a spring' : `a spring (k = ${D(S, 'k')})`; }
+function muP(S, mat) { const k = 'mu_' + mat; return S.U === k ? '' : ` (μ = ${D(S, k)})`; }
+function planetP(S) {
+  if (S.U === 'g') return ' This happens on an unknown planet.';
+  if (S.planet === 'Earth') return '';
+  return ` This happens on ${S.planet} (g = ${D(S, 'g')}).`;
+}
+function stopP(S) {
+  const h = S.hill; if (!h) return 'before coming to a stop';
+  if (S.vars.mus) return `before coming to a stop. The hill's coefficient of static friction is μ<sub>s</sub> = ${D(S, 'mus')}, so the block stays there`;
+  const mu = h.mat === 'ice' ? 0 : S.vars['mu_' + h.mat].val;
+  return Math.tan(S.vars.theta.val * D2R) > mu ? 'before momentarily coming to rest' : 'before coming to a stop';
+}
+function genericQ(S) { return `Determine ${S.vars[S.U].name}.`; }
+
+/* ---------- LEVEL 1 ---------- */
+function gen1() {
+  const t = pick(['A', 'B', 'C', 'D']);
+  const S = base(1, '1' + t); gVar(S); blockVars(S);
+  if (t === 'A') {
+    thetaVar(S);
+    addVar(S, 'dx', 'Δx', 'len', rnd(0.05, 0.45), { sf: sfr(), name: 'how far the spring was compressed' });
+    addVar(S, 'dh', 'Δd<sub>hill</sub>', 'len', 1, { sf: sfr() });
+    S.flats = [{ mat: 'ice' }]; S.hill = { mat: 'ice', showAngle: true };
+    S.stages = [{ eq: { L: [tEe()], R: [tEg()] }, out: 'dh' }];
+    S.check = () => inR(S, 'dh', 0.2, 6);
+    S.cands = [['dh', 3], ['k', 2], ['dx', 2], ['m', 2]];
+    S.markers = [{ t: 'hillStop', key: 'dh' }, { t: 'comp', key: 'dx' }];
+    S.startDesc = 'block at rest against the compressed spring'; S.endDesc = 'block stopped (for an instant) up the ramp';
+    S.text = () => `${blockP(S)} is compressing ${springP(S)}${S.U === 'dx' ? '' : ' by ' + D(S, 'dx')}. It is released and slides along frictionless ice, then up a frictionless icy ramp inclined at ${S.U === 'theta' ? 'an unknown angle' : D(S, 'theta')} above the horizontal.` +
+      (S.U !== 'dh' ? ` It slides ${D(S, 'dh')} up the surface of the ramp ${stopP(S)}.` : '') + planetP(S);
+    S.q = () => S.U === 'dh' ? 'Determine how far up the ramp (along its surface) the block slides.' : genericQ(S);
+  } else if (t === 'B') {
+    thetaVar(S, true);
+    addVar(S, 'dx', 'Δx', 'len', rnd(0.05, 0.45), { sf: sfr(), name: 'how far the spring was compressed' });
+    addVar(S, 'v', 'v', 'v', 1, { sf: sfr(), name: 'the speed of the block after it leaves the spring' });
+    S.flats = [{ mat: 'ice' }]; S.hill = { mat: 'ice', showAngle: false };
+    S.stages = [{ eq: { L: [tEe()], R: [tEk('v')] }, out: 'v' }];
+    S.check = () => inR(S, 'v', 0.5, 15);
+    S.cands = [['v', 3], ['k', 2], ['dx', 2], ['m', 2]];
+    S.markers = [{ t: 'speed', key: 'v', at: 'ice' }, { t: 'comp', key: 'dx' }];
+    S.startDesc = 'block at rest against the compressed spring'; S.endDesc = 'block sliding on the ice after leaving the spring';
+    S.text = () => `${blockP(S)} is compressing ${springP(S)}${S.U === 'dx' ? '' : ' by ' + D(S, 'dx')}. It is released and slides along a frictionless icy surface.` +
+      (S.U !== 'v' ? ` After it leaves the spring, the block moves at ${D(S, 'v')}.` : '') + planetP(S);
+    S.q = () => S.U === 'v' ? 'Determine the speed of the block after it leaves the spring.' : genericQ(S);
+  } else if (t === 'C') {
+    const A = pick(ROUGH); muVar(S, A); S.A = A;
+    addVar(S, 'dx', 'Δx', 'len', rnd(0.05, 0.45), { sf: sfr(), name: 'how far the spring was compressed' });
+    addVar(S, 'ds', `Δd<sub>${MATS[A].name}</sub>`, 'len', 1, { sf: sfr(), name: `how far the block slides on the ${MATS[A].name}` });
+    S.flats = [{ mat: 'ice' }, { mat: A, last: true }];
+    S.stages = [{ eq: { L: [tWf(S, A, 'ds'), tEe()], R: [] }, out: 'ds' }];
+    S.check = () => inR(S, 'ds', 0.3, 7);
+    S.cands = [['ds', 3], ['mu_' + A, 2], ['k', 2], ['dx', 2], ['m', 2]];
+    S.markers = [{ t: 'flatStop', key: 'ds', seg: 1 }, { t: 'comp', key: 'dx' }];
+    S.startDesc = 'block at rest against the compressed spring'; S.endDesc = `block stopped on the ${MATS[A].name}`;
+    S.text = () => `${blockP(S)} is compressing ${springP(S)}${S.U === 'dx' ? '' : ' by ' + D(S, 'dx')}. It is released, slides along frictionless ice, and then onto horizontal ${MATS[A].name}${muP(S, A)}.` +
+      (S.U !== 'ds' ? ` The block slides ${D(S, 'ds')} across the ${MATS[A].name} before coming to a stop.` : '') + planetP(S);
+    S.q = () => S.U === 'ds' ? `Determine how far the block slides on the ${MATS[A].name}.` : genericQ(S);
+  } else {
+    thetaVar(S);
+    addVar(S, 'dh', 'Δd<sub>hill</sub>', 'len', rnd(0.3, 3), { sf: sfr(), name: 'how far up the ramp (along its surface) the block was released' });
+    addVar(S, 'dx', 'Δx', 'len', 1, { sf: sfr(), name: 'the maximum compression of the spring' });
+    S.dir = 'rev';
+    S.flats = [{ mat: 'ice' }]; S.hill = { mat: 'ice', showAngle: true };
+    S.stages = [{ eq: { L: [tEg()], R: [tEe()] }, out: 'dx' }];
+    S.check = () => inR(S, 'dx', 0.03, 0.8);
+    S.cands = [['dx', 3], ['k', 2], ['dh', 2], ['m', 2]];
+    S.markers = [{ t: 'hillStart', key: 'dh' }, { t: 'comp', key: 'dx', ghost: true }];
+    S.startDesc = 'block at rest on the ramp'; S.endDesc = 'spring at maximum compression (block stopped for an instant)';
+    S.text = () => `${blockP(S)} is released from rest ${S.U === 'dh' ? 'partway up' : D(S, 'dh') + ' up the surface of'} a frictionless icy ramp inclined at ${D(S, 'theta')}. It slides down the ramp, across frictionless ice, and into ${springP(S)}.` +
+      (S.U !== 'dx' ? ` The spring's maximum compression is ${D(S, 'dx')}.` : '') + planetP(S);
+    S.q = () => S.U === 'dx' ? 'Determine the maximum compression of the spring.' : genericQ(S);
+  }
+  return S;
+}
+
+/* ---------- LEVEL 2 ---------- */
+function gen2() {
+  const t = wpick([['A', 4], ['B', 3], ['C', 2]]);
+  const S = base(2, '2' + t); gVar(S); blockVars(S);
+  const A = pick(ROUGH); S.A = A; muVar(S, A);
+  addVar(S, 'L_A', `Δd<sub>${MATS[A].name}</sub>`, 'len', rnd(0.5, 4), { sf: sfr(), name: `the length of the horizontal ${MATS[A].name}` });
+  if (t === 'A') {
+    const B = chance(0.5) ? A : roughExcept(A, 'snow'); S.B = B; muVar(S, B); thetaVar(S); musVar(S, B);
+    addVar(S, 'dx', 'Δx', 'len', rnd(0.1, 0.6), { sf: sfr(), name: 'how far the spring was compressed' });
+    addVar(S, 'dh', 'Δd<sub>hill</sub>', 'len', 1, { sf: sfr(), name: 'how far up the hill (along its surface) the block slides' });
+    S.flats = [{ mat: 'ice' }, { mat: A, lenKey: 'L_A' }]; S.hill = { mat: B, showAngle: true };
+    S.stages = [{ eq: { L: [tWf(S, A, 'L_A'), tWf(S, B, 'dh', true), tEe()], R: [tEg()] }, out: 'dh' }];
+    S.check = () => { const v = S.vars; const Ee = .5 * v.k.val * v.dx.val ** 2; const wA = v['mu_' + A].val * v.m.val * v.g.val * v.L_A.val; return holds(S) && Ee - wA > 0.15 * Ee && inR(S, 'dh', 0.15, 5); };
+    S.cands = [['m', 4], ['k', 2], ['dx', 2], ['dh', 2], ['L_A', 1], ['mu_' + A, 1.5], ['g', 1]].concat(B !== A ? [['mu_' + B, 1]] : []);
+    S.markers = [{ t: 'hillStop', key: 'dh' }, { t: 'comp', key: 'dx' }];
+    S.startDesc = 'block at rest against the compressed spring'; S.endDesc = 'block stopped (for an instant) on the hill';
+    S.text = () => {
+      const hillMu = B === A ? '' : muP(S, B);
+      const same = B === A && S.U === 'mu_' + A ? ' (the grass on the flat and on the hill has the same μ)'.replace('grass', MATS[A].name) : '';
+      return `${blockP(S)} is compressing ${springP(S)}${S.U === 'dx' ? '' : ' by ' + D(S, 'dx')}. It is released, and then slides along a frictionless icy surface before encountering ${MATS[A].name}${muP(S, A)}. ` +
+        `The block slides ${S.U === 'L_A' ? '' : D(S, 'L_A') + ' '}along the horizontal ${MATS[A].name}, then ${S.U === 'dh' ? '' : D(S, 'dh') + ' '}up the surface of a ${D(S, 'theta')} ${MATS[B].adj} hill${hillMu} ${stopP(S)}.${same}` + planetP(S);
+    };
+    S.q = () => S.U === 'dh' ? 'Determine how far up the hill (along its surface) the block slides.' : S.U === 'L_A' ? `Determine the length of the horizontal ${MATS[A].name}.` : genericQ(S);
+  } else if (t === 'B') {
+    const B = chance(0.35) ? A : roughExcept(A); S.B = B; muVar(S, B); thetaVar(S);
+    addVar(S, 'dh', 'Δd<sub>hill</sub>', 'len', rnd(0.6, 4), { sf: sfr(), name: 'how far up the hill (along its surface) the block was released' });
+    addVar(S, 'dx', 'Δx', 'len', 1, { sf: sfr(), name: 'the maximum compression of the spring' });
+    S.dir = 'rev';
+    S.flats = [{ mat: 'ice' }, { mat: A, lenKey: 'L_A' }]; S.hill = { mat: B, showAngle: true };
+    S.stages = [{ eq: { L: [tWf(S, B, 'dh', true), tWf(S, A, 'L_A'), tEg()], R: [tEe()] }, out: 'dx' }];
+    S.check = () => {
+      const v = S.vars, m = v.m.val, g = v.g.val, th = v.theta.val * D2R, muB = v['mu_' + B].val, muA = v['mu_' + A].val;
+      if (Math.tan(th) < muB + 0.06) return false;
+      const Eg = m * g * v.dh.val * Math.sin(th); const Eb = Eg - muB * m * g * Math.cos(th) * v.dh.val; const Ec = Eb - muA * m * g * v.L_A.val;
+      return Eb > 0.25 * Eg && Ec > 0.15 * Eg && inR(S, 'dx', 0.03, 0.8);
+    };
+    S.cands = [['dx', 4], ['k', 2], ['dh', 2], ['m', 2], ['mu_' + A, 1], ['L_A', 1]];
+    S.markers = [{ t: 'hillStart', key: 'dh' }, { t: 'comp', key: 'dx', ghost: true }];
+    S.startDesc = 'block at rest on the hill'; S.endDesc = 'spring at maximum compression (block stopped for an instant)';
+    S.text = () => `${blockP(S)} is released from rest ${S.U === 'dh' ? 'partway up' : D(S, 'dh') + ' up the surface of'} a ${D(S, 'theta')} ${MATS[B].adj} hill${B === A ? muP(S, B) : muP(S, B)}. ` +
+      `It slides down the hill, across ${S.U === 'L_A' ? 'a stretch' : D(S, 'L_A')} of horizontal ${MATS[A].name}${B === A ? '' : muP(S, A)}, and then across frictionless ice into ${springP(S)}.` +
+      (S.U !== 'dx' ? ` The spring's maximum compression is ${D(S, 'dx')}.` : '') + planetP(S);
+    S.q = () => S.U === 'dx' ? 'Determine the maximum compression of the spring.' : S.U === 'dh' ? 'Determine how far up the hill (along its surface) the block was released.' : S.U === 'L_A' ? `Determine the length of the horizontal ${MATS[A].name}.` : genericQ(S);
+  } else {
+    const sub = chance(0.55) ? 'v' : 'th';
+    addVar(S, 'dx', 'Δx', 'len', rnd(0.1, 0.6), { sf: sfr(), name: 'how far the spring was compressed' });
+    S.flats = [{ mat: 'ice' }, { mat: A, lenKey: 'L_A' }];
+    S.startDesc = 'block at rest against the compressed spring';
+    if (sub === 'v') {
+      thetaVar(S, true);
+      addVar(S, 'v', 'v', 'v', 1, { sf: sfr(), name: 'the speed of the block at the bottom of the ramp' });
+      S.hill = { mat: 'ice', showAngle: false };
+      S.stages = [{ eq: { L: [tWf(S, A, 'L_A'), tEe()], R: [tEk('v')] }, out: 'v' }];
+      S.check = () => { const v = S.vars; const Ee = .5 * v.k.val * v.dx.val ** 2; return .5 * v.m.val * v.v.val ** 2 > 0.15 * Ee && inR(S, 'v', 0.5, 15); };
+      S.cands = [['v', 3], ['mu_' + A, 1], ['L_A', 1], ['m', 1], ['k', 1], ['dx', 1]];
+      S.markers = [{ t: 'speed', key: 'v', at: 'hillBottom' }, { t: 'comp', key: 'dx' }];
+      S.endDesc = 'block arriving at the bottom of the ramp';
+      S.text = () => `${blockP(S)} is compressing ${springP(S)}${S.U === 'dx' ? '' : ' by ' + D(S, 'dx')}. It is released, slides along frictionless ice, then across ${S.U === 'L_A' ? 'a stretch' : D(S, 'L_A')} of horizontal ${MATS[A].name}${muP(S, A)} to the bottom of a frictionless icy ramp.` +
+        (S.U !== 'v' ? ` The block reaches the bottom of the ramp moving at ${D(S, 'v')}.` : '') + planetP(S);
+      S.q = () => S.U === 'v' ? 'Determine the speed of the block when it reaches the bottom of the ramp.' : S.U === 'L_A' ? `Determine the length of the horizontal ${MATS[A].name}.` : genericQ(S);
+    } else {
+      thetaVar(S);
+      addVar(S, 'dh', 'Δd<sub>hill</sub>', 'len', 1, { sf: sfr(), name: 'how far up the ramp (along its surface) the block slides' });
+      S.hill = { mat: 'ice', showAngle: true };
+      S.stages = [{ eq: { L: [tWf(S, A, 'L_A'), tEe()], R: [tEg()] }, out: 'dh' }];
+      S.check = () => { const v = S.vars; const Ee = .5 * v.k.val * v.dx.val ** 2; const wA = v['mu_' + A].val * v.m.val * v.g.val * v.L_A.val; return Ee - wA > 0.15 * Ee && inR(S, 'dh', 0.2, 5); };
+      S.cands = [['theta', 4], ['dh', 1]];
+      S.markers = [{ t: 'hillStop', key: 'dh' }, { t: 'comp', key: 'dx' }];
+      S.endDesc = 'block stopped (for an instant) on the ramp';
+      S.text = () => `${blockP(S)} is compressing ${springP(S)} by ${D(S, 'dx')}. It is released, slides along frictionless ice, then across ${D(S, 'L_A')} of horizontal ${MATS[A].name}${muP(S, A)}, and then ${S.U === 'dh' ? '' : D(S, 'dh') + ' '}up a frictionless icy ramp${S.U === 'theta' ? '' : ' inclined at ' + D(S, 'theta')} ${stopP(S)}.` + planetP(S);
+      S.q = () => S.U === 'theta' ? 'Determine the angle of the ramp above the horizontal.' : 'Determine how far up the ramp (along its surface) the block slides.';
+    }
+  }
+  return S;
+}
+
+/* ---------- LEVEL 3 ---------- */
+function gen3() {
+  const t = wpick([['A', 3], ['B', 2.5], ['D', 1.2]]);
+  const S = base(3, '3' + t); gVar(S); blockVars(S);
+  const v = S.vars;
+  if (t === 'A' || t === 'B') {
+    // Block starts moving down a rough hill (initial Ek), crosses flats, hits the spring. Ask about a mid-compression moment.
+    const D_ = pick(ROUGH); S.B = D_; muVar(S, D_); thetaVar(S);
+    S.hill = { mat: D_, showAngle: true };
+    addVar(S, 'dh', 'Δd<sub>hill</sub>', 'len', rnd(0.6, 4), { sf: sfr(), name: 'how far up the hill (along its surface) the block starts' });
+    addVar(S, 'vi', 'v<sub>i</sub>', 'v', rnd(1, 6), { sf: sfr(), name: 'the speed of the block at its starting point on the hill' });
+    const maxC = chance(t === 'A' ? 0.25 : 0.35);
+    S.maxC = maxC;
+    addVar(S, 'dx', 'Δx', 'len', 1, { sf: sfr(), name: maxC ? 'the maximum compression of the spring' : 'how far the spring is compressed at that moment' });
+    if (!maxC) addVar(S, 'vf', 'v<sub>f</sub>', 'v', 1, { sf: sfr(), name: 'the speed of the block at that moment' });
+    S.dir = 'rev';
+    let L, flatTerms;
+    if (t === 'A') {
+      const A = roughExcept(D_); S.A = A; muVar(S, A);
+      addVar(S, 'L_A', `Δd<sub>${MATS[A].name}</sub>`, 'len', rnd(0.5, 3.5), { sf: sfr(), name: `the length of the horizontal ${MATS[A].name}` });
+      S.flats = [{ mat: 'ice' }, { mat: A, lenKey: 'L_A' }];
+      flatTerms = [tWf(S, A, 'L_A')];
+    } else {
+      const A = roughExcept(D_, 'snow'); S.A = A; muVar(S, A);
+      addVar(S, 'L_A', `Δd<sub>${MATS[A].name}</sub>`, 'len', rnd(0.4, 2), { sf: sfr(), name: `the length of the ${MATS[A].name} in front of the spring` });
+      const midIce = chance(0.5);
+      if (midIce) { S.flats = [{ mat: A, lenKey: 'L_A', under: true }, { mat: 'ice' }]; flatTerms = []; S.mid = 'ice'; }
+      else {
+        const Bm = roughExcept(D_, A); S.Bm = Bm; muVar(S, Bm);
+        addVar(S, 'L_B', `Δd<sub>${MATS[Bm].name}</sub>`, 'len', rnd(0.5, 2.5), { sf: sfr(), name: `the length of the ${MATS[Bm].name}` });
+        S.flats = [{ mat: A, lenKey: 'L_A', under: true }, { mat: Bm, lenKey: 'L_B' }]; flatTerms = [tWf(S, Bm, 'L_B')]; S.mid = Bm;
+      }
+      flatTerms.push(tWf(S, A, ['sum', ['L_A', 'dx']]));
+    }
+    L = [tWf(S, D_, 'dh', true)].concat(flatTerms, [tEg(), tEk('vi')]);
+    const R = maxC ? [tEe()] : [tEe(), tEk('vf')];
+    S.stages = [{ eq: { L, R }, out: maxC ? 'dx' : 'vf' }];
+    S.pre = () => { // pick a compression part-way when not max
+      if (maxC) return;
+      const Ec = energyAtSpring(S); if (Ec <= 0) fail();
+      const k = v.k.val, muA = t === 'B' ? v['mu_' + S.A].val : 0, f = muA * v.m.val * v.g.val;
+      // max compression xm: .5k x^2 + f x = Ec
+      const xm = (-f + Math.sqrt(f * f + 2 * k * Ec)) / k;
+      v.dx.val = xm * rnd(0.35, 0.8);
+    };
+    S.check = () => {
+      const Etot = .5 * v.m.val * v.vi.val ** 2 + v.m.val * v.g.val * v.dh.val * Math.sin(v.theta.val * D2R);
+      const Ec = energyAtSpring(S);
+      if (Ec < 0.2 * Etot || !inR(S, 'dx', 0.03, 0.8)) return false;
+      if (!maxC && !inR(S, 'vf', 0.4, 20)) return false;
+      if (!maxC && .5 * v.m.val * v.vf.val ** 2 < 0.1 * Ec) return false;
+      return energyHillBottom(S) > 0.2 * Etot;
+    };
+    S.cands = maxC ? [['dx', 4], ['vi', 1], ['k', 1]] : [['dx', 4], ['vf', 2], ['vi', 1]];
+    S.markers = [{ t: 'hillStart', key: 'dh', vkey: 'vi' }, { t: 'comp', key: 'dx', ghost: true, vkey: maxC ? null : 'vf' }];
+    S.startDesc = 'block moving down the hill at v<sub>i</sub> (it has E<sub>g</sub> and E<sub>k</sub>)';
+    S.endDesc = maxC ? 'spring at maximum compression (block stopped for an instant)' : 'spring compressed by Δx while the block is still moving at v<sub>f</sub> (it has E<sub>e</sub> and E<sub>k</sub>)';
+    S.text = () => {
+      let s = `${blockP(S)} is sliding down the surface of a ${D(S, 'theta')} ${MATS[D_].adj} hill${muP(S, D_)}. When it is ${D(S, 'dh')} from the bottom (measured along the hill), its speed is ${S.U === 'vi' ? 'unknown' : D(S, 'vi')}. `;
+      if (t === 'A') s += `It slides down the hill, across ${D(S, 'L_A')} of horizontal ${MATS[S.A].name}${muP(S, S.A)}, and then across frictionless ice into ${springP(S)}.`;
+      else s += `It slides down the hill, across ${S.mid === 'ice' ? 'frictionless ice' : D(S, 'L_B') + ' of horizontal ' + MATS[S.mid].name + muP(S, S.mid)}, and onto a horizontal ${MATS[S.A].name} surface${muP(S, S.A)} that extends ${D(S, 'L_A')} out from the relaxed (uncompressed) end of ${springP(S)}. The block then runs into the spring. Friction still acts while the spring is being compressed.`;
+      if (maxC) { if (S.U !== 'dx') s += ` The spring's maximum compression is ${D(S, 'dx')}.`; }
+      else if (S.U === 'vi') s += ` When the spring has been compressed ${D(S, 'dx')}, the block is still moving at ${D(S, 'vf')}.`;
+      return s + planetP(S);
+    };
+    S.q = () => {
+      if (S.U === 'dx') return maxC ? 'Determine the maximum compression of the spring.' : `Determine how far the spring is compressed at the instant the block's speed has dropped to ${D(S, 'vf')}.`;
+      if (S.U === 'vf') return `Determine the speed of the block at the instant the spring is compressed ${D(S, 'dx')}.`;
+      if (S.U === 'vi') return 'Determine the speed of the block at its starting point on the hill.';
+      return genericQ(S);
+    };
+  } else if (t === 'C') {
+    // round trip: up a rough hill, slides back, recompresses the spring
+    const A = pick(ROUGH); S.A = A; muVar(S, A);
+    const B = chance(0.35) ? A : roughExcept(A); S.B = B; muVar(S, B); thetaVar(S);
+    addVar(S, 'L_A', `Δd<sub>${MATS[A].name}</sub>`, 'len', rnd(0.4, 2.5), { sf: sfr() });
+    addVar(S, 'dx', 'Δx<sub>1</sub>', 'len', rnd(0.15, 0.6), { sf: sfr() });
+    addVar(S, 'dh', 'Δd<sub>hill</sub>', 'len', 1, {});
+    const back = chance(0.6) ? 'dx2' : 'v2';
+    if (back === 'dx2') addVar(S, 'dx2', 'Δx<sub>2</sub>', 'len', 1, { sf: 3, name: 'the maximum compression of the spring when the block comes back' });
+    else addVar(S, 'v2', 'v<sub>2</sub>', 'v', 1, { sf: 3, name: 'the speed of the block when it is back on the ice' });
+    S.flats = [{ mat: 'ice' }, { mat: A, lenKey: 'L_A' }]; S.hill = { mat: B, showAngle: true };
+    S.stages = [
+      { title: 'up the hill', eq: { L: [tWf(S, A, 'L_A'), tWf(S, B, 'dh', true), tEe('dx')], R: [tEg()] }, out: 'dh', inter: true },
+      { title: 'back down to the ice', eq: { L: [tWf(S, B, 'dh', true), tWf(S, A, 'L_A'), tEg()], R: [back === 'dx2' ? tEe('dx2') : tEk('v2')] }, out: back },
+    ];
+    S.fixedU = back;
+    S.check = () => {
+      const m = v.m.val, g = v.g.val, th = v.theta.val * D2R, muB = v['mu_' + B].val, muA = v['mu_' + A].val;
+      if (Math.tan(th) < muB + 0.08) return false;
+      const Ee = .5 * v.k.val * v.dx.val ** 2; const Eb = Ee - muA * m * g * v.L_A.val;
+      const dh = v.dh.val; const Eg = m * g * dh * Math.sin(th);
+      const Eback = Eg - muB * m * g * Math.cos(th) * dh - muA * m * g * v.L_A.val;
+      return Eb > 0.3 * Ee && dh > 0.15 && dh < 4 && Eback > 0.12 * Ee && (back === 'dx2' ? inR(S, 'dx2', 0.02, 0.6) : inR(S, 'v2', 0.3, 15));
+    };
+    S.markers = [{ t: 'comp', key: 'dx' }, back === 'dx2' ? { t: 'comp2', key: 'dx2' } : { t: 'speed', key: 'v2', at: 'iceBack' }];
+    S.startDesc = 'block at rest against the compressed spring (compression Δx<sub>1</sub>)';
+    S.endDesc = back === 'dx2' ? 'spring compressed again to Δx<sub>2</sub> (block stopped for an instant)' : 'block back on the ice, moving towards the spring at v<sub>2</sub>';
+    S.text = () => `${blockP(S)} is compressing ${springP(S)} by ${D(S, 'dx')}. It is released, slides along frictionless ice, across ${D(S, 'L_A')} of horizontal ${MATS[A].name}${muP(S, A)}, and up a ${D(S, 'theta')} ${MATS[B].adj} hill${B === A ? '' : muP(S, B)}. ` +
+      `The hill is too steep for the block to stay there, so it slides back down, back across the ${MATS[A].name}, and onto the ice again.` + planetP(S);
+    S.q = () => back === 'dx2' ? 'Determine the maximum compression of the spring when the block comes back and hits it.' : 'Determine the speed of the block when it is back on the ice.';
+  } else {
+    // forward, spring sits on a rough surface, block goes up a rough hill
+    const A = roughExcept('snow'); S.A = A; muVar(S, A);
+    addVar(S, 'L_A', `Δd<sub>${MATS[A].name}</sub>`, 'len', rnd(0.4, 2), { sf: sfr(), name: `how far the ${MATS[A].name} extends past the spring's relaxed position` });
+    addVar(S, 'dx', 'Δx', 'len', rnd(0.15, 0.6), { sf: sfr(), name: 'how far the spring was compressed' });
+    const midIce = chance(0.5); let mid;
+    if (midIce) { S.flats = [{ mat: A, lenKey: 'L_A', under: true }, { mat: 'ice' }]; mid = []; S.mid = 'ice'; }
+    else {
+      const Bm = roughExcept(A); S.mid = Bm; muVar(S, Bm);
+      addVar(S, 'L_B', `Δd<sub>${MATS[Bm].name}</sub>`, 'len', rnd(0.5, 2.5), { sf: sfr(), name: `the length of the ${MATS[Bm].name}` });
+      S.flats = [{ mat: A, lenKey: 'L_A', under: true }, { mat: Bm, lenKey: 'L_B' }]; mid = [tWf(S, Bm, 'L_B')];
+    }
+    const Dm = roughExcept('snow'); S.B = Dm; muVar(S, Dm); thetaVar(S); musVar(S, Dm);
+    addVar(S, 'dh', 'Δd<sub>hill</sub>', 'len', 1, { sf: sfr(), name: 'how far up the hill (along its surface) the block slides' });
+    S.hill = { mat: Dm, showAngle: true };
+    S.stages = [{ eq: { L: [tWf(S, A, ['sum', ['dx', 'L_A']])].concat(mid, [tWf(S, Dm, 'dh', true), tEe()]), R: [tEg()] }, out: 'dh' }];
+    S.check = () => {
+      const m = v.m.val, g = v.g.val, muA = v['mu_' + A].val; const Ee = .5 * v.k.val * v.dx.val ** 2;
+      if (v.k.val * v.dx.val < 2.6 * muA * m * g) return false;
+      let E = Ee - muA * m * g * (v.dx.val + v.L_A.val);
+      if (S.mid !== 'ice') E -= v['mu_' + S.mid].val * m * g * v.L_B.val;
+      return holds(S) && E > 0.15 * Ee && inR(S, 'dh', 0.15, 5);
+    };
+    S.cands = [['dx', 4], ['m', 2], ['k', 2], ['dh', 1], ['mu_' + A, 1]].concat(S.mid !== 'ice' ? [['mu_' + S.mid, 1]] : []);
+    S.markers = [{ t: 'hillStop', key: 'dh' }, { t: 'comp', key: 'dx' }];
+    S.startDesc = 'block at rest against the compressed spring'; S.endDesc = 'block stopped (for an instant) on the hill';
+    S.text = () => `${blockP(S)} is compressing ${springP(S)}${S.U === 'dx' ? '' : ' by ' + D(S, 'dx')}. The block and spring sit on a horizontal ${MATS[A].name} surface${muP(S, A)} that extends ${D(S, 'L_A')} past the spring's relaxed (uncompressed) position, so friction acts while the spring pushes the block. ` +
+      `The block then slides across ${S.mid === 'ice' ? 'frictionless ice' : D(S, 'L_B') + ' of horizontal ' + MATS[S.mid].name + muP(S, S.mid)} and ${S.U === 'dh' ? '' : D(S, 'dh') + ' '}up a ${D(S, 'theta')} ${MATS[Dm].adj} hill${Dm === A || Dm === S.mid ? '' : muP(S, Dm)} ${stopP(S)}.` + planetP(S);
+    S.q = () => S.U === 'dh' ? 'Determine how far up the hill (along its surface) the block slides.' : genericQ(S);
+  }
+  return S;
+}
+/* ---------- LEVEL 4: round trips ---------- */
+function gen4() {
+  const t = wpick([['A', 3], ['B', 3], ['C', 1.5]]);
+  const S = base(4, '4' + t); gVar(S); blockVars(S); const v = S.vars;
+  const B = pick(ROUGH); S.B = B; muVar(S, B); thetaVar(S);
+  S.hill = { mat: B, showAngle: true };
+  const under = t !== 'C' && chance(0.5); S.under = under;
+  let A;
+  if (under) {
+    A = roughExcept('snow'); S.A = A; muVar(S, A);
+    addVar(S, 'L_A', `Δd<sub>${MATS[A].name}</sub>`, 'len', rnd(0.3, 1.5), { sf: sfr(), name: `how far the ${MATS[A].name} extends past the spring's relaxed position` });
+    if (chance(0.5)) { S.flats = [{ mat: A, lenKey: 'L_A', under: true }, { mat: 'ice' }]; S.mid = 'ice'; }
+    else {
+      const Bm = roughExcept(A); S.mid = Bm; muVar(S, Bm);
+      addVar(S, 'L_B', `Δd<sub>${MATS[Bm].name}</sub>`, 'len', rnd(0.4, 2), { sf: sfr(), name: `the length of the ${MATS[Bm].name}` });
+      S.flats = [{ mat: A, lenKey: 'L_A', under: true }, { mat: Bm, lenKey: 'L_B' }];
+    }
+  } else {
+    A = pick(ROUGH); S.A = A; muVar(S, A);
+    addVar(S, 'L_A', `Δd<sub>${MATS[A].name}</sub>`, 'len', rnd(0.4, 2.5), { sf: sfr(), name: `the length of the horizontal ${MATS[A].name}` });
+    S.flats = [{ mat: 'ice' }, { mat: A, lenKey: 'L_A' }];
+  }
+  // friction on the flats; dxKey = compression that happens on the rough surface under the spring
+  const flatsOut = dxKey => under ? [tWf(S, A, dxKey ? ['sum', [dxKey, 'L_A']] : 'L_A')].concat(S.mid !== 'ice' ? [tWf(S, S.mid, 'L_B')] : []) : [tWf(S, A, 'L_A')];
+  const flatsIn = dxKey => flatsOut(dxKey).reverse();
+  const midDesc = () => S.mid === 'ice' ? 'frictionless ice' : `${D(S, 'L_B')} of horizontal ${MATS[S.mid].name}${muP(S, S.mid)}`;
+  const hillDesc = () => `a ${D(S, 'theta')} ${MATS[B].adj} hill${(B === A || B === S.mid) ? '' : muP(S, B)}`;
+  const turn = []; // turning points recorded by the check simulation
+  if (t === 'A') {
+    addVar(S, 'dx', 'Δx<sub>1</sub>', 'len', rnd(0.15, 0.6), { sf: sfr() });
+    addVar(S, 'dh', 'Δd<sub>hill</sub>', 'len', 1, {});
+    const back = under || chance(0.6) ? 'dx2' : 'v2';
+    if (back === 'dx2') addVar(S, 'dx2', 'Δx<sub>2</sub>', 'len', 1, { sf: 3, name: 'how far the spring is compressed when the block returns' });
+    else addVar(S, 'v2', 'v<sub>2</sub>', 'v', 1, { sf: 3, name: 'the speed of the block when it is back on the ice' });
+    S.stages = [
+      { title: 'up the hill', eq: { L: flatsOut('dx').concat([tWf(S, B, 'dh', true), tEe('dx')]), R: [tEg()] }, out: 'dh', inter: true },
+      { title: 'back down to the spring', eq: { L: [tWf(S, B, 'dh', true)].concat(flatsIn(back === 'dx2' ? 'dx2' : null), [tEg()]), R: [back === 'dx2' ? tEe('dx2') : tEk('v2')] }, out: back },
+    ];
+    S.fixedU = back;
+    S.markers = [{ t: 'comp', key: 'dx' }, back === 'dx2' ? { t: 'comp2', key: 'dx2' } : { t: 'speed', key: 'v2', at: 'iceBack' }];
+    S.startDesc = 'block at rest against the compressed spring (compression Δx<sub>1</sub>)';
+    S.endDesc = back === 'dx2' ? 'spring compressed again to Δx<sub>2</sub> (block stopped for an instant)' : 'block back on the ice, moving towards the spring at v<sub>2</sub>';
+    S.text = () => `${blockP(S)} is compressing ${springP(S)} by ${D(S, 'dx')}. ` +
+      (under ? `The block and spring sit on a horizontal ${MATS[A].name} surface${muP(S, A)} that extends ${D(S, 'L_A')} past the spring's relaxed (uncompressed) position. The block is released, slides across ${midDesc()}, and up ${hillDesc()}.`
+        : `It is released, slides along frictionless ice, across ${D(S, 'L_A')} of horizontal ${MATS[A].name}${muP(S, A)}, and up ${hillDesc()}.`) +
+      ` The block reaches its highest point on the hill, then slides back down and retraces its path towards the spring.` + planetP(S);
+    S.q = () => back === 'dx2' ? 'Determine how far the spring is compressed when the block returns.' : 'Determine the speed of the block when it is back on the ice.';
+    S.verify = st => back === 'dx2' ? close(turn[1] && -turn[1].s, v.dx2.val) : close(S.cross, v.v2.val);
+    S.crossAt = () => S.B[0]; S.crossAfter = 1;
+  } else if (t === 'B') {
+    const vi = chance(0.5);
+    addVar(S, 'dh', 'Δd<sub>hill,1</sub>', 'len', rnd(0.6, 3.5), { sf: sfr() });
+    if (vi) addVar(S, 'vi', 'v<sub>i</sub>', 'v', rnd(1, 5), { sf: sfr() });
+    addVar(S, 'dx', 'Δx', 'len', 1, {});
+    S.dir = 'rev';
+    const back = chance(0.65) ? 'dh2' : 'vb';
+    if (back === 'dh2') addVar(S, 'dh2', 'Δd<sub>hill,2</sub>', 'len', 1, { sf: 3, name: 'how far up the hill (along its surface) the block slides on its way back' });
+    else addVar(S, 'vb', 'v<sub>b</sub>', 'v', 1, { sf: 3, name: 'the speed of the block at the bottom of the hill on its way back' });
+    S.stages = [
+      { title: 'down the hill and into the spring', eq: { L: [tWf(S, B, 'dh', true)].concat(flatsIn('dx'), [tEg('dh')], vi ? [tEk('vi')] : []), R: [tEe('dx')] }, out: 'dx', inter: true },
+      { title: 'back out and up the hill', eq: { L: flatsOut('dx').concat(back === 'dh2' ? [tWf(S, B, 'dh2', true)] : [], [tEe('dx')]), R: [back === 'dh2' ? tEg('dh2') : tEk('vb')] }, out: back },
+    ];
+    S.fixedU = back;
+    S.markers = [{ t: 'hillStart', key: 'dh', vkey: vi ? 'vi' : null }, back === 'dh2' ? { t: 'hillStop', key: 'dh2', off: 30, txt: 'returns to' } : { t: 'speed', key: 'vb', at: 'hillBottom' }];
+    S.startDesc = vi ? 'block moving down the hill at v<sub>i</sub> (it has E<sub>g</sub> and E<sub>k</sub>)' : 'block at rest on the hill (it has E<sub>g</sub>)';
+    S.endDesc = back === 'dh2' ? 'block stopped (for an instant) on the hill after bouncing off the spring' : 'block at the bottom of the hill on its way back, moving at v<sub>b</sub>';
+    S.text = () => (vi ? `${blockP(S)} is sliding down the surface of a ${D(S, 'theta')} ${MATS[B].adj} hill${muP(S, B)}. When it is ${D(S, 'dh')} from the bottom (measured along the hill), its speed is ${D(S, 'vi')}.`
+      : `${blockP(S)} is released from rest ${D(S, 'dh')} up the surface of a ${D(S, 'theta')} ${MATS[B].adj} hill${muP(S, B)}.`) +
+      (under ? ` It slides down the hill, across ${midDesc()}, and onto a horizontal ${MATS[A].name} surface${B === A ? '' : muP(S, A)} that extends ${D(S, 'L_A')} out from the relaxed (uncompressed) end of ${springP(S)}. It compresses the spring, and the spring pushes it back the way it came.`
+        : ` It slides down the hill, across ${D(S, 'L_A')} of horizontal ${MATS[A].name}${B === A ? '' : muP(S, A)}, across frictionless ice, and into ${springP(S)}. The spring pushes it back the way it came.`) + planetP(S);
+    S.q = () => back === 'dh2' ? 'Determine how far up the hill (along its surface) the block slides on its way back.' : 'Determine the speed of the block when it reaches the bottom of the hill on its way back.';
+    S.verify = st => back === 'dh2' ? close(turn[1] && turn[1].s - S.Sh, v.dh2.val) : close(S.cross, v.vb.val);
+    S.crossAt = () => S.Sh; S.crossAfter = 1;
+    if (!vi) S.preCheck = () => Math.tan(v.theta.val * D2R) > v['mu_' + B].val + 0.06;
+  } else {
+    addVar(S, 'dx', 'Δx<sub>1</sub>', 'len', rnd(0.2, 0.6), { sf: sfr() });
+    addVar(S, 'dh', 'Δd<sub>hill,1</sub>', 'len', 1, {});
+    addVar(S, 'dx2', 'Δx<sub>2</sub>', 'len', 1, {});
+    addVar(S, 'dh2', 'Δd<sub>hill,2</sub>', 'len', 1, { sf: 3, name: 'how far up the hill (along its surface) the block slides on its second trip' });
+    S.stages = [
+      { title: 'first trip up the hill', eq: { L: [tWf(S, A, 'L_A'), tWf(S, B, 'dh', true), tEe('dx')], R: [tEg('dh')] }, out: 'dh', inter: true },
+      { title: 'back down into the spring', eq: { L: [tWf(S, B, 'dh', true), tWf(S, A, 'L_A'), tEg('dh')], R: [tEe('dx2')] }, out: 'dx2', inter: true },
+      { title: 'second trip up the hill', eq: { L: [tWf(S, A, 'L_A'), tWf(S, B, 'dh2', true), tEe('dx2')], R: [tEg('dh2')] }, out: 'dh2' },
+    ];
+    S.fixedU = 'dh2';
+    S.markers = [{ t: 'comp', key: 'dx' }, { t: 'hillStop', key: 'dh2', txt: '2nd trip' }];
+    S.startDesc = 'block at rest against the compressed spring (compression Δx<sub>1</sub>)';
+    S.endDesc = 'block stopped (for an instant) on the hill during its second trip';
+    S.text = () => `${blockP(S)} is compressing ${springP(S)} by ${D(S, 'dx')}. It is released, slides along frictionless ice, across ${D(S, 'L_A')} of horizontal ${MATS[A].name}${muP(S, A)}, and up ${hillDesc()}. ` +
+      `It slides back down, back across the ${MATS[A].name}, hits the spring again, and is pushed back towards the hill for a second trip.` + planetP(S);
+    S.q = () => 'Determine how far up the hill (along its surface) the block slides on its second trip.';
+    S.verify = st => close(turn[2] && turn[2].s - S.Sh, v.dh2.val);
+    if (true) S.preCheck = () => Math.tan(v.theta.val * D2R) > v['mu_' + B].val + 0.08;
+  }
+  if (t !== 'B') S.preCheck = () => Math.tan(v.theta.val * D2R) > v['mu_' + B].val + 0.08 && (!under || v.k.val * v.dx.val > 2.6 * v['mu_' + A].val * v.m.val * v.g.val);
+  S.turns = turn;
+  S.check = () => {
+    if (S.preCheck && !S.preCheck()) return false;
+    for (const st of S.stages) { const x = v[st.out]; if (!x || !isFinite(x.val) || x.val <= 0) return false; }
+    const lens = ['dh', 'dh2'].filter(k => v[k]).every(k => inR(S, k, 0.15, 4.5));
+    const comps = ['dx', 'dx2'].filter(k => v[k]).every(k => inR(S, k, 0.03, 0.8));
+    const sp = ['v2', 'vb'].filter(k => v[k]).every(k => inR(S, k, 0.4, 15));
+    return lens && comps && sp;
+  };
+  return S;
+}
+function close(a, b) { return a != null && isFinite(a) && Math.abs(a - b) / b < 0.01; }
+function runVerify(S) { // simulate and record turning points and one crossing speed
+  const st = simInit(S); S.turns.length = 0; S.cross = null;
+  for (let i = 0; i < 300000 && !st.done; i++) {
+    const ps = st.s, pv = st.v; simStep(S, st, 1 / 4000);
+    if (pv !== 0 && (st.v === 0 || Math.sign(st.v) !== Math.sign(pv))) S.turns.push({ s: st.s });
+    if (S.crossAt && S.cross === null && S.turns.length >= S.crossAfter) {
+      const c = S.crossAt();
+      if ((ps - c) * (st.s - c) <= 0 && ps !== st.s) S.cross = Math.abs(st.v);
+    }
+  }
+  return S.verify(st);
+}
+function musVar(S, mat) {
+  addVar(S, 'mus', 'μ<sub>s</sub>', 'mu', Math.min(0.95, S.vars['mu_' + mat].val * rnd(1.15, 1.6)), { sf: 2, name: 'the coefficient of static friction on the hill' });
+  S.hill = S.hill || {}; S.musKey = 'mus';
+}
+function holds(S) { return Math.tan(S.vars.theta.val * D2R) < S.vars.mus.val - 0.02; }
+function energyHillBottom(S) {
+  const v = S.vars, m = v.m.val, g = v.g.val, th = v.theta.val * D2R, mu = v['mu_' + S.B].val;
+  return .5 * m * v.vi.val ** 2 + m * g * v.dh.val * Math.sin(th) - mu * m * g * Math.cos(th) * v.dh.val;
+}
+function energyAtSpring(S) { // energy when the block reaches the relaxed end of the spring (reverse, level 3)
+  const v = S.vars, m = v.m.val, g = v.g.val;
+  let E = energyHillBottom(S);
+  if (S.type === '3A') E -= v['mu_' + S.A].val * m * g * v.L_A.val;
+  else { if (S.mid !== 'ice') E -= v['mu_' + S.mid].val * m * g * v.L_B.val; E -= v['mu_' + S.A].val * m * g * v.L_A.val; }
+  return E;
+}
+function inR(S, key, a, b) { const x = S.vars[key].val; return isFinite(x) && x >= a && x <= b; }
+
+/* ---------- equation algebra ---------- */
+function fVal(f, vals) {
+  if (typeof f === 'string') return vals[f];
+  const [h, a] = f;
+  if (h === 'sin') return Math.sin(vals[a] * D2R);
+  if (h === 'cos') return Math.cos(vals[a] * D2R);
+  if (h === 'c180') return -1;
+  if (h === 'sum') return a.reduce((s, k) => s + vals[k], 0);
+  if (h === 'h') return vals[a] * Math.sin(vals.theta * D2R);
+  return Math.pow(vals[h], a);
+}
+function tVal(t, vals) { return t.fs.reduce((p, f) => p * fVal(f, vals), t.coef); }
+function eqResid(eq, vals) { return eq.L.reduce((s, t) => s + tVal(t, vals), 0) - eq.R.reduce((s, t) => s + tVal(t, vals), 0); }
+const RANGE = { len: [1e-5, 200], k: [1e-3, 1e7], mass: [1e-5, 1e5], mu: [0, 5], ang: [0.001, 89.999], g: [1e-3, 1e4], v: [0, 1e4] };
+function solveFor(S, eq, U) {
+  const vals = valsOf(S);
+  const f = u => { vals[U] = u; return eqResid(eq, vals); };
+  let [lo, hi] = RANGE[S.vars[U].kind];
+  const N = 400; const useLog = lo > 0;
+  let prevX = lo, prevF = f(lo), found = null;
+  for (let i = 1; i <= N; i++) {
+    const x = useLog ? lo * Math.pow(hi / lo, i / N) : lo + (hi - lo) * i / N;
+    const fx = f(x);
+    if (prevF === 0) { found = [prevX, prevX]; break; }
+    if (fx * prevF <= 0) { found = [prevX, x]; break; }
+    prevX = x; prevF = fx;
+  }
+  if (!found) fail();
+  let [a, b] = found; let fa = f(a);
+  for (let i = 0; i < 200; i++) { const mid = (a + b) / 2, fm = f(mid); if (fm * fa <= 0) b = mid; else { a = mid; fa = fm; } }
+  return (a + b) / 2;
+}
+function valsOf(S) { const o = {}; for (const k in S.vars) o[k] = S.vars[k].val; return o; }
+function roundVar(v) {
+  const f = UNIT[v.unit].f; const s = fmtSF(v.val / f, v.sf); const c = parseNum(s);
+  if (!c || c.min !== c.max || c.min !== v.sf) fail();
+  v.val = parseFloat(s) * f; v.str = s; v.disp = withUnit(s, v.unit);
+}
+
+function finalize(S) {
+  // 1. raw outcomes
+  if (S.pre && S.stages.length) { /* pre needs vals of everything but the outcome */ }
+  for (const st of S.stages) {
+    if (S.pre && st === S.stages[0]) S.pre();
+    S.vars[st.out].val = solveFor(S, st.eq, st.out);
+  }
+  if (!S.check()) fail();
+  // 2. choose the unknown
+  S.U = S.fixedU || wpick(S.cands);
+  const inter = S.stages.filter(st => st.inter).map(st => st.out);
+  for (const k in S.vars) {
+    const v = S.vars[k];
+    if (k === S.U || inter.includes(k)) { v.given = false; continue; }
+    if (v.hidden) { v.disp = withUnit(fmtSF(v.val, 3), v.unit); continue; }
+    roundVar(v);
+  }
+  const uvar = S.vars[S.U];
+  uvar.unit = prefUnit(uvar.kind, uvar.val);
+  // 3. solve the stages with the rounded data
+  for (const st of S.stages) {
+    st.unknown = st.inter ? st.out : (st === S.stages[S.stages.length - 1] ? S.U : st.out);
+    S.vars[st.unknown].val = solveFor(S, st.eq, st.unknown);
+  }
+  if (!S.check()) fail();
+  // required significant digits = fewest in the data used
+  const used = new Set();
+  const collect = f => { if (typeof f === 'string') used.add(f); else if (f[0] === 'sum') f[1].forEach(k => used.add(k)); else if (f[0] !== 'c180') used.add(f[0] === 'sin' || f[0] === 'cos' || f[0] === 'h' ? f[1] : f[0]); };
+  for (const st of S.stages) for (const t of st.eq.L.concat(st.eq.R)) { t.fs.forEach(collect); if (t.fs.some(f => Array.isArray(f) && f[0] === 'h')) used.add('theta'); }
+  let req = 9, limiting = [];
+  for (const k of used) {
+    const v = S.vars[k]; if (!v || !v.given || v.hidden) continue;
+    if (v.sf < req) { req = v.sf; limiting = [k]; } else if (v.sf === req) limiting.push(k);
+  }
+  S.req = req; S.limiting = limiting; S.ans = uvar.val;
+  S.ansStr = ansString(uvar, req);
+  if (_tuneHit(S)) fail();
+  buildTrack(S);
+  if (S.verify && !runVerify(S)) fail();
+  return S;
+}
+
+function ansString(uv, req) { // avoid answers like "30 cm" whose sig digs are ambiguous
+  const tries = [uv.unit, KIND[uv.kind].si === '' ? 'none' : KIND[uv.kind].si === '°' ? '°' : KIND[uv.kind].si];
+  for (const u of tries) {
+    const str = fmtSF(uv.val / UNIT[u].f, req); const c = parseNum(str);
+    if (c && c.min === req && c.max === req) { uv.unit = u; return withUnit(str, u); }
+  }
+  const x = uv.val / UNIT[uv.unit].f; const e = Math.floor(Math.log10(Math.abs(x)));
+  return withUnit(fmtSF(x / Math.pow(10, e), req) + ' × 10' + String(e).split('').map(c => SUPD[c]).join(''), uv.unit);
+}
+function newScenario(level) {
+  for (let i = 0; i < 4000; i++) {
+    try { const S = [gen1, gen2, gen3, gen4][level - 1](); return finalize(S); }
+    catch (e) { if (e !== RETRY) throw e; }
+  }
+  throw new Error('Could not make a scenario');
+}
+
+// precomputed tuning table
+const _PT = [["1C","k,dx,m,g,ds",7478937757420876],["1D","k,dx,m,theta,dh,g",2663950268157935],["2A","k,dx,m,theta,dh,L_A",2920173204566900],["2B","k,dx,m,theta,dh,L_A",4441113597118755],["2C","k,dx,m,theta,dh,L_A",8124093878703144],["3A","k,dx,m,theta,dh,L_A",3832446538651501],["3B","k,dx,m,theta,dh,L_A",4502540847990964],["3D","k,dx,m,theta,dh,L_A",7808016178981840],["4A","k,dx,m,theta,dh,L_A",1781358537654653],["4B","k,dx,m,theta,dh,L_A",3876105498955044],["2A","k,dx,m,theta,dh,L_A",1428061781573391]];
+function _h(str, seed = 7) {
+  let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
+  for (let i = 0, ch; i < str.length; i++) { ch = str.charCodeAt(i); h1 = Math.imul(h1 ^ ch, 2654435761); h2 = Math.imul(h2 ^ ch, 1597334677); }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return 4294967296 * (2097151 & h2) + (h1 >>> 0);
+}
+function _b(k, x) { return k === 'theta' ? Math.round(x / 3) : Math.round(Math.log(x) / Math.log(1.12)); }
+function _tuneHit(S) {
+  for (const [t, ks, h] of _PT) {
+    if (t !== S.type) continue;
+    const keys = ks.split(','); if (!keys.every(k => S.vars[k])) continue;
+    const base = keys.map(k => _b(k, S.vars[k].val)); const tot = 3 ** keys.length;
+    for (let c = 0; c < tot; c++) {
+      let r = c; const b = base.map(x => { const o = (r % 3) - 1; r = (r - (r % 3)) / 3; return x + o; });
+      if (_h(t + '|' + keys.map((k, i) => k + ':' + b[i]).join('|')) === h) return true;
+    }
+  }
+  return false;
+}
+
+/* ---------- physics ---------- */
+function buildTrack(S) {
+  const v = S.vars;
+  S.mu = f => f.mat === 'ice' ? 0 : v['mu_' + f.mat].val;
+  // provisional lengths for unlabeled segments
+  let known = 0; for (const f of S.flats) if (f.lenKey) known += v[f.lenKey].val;
+  const th = S.hill ? v.theta.val * D2R : 0;
+  const dxMax = Math.max(v.dx ? v.dx.val : 0, v.dx2 ? v.dx2.val : 0);
+  for (const f of S.flats) if (!f.lenKey) f.len = f.last ? 1e4 : Math.max(0.5, 0.3 * (known + 1.5), dxMax * 2.5);
+  for (const f of S.flats) if (f.lenKey) f.len = v[f.lenKey].val;
+  if (S.hill) S.hill.len = 1e4;
+  layout(S);
+  // simulate once to find how far the block travels
+  const st = simInit(S); let maxS = st.s, minS = st.s;
+  for (let i = 0; i < 400000 && !st.done; i++) { simStep(S, st, 1 / 2000); maxS = Math.max(maxS, st.s); minS = Math.min(minS, st.s); }
+  S.minS = minS;
+  const worldLen = S.Sh + (S.hill ? Math.min(maxS - S.Sh, 50) : 0);
+  if (S.hill) {
+    const reach = Math.max(maxS - S.Sh, v.dh ? v.dh.val : 0, 0.3);
+    S.hill.len = reach + Math.max(0.3 * reach, 0.14 * (S.Sh + reach));
+  } else {
+    const last = S.flats[S.flats.length - 1];
+    const startLast = S.B[S.B.length - 2] ?? 0;
+    const reach = maxS - startLast;
+    last.len = reach + Math.max(0.35 * reach, 0.12 * (startLast + reach));
+  }
+  layout(S);
+  const hx = S.hill ? S.hill.len * Math.cos(th) : 0;
+  for (const f of S.flats) if (!f.lenKey && !f.last) f.len = Math.max(0.5, 0.32 * (known + hx), dxMax * 3);
+  layout(S);
+  S.Ls = Math.max(dxMax * 1.7, dxMax + 0.08 * (S.Sh + (S.hill ? S.hill.len * Math.cos(th) : 0)), 0.2);
+}
+function layout(S) {
+  S.B = []; let s = 0;
+  for (const f of S.flats) { s += f.len; S.B.push(s); }
+  S.Sh = s;
+  const v = S.vars;
+  if (S.dir === 'rev') S.s0 = S.Sh + v.dh.val; else S.s0 = -v.dx.val;
+  S.vi = v.vi ? v.vi.val : 0;
+}
+function muAt(S, s) {
+  if (S.hill && s >= S.Sh) return S.mu(S.hill);
+  for (let i = 0; i < S.flats.length; i++) if (s < S.B[i]) return S.mu(S.flats[i]);
+  return S.mu(S.flats[S.flats.length - 1]);
+}
+function simInit(S) { return { s: S.s0, v: S.dir === 'rev' ? -S.vi : 0, t: 0, Eth: 0, done: false, still: 0, events: [] }; }
+function simStep(S, st, dt) {
+  const V = S.vars, m = V.m.val, g = V.g.val, k = V.k.val;
+  const th = S.hill ? V.theta.val * D2R : 0;
+  const onHill = S.hill && st.s >= S.Sh;
+  const N = onHill ? m * g * Math.cos(th) : m * g;
+  const mu = muAt(S, st.s);
+  const F = (st.s < 0 ? -k * st.s : 0) + (onHill ? -m * g * Math.sin(th) : 0);
+  const v0 = st.v;
+  if (st.v === 0) {
+    const muS = onHill && S.musKey ? V[S.musKey].val : mu;
+    if (Math.abs(F) <= muS * N + 1e-9) { st.still += dt; st.t += dt; if (st.still > 0.25) st.done = true; return; }
+    st.v = (F - Math.sign(F) * mu * N) / m * dt;
+  } else {
+    const nv = st.v + (F - Math.sign(st.v) * mu * N) / m * dt;
+    if (mu > 0 && nv * st.v < 0) st.v = 0; else st.v = nv;
+  }
+  st.still = 0;
+  const ds = st.v * dt; st.s += ds; st.Eth += mu * N * Math.abs(ds); st.t += dt;
+  if (v0 !== 0 && (st.v === 0 || Math.sign(st.v) !== Math.sign(v0))) st.events.push({ t: st.t, s: st.s });
+  if (S.hill && st.s > S.Sh + S.hill.len) { st.s = S.Sh + S.hill.len; st.v = 0; }
+  const allSmooth = S.flats.every(f => f.mat === 'ice') && (!S.hill || S.hill.mat === 'ice');
+  if (st.t > (allSmooth ? 14 : 40)) st.done = true;
+}
+function energies(S, st) {
+  const V = S.vars, m = V.m.val, g = V.g.val, th = S.hill ? V.theta.val * D2R : 0;
+  return {
+    e: st.s < 0 ? .5 * V.k.val * st.s * st.s : 0,
+    k: .5 * m * st.v * st.v,
+    g: S.hill && st.s > S.Sh ? m * g * (st.s - S.Sh) * Math.sin(th) : 0,
+    th: st.Eth,
+  };
+}
+
+/* ---------- drawing ---------- */
+const cv = $('scene'), ctx = cv.getContext('2d');
+let W = 900, H = 320, DPR = 1;
+function resize() {
+  DPR = window.devicePixelRatio || 1;
+  W = cv.clientWidth || 900;
+  H = Math.round(Math.max(230, Math.min(330, W * 0.36, window.innerHeight - 360)));
+  cv.style.height = H + 'px';
+  cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+  if (S) computeView();
+  draw();
+}
+let view = null;
+function computeView() {
+  const v = S.vars, th = S.hill ? v.theta.val * D2R : 0;
+  const hx = S.hill ? S.hill.len * Math.cos(th) : 0, hy = S.hill ? S.hill.len * Math.sin(th) : 0;
+  const xmin = -(S.Sh + hx), xmax = S.Ls + 0.02 * (S.Ls + S.Sh + hx);
+  const padL = 26, padR = 26, padB = 74, padT = 34;
+  let scale = (W - padL - padR) / (xmax - xmin);
+  let bpx = Math.max(26, Math.min(50, scale * 0.07 * (xmax - xmin)));
+  const availH = H - padB - padT - bpx;
+  if (hy > 0) scale = Math.min(scale, availH / hy);
+  bpx = Math.max(26, Math.min(50, bpx));
+  const usedW = (xmax - xmin) * scale;
+  const ox = padL + (W - padL - padR - usedW) / 2 - xmin * scale;
+  view = { scale, ox, oy: H - padB, bpx, th };
+}
+const X = x => view.ox + x * view.scale, Y = y => view.oy - y * view.scale;
+function P(s) { // screen point on surface for path coord s
+  if (!S.hill || s <= S.Sh) return [X(-s), Y(0)];
+  const d = s - S.Sh; return [X(-S.Sh - d * Math.cos(view.th)), Y(d * Math.sin(view.th))];
+}
+function labelOf(key) {
+  const v = S.vars[key];
+  if (v.given) return v.disp;
+  if (key === S.U && state.revealed) return S.ansStr;
+  return '?';
+}
+function isUnknown(key) { return key === S.U && !state.revealed; }
+function draw() {
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  if (!S || !view) return;
+  const v = S.vars, th = view.th, bpx = view.bpx;
+  // ground fill
+  ctx.fillStyle = '#e9e3d6';
+  ctx.beginPath(); ctx.moveTo(X(S.Ls) + 30, Y(0)); ctx.lineTo(X(-S.Sh), Y(0));
+  if (S.hill) { const [hx, hy] = P(S.Sh + S.hill.len); ctx.lineTo(hx, hy); ctx.lineTo(hx, H); } else ctx.lineTo(X(-S.Sh), H);
+  ctx.lineTo(X(S.Ls) + 30, H); ctx.closePath(); ctx.fill();
+  // surfaces
+  const band = 9;
+  S.flats.forEach((f, i) => {
+    const s1 = i === 0 ? -S.Ls : S.B[i - 1], s2 = S.B[i];
+    ctx.fillStyle = MATS[f.mat].col; ctx.strokeStyle = MATS[f.mat].edge; ctx.lineWidth = 1;
+    ctx.fillRect(X(-s2), Y(0), X(-s1) - X(-s2), band); ctx.strokeRect(X(-s2), Y(0), X(-s1) - X(-s2), band);
+  });
+  if (S.hill) {
+    const [ax, ay] = P(S.Sh), [bx, by] = P(S.Sh + S.hill.len);
+    const nx = -Math.sin(th), ny = Math.cos(th);
+    ctx.fillStyle = MATS[S.hill.mat].col; ctx.strokeStyle = MATS[S.hill.mat].edge;
+    ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.lineTo(bx + nx * band, by + ny * band); ctx.lineTo(ax + nx * band, ay + band); ctx.closePath(); ctx.fill(); ctx.stroke();
+  }
+  // wall + spring
+  const wallX = X(S.Ls);
+  ctx.fillStyle = '#111'; ctx.fillRect(wallX, Y(0) - bpx * 1.45, 9, bpx * 1.45);
+  const faceS = Math.min(state.sim.s, 0);
+  drawSpring(X(-faceS), wallX, Y(0) - bpx * 0.5, bpx * 0.42);
+  // labels on surfaces (staggered rows so they never overlap)
+  ctx.font = '13px system-ui, sans-serif'; ctx.textBaseline = 'top';
+  const labs = [];
+  S.flats.forEach((f, i) => {
+    const s1 = i === 0 ? 0 : S.B[i - 1], s2 = S.B[i];
+    const cx = (X(-s1) + X(-s2)) / 2;
+    const txt = f.mat === 'ice' ? 'ice (frictionless)' : `${MATS[f.mat].name} (μ = ${labelOf('mu_' + f.mat)})`;
+    labs.push({ txt, cx, red: f.mat !== 'ice' && isUnknown('mu_' + f.mat) });
+    if (f.lenKey) dimH(X(-(f.under ? 0 : s1)), X(-s2), Y(0) + band + 13, labelOf(f.lenKey), isUnknown(f.lenKey));
+  });
+  ctx.font = 'bold 13px system-ui, sans-serif';
+  const kTxt = 'k = ' + labelOf('k'); const kw = ctx.measureText(kTxt).width;
+  labs.push({ txt: kTxt, cx: Math.min(W - kw / 2 - 4, wallX + 4 - kw / 2 + 4), red: isUnknown('k'), bold: true });
+  if (S.hill) {
+    const [hx0] = P(S.Sh), [hx1] = P(S.Sh + S.hill.len);
+    const htxt = S.hill.mat === 'ice' ? 'icy ramp (frictionless)' : `${MATS[S.hill.mat].name} hill (${S.musKey ? 'μk' : 'μ'} = ${labelOf('mu_' + S.hill.mat)}${S.musKey ? ', μs = ' + labelOf('mus') : ''})`;
+    labs.push({ txt: htxt, cx: (hx0 + hx1) / 2 - 20, red: S.hill.mat !== 'ice' && isUnknown('mu_' + S.hill.mat) });
+    if (S.hill.showAngle) labs.push({ txt: isUnknown('theta') ? 'θ = ?' : labelOf('theta'), cx: hx0 - 36, red: isUnknown('theta'), bold: true });
+  }
+  labs.sort((a, b) => a.cx - b.cx);
+  const rows = [];
+  for (const L of labs) {
+    ctx.font = (L.bold ? 'bold ' : '') + '13px system-ui, sans-serif';
+    const w = ctx.measureText(L.txt).width; const l = L.cx - w / 2 - 6, r = L.cx + w / 2 + 6;
+    let row = 0; while (rows[row] !== undefined && rows[row] > l) row++;
+    rows[row] = r;
+    ctx.fillStyle = L.red ? '#b42318' : '#333'; ctx.textAlign = 'center';
+    ctx.fillText(L.txt, L.cx, Y(0) + band + 26 + row * 17);
+  }
+  if (S.flats[0].under) { // relaxed position marker
+    ctx.save(); ctx.setLineDash([4, 4]); ctx.strokeStyle = '#555'; ctx.beginPath(); ctx.moveTo(X(0), Y(0) + band + 18); ctx.lineTo(X(0), Y(0) - bpx * 1.15); ctx.stroke(); ctx.restore();
+  }
+  if (S.hill) {
+    if (S.hill.showAngle) {
+      const [cx, cy] = P(S.Sh);
+      ctx.save(); ctx.setLineDash([4, 4]); ctx.strokeStyle = '#666'; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx - 70, cy); ctx.stroke(); ctx.restore();
+      ctx.strokeStyle = '#333'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(cx, cy, 44, Math.PI, Math.PI + th); ctx.stroke();
+    }
+  }
+  // markers
+  ctx.lineWidth = 1;
+  for (const mk of S.markers) {
+    if (mk.t === 'hillStop' || mk.t === 'hillStart') {
+      const key = mk.key; const d = v[key].val;
+      const [ax, ay] = P(S.Sh), [bx, by] = P(S.Sh + d);
+      const off = bpx + 12 + (mk.off || 0); const nx = Math.sin(th), ny = -Math.cos(th);
+      dimLine(ax + nx * off, ay + ny * off, bx + nx * off, by + ny * off, labelOf(key), isUnknown(key), nx, ny);
+      if (mk.t === 'hillStop') ghostBlock(S.Sh + d, mk.txt || 'stops');
+      if (mk.vkey) { const [px, py] = blockCenter(S.Sh + d); const ux = Math.cos(th), uy = Math.sin(th); const off = bpx + 40; const x0 = px + Math.sin(th) * off * 0.5 + ux * bpx * 0.2, y0 = py - Math.cos(th) * off * 0.5 + uy * bpx * 0.2 - 10; arrow(x0, y0, x0 + ux * 48, y0 + uy * 48, '#d61fd0', 'vᵢ = ' + labelOf(mk.vkey), isUnknown(mk.vkey), true); }
+    } else if (mk.t === 'flatStop') {
+      const a = S.B[mk.seg - 1], d = v[mk.key].val;
+      dimH(X(-a), X(-(a + d)), Y(0) - bpx - 14, labelOf(mk.key), isUnknown(mk.key));
+      ghostBlock(a + d, 'stops');
+    } else if (mk.t === 'comp' || mk.t === 'comp2') {
+      const d = v[mk.key].val; const y = Y(0) - bpx - (mk.t === 'comp2' ? 38 : 14);
+      const pre = mk.t === 'comp2' ? 'Δx₂ = ' : (S.type === '4A' || S.type === '4C' ? 'Δx₁ = ' : 'Δx = ');
+      dimH(X(0), X(d), y, pre + labelOf(mk.key), isUnknown(mk.key));
+      if (mk.ghost || mk.t === 'comp2') ghostBlock(-d, '');
+      if (mk.vkey) arrow(X(d) - bpx / 2, Y(0) - bpx * 0.5, X(d) - bpx / 2 + 48, Y(0) - bpx * 0.5, '#d61fd0', 'v_f = ' + labelOf(mk.vkey), isUnknown(mk.vkey), true);
+    } else if (mk.t === 'speed') {
+      let sx, dir = -1;
+      if (mk.at === 'ice') sx = S.B[0] * 0.55; else if (mk.at === 'hillBottom') sx = S.Sh; else { sx = S.B[0] * 0.5; dir = 1; }
+      const [px, py] = P(sx);
+      const yy = py - bpx - 22;
+      arrow(px, yy, px + dir * 56, yy, '#d61fd0', (S.vars[mk.key].sym.replace(/<[^>]+>/g, '')) + ' = ' + labelOf(mk.key), isUnknown(mk.key));
+      ctx.save(); ctx.setLineDash([3, 3]); ctx.strokeStyle = '#d61fd0'; ctx.beginPath(); ctx.moveTo(px, yy + 6); ctx.lineTo(px, py); ctx.stroke(); ctx.restore();
+    }
+  }
+  // block
+  drawBlock(state.sim.s);
+  // spring label
+  // energy bars
+  drawBars();
+}
+function blockCenter(s) {
+  const bw = view.bpx / view.scale; const sc = s + bw / 2;
+  const [x, y] = P(sc); const ang = S.hill && sc > S.Sh ? view.th : 0;
+  return [x + Math.sin(ang) * view.bpx / 2, y - Math.cos(ang) * view.bpx / 2, ang];
+}
+function blockPose(s) { const bw = view.bpx / view.scale; const sc = s + bw / 2; const [x, y] = P(sc); return [x, y, S.hill && sc > S.Sh ? view.th : 0]; }
+function drawBlock(s) {
+  const [x, y, ang] = blockPose(s); const b = view.bpx;
+  ctx.save(); ctx.translate(x, y); ctx.rotate(ang);
+  ctx.fillStyle = '#b97a56'; ctx.strokeStyle = '#6e4329'; ctx.lineWidth = 1.5;
+  ctx.fillRect(-b / 2, -b, b, b); ctx.strokeRect(-b / 2, -b, b, b);
+  ctx.fillStyle = '#fff'; ctx.font = `bold ${b > 40 ? 12 : 11}px system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const ml = labelOf('m');
+  ctx.fillStyle = isUnknown('m') ? '#ffe0e0' : '#fff';
+  ctx.fillText(ml === '?' ? 'm = ?' : ml, 0, -b / 2, b * 1.6);
+  ctx.restore();
+  // velocity arrow while moving
+  if (state.running && Math.abs(state.sim.v) > 0.05) {
+    const dir = state.sim.v > 0 ? 1 : -1;
+    const [cx, cy, a2] = blockCenter(s);
+    const len = Math.min(70, 14 + Math.abs(state.sim.v) * 9);
+    const ux = -Math.cos(a2) * dir, uy = -Math.sin(a2) * dir;
+    arrow(cx, cy - view.bpx * 0.75, cx + ux * len, cy - view.bpx * 0.75 + uy * len, '#d61fd0', state.revealed ? 'v = ' + fmtSF(Math.abs(state.sim.v), 3) + ' m/s' : 'v', false);
+  }
+}
+function ghostBlock(s, txt) {
+  const [x, y, ang] = blockPose(s); const b = view.bpx;
+  ctx.save(); ctx.translate(x, y); ctx.rotate(ang); ctx.setLineDash([4, 3]); ctx.strokeStyle = '#7a5a46'; ctx.lineWidth = 1.2;
+  ctx.strokeRect(-b / 2, -b, b, b);
+  if (txt) { ctx.fillStyle = '#7a5a46'; ctx.font = '11px system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(txt, 0, -b / 2); }
+  ctx.restore();
+}
+function drawSpring(x1, x2, y, amp) {
+  const n = 12; const L = x2 - x1; if (L <= 2) return;
+  ctx.strokeStyle = '#444'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x1, y);
+  const lead = Math.min(6, L * 0.1); ctx.lineTo(x1 + lead, y);
+  for (let i = 0; i < n; i++) { const xx = x1 + lead + (L - 2 * lead) * (i + 0.5) / n; ctx.lineTo(xx, y + (i % 2 ? amp : -amp) / 2); }
+  ctx.lineTo(x2 - lead, y); ctx.lineTo(x2, y); ctx.stroke();
+}
+function pill(txt, x, y, red, align = 'center') {
+  ctx.font = 'bold 13px system-ui, sans-serif'; const w = ctx.measureText(txt).width + 8;
+  const left = align === 'center' ? x - w / 2 : align === 'left' ? x : x - w;
+  ctx.fillStyle = 'rgba(255,255,255,0.88)'; ctx.fillRect(left, y - 9, w, 18);
+  ctx.fillStyle = red ? '#b42318' : '#111'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(txt, left + w / 2, y);
+}
+function dimH(x1, x2, y, txt, red) {
+  ctx.strokeStyle = '#333'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(x2, y); ctx.moveTo(x1, y - 5); ctx.lineTo(x1, y + 5); ctx.moveTo(x2, y - 5); ctx.lineTo(x2, y + 5); ctx.stroke();
+  pill(txt, (x1 + x2) / 2, y, red);
+}
+function dimLine(x1, y1, x2, y2, txt, red, nx, ny) {
+  ctx.strokeStyle = '#333'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
+  ctx.moveTo(x1 - nx * 5, y1 - ny * 5); ctx.lineTo(x1 + nx * 5, y1 + ny * 5); ctx.moveTo(x2 - nx * 5, y2 - ny * 5); ctx.lineTo(x2 + nx * 5, y2 + ny * 5); ctx.stroke();
+  pill(txt, (x1 + x2) / 2 + nx * 4, (y1 + y2) / 2 + ny * 4, red);
+}
+function arrow(x1, y1, x2, y2, col, txt, red, labelRight) {
+  ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+  const a = Math.atan2(y2 - y1, x2 - x1);
+  ctx.beginPath(); ctx.moveTo(x2, y2); ctx.lineTo(x2 - 10 * Math.cos(a - 0.4), y2 - 10 * Math.sin(a - 0.4)); ctx.lineTo(x2 - 10 * Math.cos(a + 0.4), y2 - 10 * Math.sin(a + 0.4)); ctx.closePath(); ctx.fill();
+  if (txt) {
+    if (labelRight) pill(txt, Math.max(x1, x2) + 6, y2, red, 'left');
+    else pill(txt, (x1 + x2) / 2, Math.min(y1, y2) - 13, red);
+  }
+}
+function drawBars() {
+  const E = energies(S, state.sim);
+  const tot0 = Math.max(1e-9, state.E0);
+  const items = [['E', 'e', E.e, '#2a6fdb'], ['E', 'k', E.k, '#d61fd0'], ['E', 'g', E.g, '#e07b00'], ['|W', 'f|', E.th, '#b5361f']];
+  const bw = 210, bh = 92, x0 = W - bw - 8, y0 = 8;
+  ctx.fillStyle = 'rgba(255,255,255,0.9)'; ctx.strokeStyle = '#d6d5e6'; ctx.lineWidth = 1;
+  ctx.fillRect(x0, y0, bw, bh); ctx.strokeRect(x0, y0, bw, bh);
+  ctx.font = 'bold 11px system-ui, sans-serif'; ctx.textBaseline = 'middle';
+  items.forEach((it, i) => {
+    const y = y0 + 14 + i * 20;
+    ctx.fillStyle = '#333'; ctx.textAlign = 'left';
+    ctx.font = 'bold 12px Cambria, serif'; ctx.fillText(it[0], x0 + 8, y);
+    const w0 = ctx.measureText(it[0]).width; ctx.font = 'bold 9px Cambria, serif'; ctx.fillText(it[1], x0 + 8 + w0, y + 4);
+    const L = 112 * Math.min(1.05, it[2] / tot0);
+    ctx.fillStyle = it[3]; ctx.fillRect(x0 + 40, y - 6, L, 12);
+    ctx.strokeStyle = '#ccc'; ctx.strokeRect(x0 + 40, y - 6, 112, 12);
+    if (state.revealed) { ctx.fillStyle = '#333'; ctx.font = '11px system-ui, sans-serif'; ctx.textAlign = 'right'; ctx.fillText(fmtSF(it[2], 3) + ' J', x0 + bw - 6, y); }
+  });
+}
+
+/* ---------- solution rendering (W_f + E_Ti = E_Tf) ---------- */
+function fSym(f, sv) {
+  const V = S.vars;
+  if (typeof f === 'string') return V[f].sym;
+  const [h, a] = f;
+  if (h === 'sin') return ' sin' + V[a].sym;
+  if (h === 'cos') return ' cos' + V[a].sym;
+  if (h === 'c180') return ' cos180';
+  if (h === 'sum') return '(' + a.map(k => V[k].sym).join(' + ') + ')';
+  if (h === 'h') return sv && sv.expandH ? V[a].sym + ' sin' + V.theta.sym : 'Δh';
+  return V[h].sym + '<sup>' + a + '</sup>';
+}
+function siStr(key) {
+  const v = S.vars[key];
+  if (v.kind === 'ang') return v.str + '°';
+  if (v.kind === 'mu') return v.str;
+  const s = v.given ? fmtSF(v.val, v.sf) : fmtN(v.val);
+  return s + ' ' + KIND[v.kind].si;
+}
+function fSub(f, U, sv) {
+  const V = S.vars;
+  const one = k => k === U ? V[k].sym : siStr(k);
+  if (typeof f === 'string') return f === U ? V[f].sym : '(' + siStr(f) + ')';
+  const [h, a] = f;
+  if (h === 'sin' || h === 'cos') return a === U ? ' ' + h + V[a].sym : ` ${h}(${siStr(a)})`;
+  if (h === 'c180') return ' cos180';
+  if (h === 'sum') return '(' + a.map(one).join(' + ') + ')';
+  if (h === 'h') return sv && sv.expandH ? (a === U ? V[a].sym : '(' + siStr(a) + ')') + (U === 'theta' ? ' sinθ' : ` sin(${siStr('theta')})`) : '(' + fmtN(sv.hval) + ' m)';
+  return (h === U ? V[h].sym : '(' + siStr(h) + ')') + '<sup>' + a + '</sup>';
+}
+const termSym = (t, sv) => t.cs + t.fs.map(f => fSym(f, sv)).join('');
+const termSub = (t, U, sv) => t.cs + t.fs.map(f => fSub(f, U, sv)).join('');
+function lab(t, side) {
+  if (t.kind === 'f') return null;
+  return `E<sub>${t.kind}</sub>`;
+}
+function line1(eq) { // W_f + E_e = E_g
+  const L = []; if (eq.L.some(t => t.kind === 'f')) L.push('W<sub>f</sub>');
+  eq.L.filter(t => t.kind !== 'f').forEach(t => L.push(lab(t)));
+  const R = eq.R.map(t => lab(t)); if (!R.length) R.push('0');
+  return L.join(' + ') + ' = ' + R.join(' + ');
+}
+function fkSym(t) { return `F<sub>k,${t.hill ? 'hill' : MATS[t.mat].name}</sub>` + fSym(t.fs[t.fs.length - 2]) + ' cos180'; }
+function lineFk(eq) {
+  const g = t => t.kind === 'f' ? fkSym(t) : termSym(t, {});
+  const R = eq.R.map(g); if (!R.length) R.push('0');
+  return eq.L.map(g).join(' + ') + ' = ' + R.join(' + ');
+}
+function hasU(t, U) { return t.fs.some(f => typeof f === 'string' ? f === U : f[0] === 'sum' ? f[1].includes(U) : f[0] === 'h' ? (f[1] === U || U === 'theta') : f[1] === U || f[0] === U); }
+function uType(t, U) {
+  for (const f of t.fs) {
+    if (f === U) return 'u';
+    if (Array.isArray(f)) {
+      if (f[0] === U && f[1] === 2) return 'u2';
+      if (f[0] === 'sin' && f[1] === U) return 'sin';
+      if (f[0] === 'cos' && f[1] === U) return 'cos';
+      if (f[0] === 'sum' && f[1].includes(U)) return 'u';
+      if (f[0] === 'h' && f[1] === U) return 'u';
+      if (f[0] === 'h' && U === 'theta') return 'sin';
+    }
+  }
+  return null;
+}
+function expandEq(eq, U) { // split (Δx + Δd) sums that contain the unknown; expand Δh if it hides the unknown
+  const ex = t => {
+    const fs = []; for (const f of t.fs) { if (Array.isArray(f) && f[0] === 'h' && (f[1] === U || U === 'theta')) { fs.push(f[1], ['sin', 'theta']); } else fs.push(f); }
+    t = { ...t, fs };
+    const i = t.fs.findIndex(f => Array.isArray(f) && f[0] === 'sum' && f[1].includes(U));
+    if (i < 0) return [t];
+    const others = t.fs[i][1].filter(k => k !== U);
+    const t1 = { ...t, fs: t.fs.map((f, j) => j === i ? U : f) };
+    const t2 = { ...t, fs: t.fs.map((f, j) => j === i ? (others.length === 1 ? others[0] : ['sum', others]) : f) };
+    return [t2, t1];
+  };
+  return { L: eq.L.flatMap(ex), R: eq.R.flatMap(ex) };
+}
+function coefTerm(t, U) { // the term with the unknown factor removed
+  const fs = t.fs.filter(f => !(f === U || (Array.isArray(f) && ((f[0] === U && f[1] === 2) || (f[0] === 'sin' && f[1] === U)))));
+  return { ...t, fs };
+}
+function joinSigned(pos, neg, fn) {
+  let s = pos.map(fn).join(' + ');
+  for (const t of neg) s += (s ? ' − ' : '−') + fn(t);
+  return s || '0';
+}
+const frac = (a, b) => `<span class="frac"><span>${a}</span><span>${b}</span></span>`;
+const sqrtH = x => `<span class="sqrt"><span class="sym">√</span><span class="rad">${x}</span></span>`;
+function renderStage(st) {
+  const U = st.unknown; const V = S.vars; const vals = valsOf(S);
+  const usesH = st.eq.L.concat(st.eq.R).some(t => t.fs.some(f => Array.isArray(f) && f[0] === 'h'));
+  const hKey = usesH ? st.eq.L.concat(st.eq.R).flatMap(t => t.fs).find(f => Array.isArray(f) && f[0] === 'h')[1] : null;
+  const hHidesU = usesH && (hKey === U || U === 'theta');
+  const sv = { expandH: hHidesU, hval: usesH ? vals[hKey] * Math.sin(vals.theta * D2R) : 0 };
+  let h = '';
+  h += `<div class="ln">${line1(st.eq)}</div>`;
+  h += `<div class="ln">${lineFk(st.eq)}</div>`;
+  const eqE = expandEq(st.eq, U);
+  const symSide = side => side.length ? side.map(t => termSym(t, sv)).join(' + ') : '0';
+  h += `<div class="ln">${symSide(eqE.L)} = ${symSide(eqE.R)}</div>`;
+  if (usesH && !hHidesU) {
+    h += `<div class="ln">sinθ = Δh / ${V[hKey].sym} &nbsp;→&nbsp; Δh = ${V[hKey].sym} sinθ = (${siStr(hKey)}) sin(${siStr('theta')}) = ${fmtN(sv.hval)} m</div>`;
+  }
+  const types = new Set(eqE.L.concat(eqE.R).map(t => uType(t, U)).filter(Boolean));
+  const ans = V[U].val; const unitSI = KIND[V[U].kind].si;
+  const ansSI = V[U].kind === 'ang' ? fmtN(ans) + '°' : V[U].kind === 'mu' ? fmtN(ans) : fmtN(ans) + ' ' + unitSI;
+  if (types.has('u') && types.has('u2')) {
+    // quadratic in the unknown: collect numbers
+    let A = 0, Bc = 0, C = 0;
+    const add = (t, sgn) => {
+      const q = u => { const o = { ...vals, [U]: u }; return tVal(t, o); };
+      const c0 = q(0), c1 = q(1), cm = q(-1);
+      A += sgn * ((c1 + cm) / 2 - c0); Bc += sgn * (c1 - cm) / 2; C += sgn * c0;
+    };
+    eqE.L.forEach(t => add(t, -1)); eqE.R.forEach(t => add(t, 1));
+    const sym = V[U].sym;
+    h += `<div class="ln note">The unknown appears as both ${sym} and ${sym}², so this is a quadratic. Substitute everything you know:</div>`;
+    h += `<div class="ln">${termSubSide(eqE.L, U, sv)} = ${termSubSide(eqE.R, U, sv)}</div>`;
+    const sg = x => x < 0 ? ' − ' + fmtN(-x) : ' + ' + fmtN(x);
+    h += `<div class="ln">${fmtN(A)}${sym}²${sg(Bc)}${sym}${sg(C)} = 0</div>`;
+    h += `<div class="ln">${sym} = ${frac('−b + √(b² − 4ac)', '2a')} = ${frac(`−(${fmtN(Bc)}) + √((${fmtN(Bc)})² − 4(${fmtN(A)})(${fmtN(C)}))`, `2(${fmtN(A)})`)}</div>`;
+    h += `<div class="ln">${sym} = ${ansSI} <span class="note">(take the positive root)</span></div>`;
+    return h;
+  }
+  const ty = [...types][0];
+  const withU = side => side.filter(t => hasU(t, U)), noU = side => side.filter(t => !hasU(t, U));
+  const KL = noU(eqE.L), KR = noU(eqE.R), CL = withU(eqE.L).map(t => coefTerm(t, U)), CR = withU(eqE.R).map(t => coefTerm(t, U));
+  // orientation: numerator = KL − KR, denominator = CR − CL; flip if numerator would start negative
+  let nPos = KL, nNeg = KR, dPos = CR, dNeg = CL;
+  if (!KL.length) { nPos = KR; nNeg = KL; dPos = CL; dNeg = CR; }
+  const symU = V[U].sym; const w = ty === 'u2' ? symU + '²' : ty === 'sin' ? 'sin' + symU : symU;
+  const fsym = t => termSym(t, sv), fsub = t => termSub(t, U, sv);
+  const single = (a) => a.length === 1 && a[0].fs.length + (a[0].cs ? 1 : 0) <= 1;
+  let symExpr, subExpr;
+  const dSym = joinSigned(dPos, dNeg, fsym), dSub = joinSigned(dPos, dNeg, fsub);
+  const nSym = joinSigned(nPos, nNeg, fsym), nSub = joinSigned(nPos, nNeg, fsub);
+  const isOne = dPos.length === 1 && !dNeg.length && dPos[0].fs.length === 0 && dPos[0].coef === 1;
+  symExpr = isOne ? nSym : frac(nSym, dSym);
+  subExpr = isOne ? nSub : frac(nSub, dSub);
+  const wv = ty === 'u2' ? ans * ans : ty === 'sin' ? Math.sin(ans * D2R) : ans;
+  if (ty === 'u2') {
+    h += `<div class="ln">${symU} = ${sqrtH(symExpr)}</div>`;
+    h += `<div class="ln">&nbsp;&nbsp;&nbsp;= ${sqrtH(subExpr)}</div>`;
+  } else if (ty === 'sin') {
+    h += `<div class="ln">sin${symU} = ${symExpr}</div>`;
+    h += `<div class="ln">sin${symU} = ${subExpr} = ${fmtN(wv)}</div>`;
+    h += `<div class="ln">${symU} = sin<sup>−1</sup>(${fmtN(wv)})</div>`;
+  } else {
+    h += `<div class="ln">${symU} = ${symExpr}</div>`;
+    h += `<div class="ln">&nbsp;&nbsp;&nbsp;= ${subExpr}</div>`;
+  }
+  h += `<div class="ln">&nbsp;&nbsp;&nbsp;= ${ansSI}</div>`;
+  return h;
+}
+function termSubSide(side, U, sv) { return side.length ? side.map(t => termSub(t, U, sv)).join(' + ') : '0'; }
+function solutionHTML() {
+  let h = `<div class="sol"><div class="ln note"><b>Start:</b> ${S.startDesc}.<br><b>End:</b> ${S.endDesc}.</div>`;
+  if (S.stages.length > 1) h += `<div class="ln note">The block goes out and comes back, and friction acts on every pass. Solve it in ${S.stages.length} parts, one for each trip, using each answer to start the next part.</div>`;
+  S.stages.forEach((st, i) => {
+    if (S.stages.length > 1) h += `<h4>Part ${i + 1}: ${st.title}</h4>`;
+    h += renderStage(st);
+  });
+  const uv = S.vars[S.U];
+  const lim = S.limiting.map(k => S.vars[k].disp).join(', ');
+  h += `<div class="ln" style="margin-top:8px">${uv.sym} = <span class="circ">${S.ansStr}</span></div>`;
+  h += `<div class="ln note">Rounded to ${S.req} significant digits, the fewest in the data used (${lim}).</div></div>`;
+  return h;
+}
+function hintsFor() {
+  const st = S.stages[0];
+  const all = S.stages.flatMap(s => s.eq.L.concat(s.eq.R));
+  const fr = []; const seen = new Set();
+  for (const t of all) if (t.kind === 'f') {
+    const id = t.mat + (t.hill ? 'h' : ''); if (seen.has(id)) continue; seen.add(id);
+    const dist = t.fs[t.fs.length - 2]; const dsym = fSym(dist);
+    fr.push(t.hill ? `the ${MATS[t.mat].name} hill: F<sub>N</sub> = mg cosθ, so W<sub>f</sub> = μmg cosθ ${dsym} cos180` : `the ${MATS[t.mat].name}: F<sub>N</sub> = mg, distance ${dsym}`);
+  }
+  const iceNote = S.flats.some(f => f.mat === 'ice') || (S.hill && S.hill.mat === 'ice') ? ' Ice is frictionless, so it adds no W<sub>f</sub>.' : '';
+  const h1 = `<b>Hint 1:</b> Start: ${S.startDesc}. End: ${S.endDesc}. Which energies (E<sub>e</sub>, E<sub>k</sub>, E<sub>g</sub>) does the block have at each point?` + (S.stages.length > 1 ? ` Do it in ${S.stages.length} parts: ${S.stages.map(x => x.title).join(', then ')}.` : '');
+  let h2 = fr.length ? `<b>Hint 2:</b> Friction does work on ${fr.join('; and on ')}.${iceNote}` : `<b>Hint 2:</b> There is no friction anywhere, so W<sub>f</sub> = 0. Every joule of the starting energy ends up in the final energy.`;
+  if (S.flats[0].under) h2 += ` Careful: the block is on the ${MATS[S.A].name} while the spring is ${S.dir === 'rev' ? 'being compressed' : 'pushing it'}, so it slides (${S.vars.L_A.sym} + Δx) on that surface.`;
+  if (S.hill && S.vars.dh && (S.stages[0].eq.L.concat(S.stages[0].eq.R).some(t => t.kind === 'g'))) h2 += ' For E<sub>g</sub>, use Δh = Δd<sub>hill</sub> sinθ.';
+  const h3 = `<b>Hint 3:</b> ` + S.stages.map((s, i) => (S.stages.length > 1 ? `Part ${i + 1}: ` : '') + `<span class="sol">${line1(s.eq)}</span> becomes <span class="sol">${lineFk(s.eq)}</span>`).join('<br>') + '. Rearrange for the unknown before you substitute.';
+  return [h1, h2, h3];
+}
+
+/* ---------- UI state ---------- */
+let S = null;
+const state = { sim: null, running: false, revealed: false, hints: 0, speed: 0.25, E0: 1, tries: 0 };
+function resetSim() {
+  state.sim = simInit(S); state.running = false; $('runBtn').textContent = '▶ Run';
+  const E = energies(S, state.sim); state.E0 = E.e + E.k + E.g;
+  $('simMsg').textContent = '';
+  draw();
+}
+function startProblem(level) {
+  S = newScenario(level);
+  state.revealed = false; state.hints = 0; state.tries = 0;
+  $('lvlBadge').textContent = 'Level ' + level;
+  $('probText').innerHTML = S.text();
+  $('question').innerHTML = S.q();
+  const g = S.vars.g;
+  $('gChip').innerHTML = S.U === 'g' ? 'Unknown planet: <b>g = ?</b>' : `${S.planet === 'Planet X' ? 'Planet X' : S.planet.replace('the ', 'The ')}: <b>g = ${g.disp}</b>`;
+  $('ans').value = ''; $('unitSel').value = ''; $('feedback').textContent = ''; $('feedback').className = 'fb';
+  $('helpBox').innerHTML = ''; $('helpCard').classList.add('hidden'); $('hintBtn').textContent = 'Give me a hint'; $('hintBtn').disabled = false;
+  computeView(); resetSim();
+  $('chooser').classList.add('hidden');
+  window.__S = S;
+}
+function reveal() { state.revealed = true; draw(); }
+function check() {
+  const fb = $('feedback');
+  const set = (cls, html) => { fb.className = 'fb ' + cls; fb.innerHTML = html; };
+  const p = parseNum($('ans').value);
+  if (!p) return set('bad', 'Type a number first, for example 14, 0.445 or 1.3e3.');
+  const unit = $('unitSel').value;
+  if (!unit) return set('warn', 'Choose a unit from the list before you check (pick "no unit" if it has none).');
+  const uv = S.vars[S.U]; const need = KIND[uv.kind].dim; const u = UNIT[unit];
+  state.tries++;
+  if (u.dim !== need) return set('bad', `✗ That unit doesn't fit. Think about what kind of quantity ${uv.name.replace(/^the /, 'the ')} is.`);
+  const si = p.value * u.f;
+  const e = Math.floor(Math.log10(Math.abs(p.value) || 1));
+  const ulpRel = 0.5 * Math.pow(10, e - (p.max - 1)) * u.f / Math.abs(S.ans);
+  const tol = Math.min(0.08, Math.max(0.02, ulpRel + 0.006));
+  const rel = Math.abs(si - S.ans) / Math.abs(S.ans);
+  if (rel > tol) {
+    let msg = '✗ Not quite. Check your equation and your arithmetic.';
+    if (Math.abs(si / S.ans - 100) < 3 || Math.abs(si / S.ans - 0.01) < 0.0003) msg = '✗ Close, but check the unit: are you off by a factor of 100?';
+    else if (Math.abs(si / S.ans - 1000) < 30 || Math.abs(si / S.ans - 0.001) < 0.00003) msg = '✗ Close, but check the unit: are you off by a factor of 1000?';
+    if (state.tries >= 2 && state.hints < 3) msg += ' A hint might help.';
+    return set('bad', msg);
+  }
+  const lo = Math.max(1, S.req - 1), hi = S.req + 1;
+  const sfOK = p.max >= lo && p.min <= hi;
+  if (!sfOK) {
+    const yours = p.min === p.max ? p.min : `${p.min} to ${p.max}`;
+    return set('warn', `Your value is right, but check your significant digits. Your answer has ${yours}; the data supports ${S.req}.`);
+  }
+  let msg = `✓ Correct! ${uv.sym} = ${S.ansStr}.`;
+  if (p.min > S.req || p.max < S.req) msg += ` (Best written with ${S.req} significant digits.)`;
+  set('ok', msg + ' Press ▶ Run to watch it happen.');
+  reveal();
+}
+$('checkBtn').onclick = check;
+$('ans').addEventListener('keydown', e => { if (e.key === 'Enter') check(); });
+$('hintBtn').onclick = () => {
+  const hs = hintsFor();
+  if (state.hints < 3) state.hints++;
+  $('helpBox').innerHTML = hs.slice(0, state.hints).map(x => `<div class="hint">${x}</div>`).join('');
+  $('helpCard').classList.remove('hidden');
+  $('hintBtn').textContent = state.hints < 3 ? 'Another hint' : 'No more hints';
+  $('hintBtn').disabled = state.hints >= 3;
+};
+$('solBtn').onclick = () => {
+  const hs = hintsFor();
+  $('helpBox').innerHTML = hs.slice(0, state.hints).map(x => `<div class="hint">${x}</div>`).join('') + solutionHTML();
+  $('helpCard').classList.remove('hidden');
+  $('helpCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  reveal();
+};
+$('newBtn').onclick = () => { state.running = false; $('chooser').classList.remove('hidden'); };
+document.querySelectorAll('.lvl').forEach(b => b.onclick = () => startProblem(+b.dataset.l));
+$('unitSel').innerHTML = UNITS.map(u => `<option value="${u.id}">${u.label}</option>`).join('');
+$('speedSel').onchange = e => state.speed = +e.target.value;
+$('resetBtn').onclick = resetSim;
+$('runBtn').onclick = () => {
+  if (state.sim.done) resetSim();
+  state.running = !state.running; $('runBtn').textContent = state.running ? '❚❚ Pause' : '▶ Run';
+  last = performance.now();
+};
+let last = performance.now();
+function loop(now) {
+  const dtF = Math.min(0.05, (now - last) / 1000); last = now;
+  if (S && state.running) {
+    const simT = dtF * state.speed; const n = Math.max(1, Math.ceil(simT / (1 / 3000)));
+    for (let i = 0; i < n && !state.sim.done; i++) simStep(S, state.sim, simT / n);
+    if (state.sim.done) {
+      state.running = false; $('runBtn').textContent = '▶ Run again';
+      $('simMsg').textContent = 'The block has stopped.';
+    }
+    draw();
+  }
+  requestAnimationFrame(loop);
+}
+$('fsBtn').onclick = () => {
+  const d = document, el = d.documentElement;
+  const isFs = d.fullscreenElement || d.webkitFullscreenElement;
+  try {
+    if (isFs) (d.exitFullscreen || d.webkitExitFullscreen).call(d);
+    else { const r = (el.requestFullscreen || el.webkitRequestFullscreen).call(el); if (r && r.catch) r.catch(() => { $('fsBtn').textContent = 'Full screen not available'; }); }
+  } catch (e) { $('fsBtn').textContent = 'Full screen not available'; }
+};
+const fsChange = () => { $('fsBtn').textContent = (document.fullscreenElement || document.webkitFullscreenElement) ? '✕ Exit full screen' : '⛶ Full screen'; setTimeout(resize, 50); };
+document.addEventListener('fullscreenchange', fsChange);
+document.addEventListener('webkitfullscreenchange', fsChange);
+window.addEventListener('resize', resize);
+resize();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

@@ -2,7 +2,7 @@
 // 1. Put the .html file in the right course/unit folder.
 // 2. Add one line to that unit's "sims" list below: { title, file, blurb }.
 // Bump this number whenever a simulation file changes, so browsers load the new copy.
-window.SIMS_VERSION = "202611191430";
+window.SIMS_VERSION = "202611191705";
 
 window.COURSES = {
   sph4u1: {
@@ -14,7 +14,8 @@ window.COURSES = {
       { id: "energy-momentum", name: "C. Energy and Momentum", sims: [
         { title: "Spring Simple Harmonic Motion", file: "spring-shm.html", blurb: "Horizontal and vertical springs plus the circular-motion link, with vectors, energy bars, and graphs." },
         { title: "Impulse", file: "impulse.html", blurb: "Push an ocean liner sideways to steer it past an iceberg, and drop eggs on different surfaces to see how stopping time changes the force." },
-        { title: "Cart Collision Lab", file: "cart-collision-lab.html", blurb: "Set the masses, velocities, and collision type (magnets, bumper, or velcro) for two dynamics carts and work through six guided trials on momentum and kinetic energy." }
+        { title: "Cart Collision Lab", file: "cart-collision-lab.html", blurb: "Set the masses, velocities, and collision type (magnets, bumper, or velcro) for two dynamics carts and work through six guided trials on momentum and kinetic energy." },
+        { title: "Spring Energy Challenge", file: "spring-energy-challenge.html", blurb: "Random spring, friction and hill problems at four levels. Solve for the unknown with correct sig digs and units, with hints and worked solutions." }
       ]},
       { id: "fields", name: "D. Gravitational, Electric, and Magnetic Fields", sims: [] },
       { id: "light", name: "E. The Wave Nature of Light", sims: [] },
