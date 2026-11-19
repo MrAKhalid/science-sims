@@ -12,114 +12,130 @@
   --warn:#8a5a00; --warnbg:#fff3d6;
 }
 *{box-sizing:border-box}
-body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.4}
-header{background:#14325f;color:#fff;padding:10px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
-header h1{font-size:18px;margin:0;font-weight:700}
-header .eq{font-size:17px;font-weight:600;background:#24477f;border-radius:6px;padding:5px 12px}
+html,body{background:var(--bg)}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:var(--ink);font-size:14px;line-height:1.35}
+header{background:#14325f;color:#fff;padding:7px 14px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px}
+header h1{font-size:17px;margin:0;font-weight:700}
+header .eq{font-size:16px;font-weight:600;background:#24477f;border-radius:6px;padding:3px 10px}
+header .goal{font-size:14px;opacity:.9}
 header .mode{margin-left:auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
-header .mode button{background:#24477f;color:#fff;border:0;border-radius:6px;padding:7px 11px;font-size:14px;cursor:pointer;font-weight:600}
+header .mode button{background:#24477f;color:#fff;border:0;border-radius:6px;padding:6px 10px;font-size:13px;cursor:pointer;font-weight:600}
 header .mode button.active{background:#fff;color:#14325f}
-main{max-width:1180px;margin:0 auto;padding:14px 16px 40px}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:14px}
-h2{font-size:17px;margin:0 0 8px}
-h3{font-size:15px;margin:0 0 6px}
-.intro{color:var(--muted);margin:0 0 10px}
-.top{display:grid;grid-template-columns:minmax(280px,400px) 1fr;gap:16px;align-items:start}
-@media (max-width:820px){ .top{grid-template-columns:1fr} }
-.row{display:flex;gap:10px;align-items:end;flex-wrap:wrap}
-.field{display:flex;flex-direction:column;gap:3px;flex:1 1 120px}
-.field span{font-size:13px;color:var(--muted);font-weight:600}
-select,input[type=text]{font-size:15px;padding:7px;border:1px solid #aab4c3;border-radius:6px;background:#fff;color:var(--ink);width:100%}
-input[type=text]{font-family:inherit}
-.btn{background:var(--accent);color:#fff;border:0;border-radius:6px;padding:9px 16px;font-size:15px;font-weight:600;cursor:pointer}
+header .mode button.fs{display:flex;align-items:center;gap:6px}
+header .mode button.fs svg{width:14px;height:14px}
+main{padding:10px 12px 12px;display:grid;gap:10px;
+  grid-template-columns:minmax(250px,24vw) minmax(0,1fr) minmax(270px,24vw);
+  grid-template-rows:minmax(430px,1fr) auto;min-height:calc(100vh - 48px)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-width:0;min-height:0}
+h2{font-size:15px;margin:0 0 6px}
+.bench,.graphcard,.datacard{display:flex;flex-direction:column}
+.solvecard{grid-column:1 / -1}
+@media (max-width:900px), (orientation:portrait){
+  main{grid-template-columns:1fr;grid-template-rows:none;min-height:0}
+  .gwrap{height:320px;flex:none}
+  .bench svg{height:240px;flex:none}
+}
+.row{display:flex;gap:8px;align-items:end;flex-wrap:wrap}
+.field{display:flex;flex-direction:column;gap:2px;flex:1 1 100px;min-width:0}
+.field span{font-size:12px;color:var(--muted);font-weight:600}
+select,input[type=text]{font-size:14px;padding:5px 6px;border:1px solid #aab4c3;border-radius:6px;background:#fff;color:var(--ink);width:100%;font-family:inherit}
+.btn{background:var(--accent);color:#fff;border:0;border-radius:6px;padding:7px 14px;font-size:14px;font-weight:600;cursor:pointer}
 .btn:disabled{opacity:.45;cursor:default}
 .btn.ghost{background:var(--accent2);color:var(--accent)}
-.btn.small{padding:6px 10px;font-size:13px}
-.msg{padding:8px 12px;border-radius:6px;margin-top:10px;font-size:14px}
+.btn.small{padding:5px 9px;font-size:13px}
+.btn.big{width:100%;font-size:16px;padding:9px}
+.msg{padding:6px 10px;border-radius:6px;margin-top:6px;font-size:13px}
 .msg.good{background:var(--goodbg);color:var(--good)} .msg.bad{background:var(--badbg);color:var(--bad)}
 .msg.info{background:var(--accent2);color:#1a3d78} .msg.warn{background:var(--warnbg);color:var(--warn)}
-.rule{border-left:4px solid var(--accent);background:#f5f8fd;padding:8px 12px;border-radius:0 6px 6px 0;font-size:14px;margin-bottom:12px}
-table{border-collapse:collapse;width:100%;font-size:14px;margin-top:12px}
-th,td{border-bottom:1px solid var(--line);padding:6px 6px;text-align:left}
-th{background:#f3f5f9;font-size:13px}
+.rule{border-left:4px solid var(--accent);background:#f5f8fd;padding:5px 9px;border-radius:0 6px 6px 0;font-size:13px;margin-bottom:6px}
+.bench svg{width:100%;flex:1 1 auto;min-height:180px;display:block}
+.foot{font-size:11px;color:var(--muted);text-align:center;margin:2px 0 6px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:4px 5px;text-align:left}
+th{background:#f3f5f9;font-size:12px;position:sticky;top:0}
 td.num{font-variant-numeric:tabular-nums}
 tr.sel td{background:#eef4ff}
 tbody tr{cursor:pointer}
-.dot{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:5px;vertical-align:-1px}
-.tag{display:inline-block;font-size:12px;border-radius:10px;padding:1px 7px;font-weight:600}
+.tablewrap{flex:1 1 auto;overflow:auto;min-height:90px}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+.tag{display:inline-block;font-size:11px;border-radius:10px;padding:0 6px;font-weight:600}
 .tag.lone{background:var(--warnbg);color:var(--warn)}
 .tag.rep{background:#eceff3;color:var(--muted)}
-.graphwrap{position:relative}
-canvas#g{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:8px;background:#fff}
-.slider{display:flex;gap:10px;align-items:center;margin-top:8px;flex-wrap:wrap;font-size:14px}
-.slider input{flex:1 1 180px}
-.readout{font-size:14px;margin-top:6px;min-height:40px}
-.solve{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.gwrap{position:relative;flex:1 1 auto;min-height:220px}
+.gwrap canvas{position:absolute;inset:0;width:100%;height:100%;display:block;border:1px solid var(--line);border-radius:8px;background:#fff}
+.slider{display:flex;gap:10px;align-items:center;margin-top:6px;flex-wrap:wrap;font-size:13px}
+.slider input{flex:1 1 160px}
+.readout{font-size:13px;margin-top:4px;min-height:36px}
+.solve{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 @media (max-width:900px){ .solve{grid-template-columns:1fr} }
-.q{padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:#fafbfd}
+.q{padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fafbfd;min-width:0}
+.q h3{font-size:14px;margin:0 0 4px}
 .q.ok{border-color:#9fd4b4;background:var(--goodbg)}
 .q.locked{opacity:.55}
-.q .row{margin-top:6px}
-.work{font-size:15px;margin:8px 0;padding:8px;background:#fff;border:1px dashed var(--line);border-radius:6px;line-height:1.7}
-.final{font-size:20px;font-weight:700;text-align:center;padding:12px;border:2px solid var(--good);border-radius:8px;background:var(--goodbg);color:#135c33;margin-top:12px}
+.work{font-size:14px;margin:6px 0;padding:5px 8px;background:#fff;border:1px dashed var(--line);border-radius:6px;line-height:1.6}
+.final{font-size:17px;font-weight:700;text-align:center;padding:6px;border:2px solid var(--good);border-radius:8px;background:#fff;color:#135c33;margin-top:6px}
 sup,sub{font-size:72%}
-.muted{color:var(--muted);font-size:13px}
+.muted{color:var(--muted);font-size:12px}
 </style>
 </head>
 <body>
 <header>
   <h1>Method of Initial Rates</h1>
   <div class="eq">OCl<sup>−</sup><sub>(aq)</sub> + I<sup>−</sup><sub>(aq)</sub> → OI<sup>−</sup><sub>(aq)</sub> + Cl<sup>−</sup><sub>(aq)</sub></div>
+  <div class="goal">Find: rate = k[OCl<sup>−</sup>]<sup>x</sup>[I<sup>−</sup>]<sup>y</sup></div>
   <div class="mode">
     <button id="mWorksheet" class="active">Worksheet reaction</button>
     <button id="mMystery">Mystery reaction</button>
+    <button id="fsBtn" class="fs" title="Full screen"></button>
   </div>
 </header>
 <main>
-  <div class="card">
-    <h2>Goal: find the rate law, rate = k[OCl<sup>−</sup>]<sup>x</sup>[I<sup>−</sup>]<sup>y</sup></h2>
-    <p class="intro" id="modeNote"></p>
-    <div class="top">
-      <div>
-        <h3>1. Run a trial</h3>
-        <div class="rule"><b>Fair test:</b> to see what one reactant does, change <b>only that one</b> concentration and keep the other the same as an earlier trial.</div>
-        <div class="row">
-          <label class="field"><span>[OCl<sup>−</sup>]<sub>0</sub> (mol/L)</span><select id="cA"></select></label>
-          <label class="field"><span>[I<sup>−</sup>]<sub>0</sub> (mol/L)</span><select id="cB"></select></label>
-          <button class="btn" id="run">Run trial</button>
-        </div>
-        <div id="runMsg"></div>
-        <table>
-          <thead><tr><th>Trial</th><th>[OCl<sup>−</sup>] (mol/L)</th><th>[I<sup>−</sup>] (mol/L)</th><th>Initial rate (mol/(L·s))</th></tr></thead>
-          <tbody id="tbody"><tr><td colspan="4" class="muted">No trials yet.</td></tr></tbody>
-        </table>
-        <div class="row" style="margin-top:10px">
-          <button class="btn ghost small" id="clear">Clear trials</button>
-          <button class="btn ghost small" id="loadWs">Load the worksheet's 3 trials</button>
-        </div>
-        <p class="muted" style="margin-top:8px">Click a row to show that trial's tangent on the graph.</p>
-      </div>
-      <div>
-        <h3>2. Measure the initial rate</h3>
-        <div class="graphwrap"><canvas id="g" width="760" height="440"></canvas></div>
-        <div class="slider">
-          <span>Tangent at <b>t = <span id="tVal">0.0</span> s</b></span>
-          <input type="range" id="tSlide" min="0" max="10" step="0.1" value="0">
-        </div>
-        <div class="readout" id="readout"></div>
-      </div>
+  <section class="card bench">
+    <h2>1. Set up a trial</h2>
+    <div class="rule"><b>Fair test:</b> change <b>only one</b> concentration from an earlier trial.</div>
+    <div class="row">
+      <label class="field"><span>[OCl<sup>−</sup>] (mol/L)</span><select id="cA"></select></label>
+      <label class="field"><span>[I<sup>−</sup>] (mol/L)</span><select id="cB"></select></label>
     </div>
-  </div>
+    <svg id="scene" viewBox="0 0 300 250" preserveAspectRatio="xMidYMid meet" aria-label="Beakers"></svg>
+    <div class="foot">Concentrations are the values in the mixture at t = 0.</div>
+    <button class="btn big" id="run" disabled>Start: mix the solutions</button>
+  </section>
 
-  <div class="card">
-    <h2>3. Solve for the rate law</h2>
-    <p class="intro">Use pairs of trials from your table. Each pair must have only one concentration changed.</p>
+  <section class="card graphcard">
+    <h2>2. Measure the initial rate</h2>
+    <div class="gwrap"><canvas id="g"></canvas></div>
+    <div class="slider">
+      <span>Tangent at <b>t = <span id="tVal">0.0</span> s</b></span>
+      <input type="range" id="tSlide" min="0" max="10" step="0.1" value="0">
+    </div>
+    <div class="readout" id="readout"></div>
+  </section>
+
+  <section class="card datacard">
+    <h2>Data table</h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Trial</th><th>[OCl<sup>−</sup>]<br>(mol/L)</th><th>[I<sup>−</sup>]<br>(mol/L)</th><th>Initial rate<br>(mol/(L·s))</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div id="runMsg"></div>
+    <div class="row" style="margin-top:6px">
+      <button class="btn ghost small" id="clear">Clear trials</button>
+      <button class="btn ghost small" id="loadWs">Load worksheet trials</button>
+    </div>
+    <p class="muted" style="margin:4px 0 0">Click a row to show its tangent on the graph.</p>
+  </section>
+
+  <section class="card solvecard">
+    <h2>3. Solve for the rate law <span class="muted" style="font-weight:400">: use pairs of trials where only one concentration changes</span></h2>
     <div class="solve">
       <div class="q" id="qA">
         <h3>Order of OCl<sup>−</sup> (x)</h3>
         <div class="row">
           <label class="field"><span>Trial</span><select id="aT1"></select></label>
-          <label class="field"><span>compared with trial</span><select id="aT2"></select></label>
+          <label class="field"><span>compared with</span><select id="aT2"></select></label>
           <button class="btn small" id="aPair">Use pair</button>
         </div>
         <div id="aPairMsg"></div>
@@ -136,7 +152,7 @@ sup,sub{font-size:72%}
         <h3>Order of I<sup>−</sup> (y)</h3>
         <div class="row">
           <label class="field"><span>Trial</span><select id="bT1"></select></label>
-          <label class="field"><span>compared with trial</span><select id="bT2"></select></label>
+          <label class="field"><span>compared with</span><select id="bT2"></select></label>
           <button class="btn small" id="bPair">Use pair</button>
         </div>
         <div id="bPairMsg"></div>
@@ -170,11 +186,11 @@ sup,sub{font-size:72%}
             <button class="btn small" id="kCheck">Check</button>
           </div>
           <div id="kMsg"></div>
+          <div id="final"></div>
         </div>
       </div>
     </div>
-    <div id="final"></div>
-  </div>
+  </section>
 </main>
 <script>
 (function(){
@@ -185,33 +201,33 @@ const TMAX = 10;            // s shown on the graph
 const MAXTRIALS = 8;
 const WS = {x:2, y:1, k:57500};
 const WS_TRIALS = [[0.0040,0.0020],[0.0020,0.0040],[0.0020,0.0020]];
+const COL_A = [150,200,90], COL_B = [110,160,230];   // OCl- (green), I- (blue) tints
 
 let mode = "worksheet";
 let R = {...WS};            // current reaction {x,y,k}
-let trials = [];            // {a,b,rate,pts,color}
+let trials = [];            // {a,b,rate,pts,color,shown}
 let sel = -1;
 let anim = null;
 let solved = {x:false, y:false, k:false};
+let mixed = null;           // trial shown in the mixing beaker
 
 // ---------- number formatting ----------
 function fmt(v, sf=3){
   if (v === 0) return "0";
   const s = Number(v.toPrecision(sf));
   if (Math.abs(s) >= 1e5 || Math.abs(s) < 1e-6) return s.toExponential(sf-1);
-  // plain decimal with sf significant figures
   const mag = Math.floor(Math.log10(Math.abs(s)));
-  const dec = Math.max(0, sf - 1 - mag);
-  return s.toFixed(dec);
+  return s.toFixed(Math.max(0, sf - 1 - mag));
 }
 function fmtC(c){ return c.toFixed(4); }
-function fmtBig(v){ // k values like 57500
+function fmtBig(v){
   const s = Number(v.toPrecision(3));
   if (s >= 1000) return s.toLocaleString("en-CA").replace(/,/g," ");
   return fmt(s,3);
 }
 
 // ---------- kinetics ----------
-function rateAt(a,b,xi){ // xi = [OI-] formed
+function rateAt(a,b,xi){
   const A = Math.max(a-xi,0), B = Math.max(b-xi,0);
   if (A<=0 || B<=0) return 0;
   return R.k * Math.pow(A,R.x) * Math.pow(B,R.y);
@@ -220,52 +236,134 @@ function simulate(a,b){
   const pts=[]; let xi=0; const dt=0.0005; const lim=Math.min(a,b);
   for (let i=0, t=0; t<=TMAX+1e-9; i++){
     if (i%20===0) pts.push([t,xi]);
-    let r = rateAt(a,b,xi);
-    xi = Math.min(lim, xi + r*dt);
+    xi = Math.min(lim, xi + rateAt(a,b,xi)*dt);
     t = (i+1)*dt;
   }
   return pts;
 }
-function xAtT(tr,t){
-  const i = Math.min(tr.pts.length-1, Math.round(t/0.01));
-  return tr.pts[i][1];
-}
+function xAtT(tr,t){ return tr.pts[Math.min(tr.pts.length-1, Math.round(t/0.01))][1]; }
 function initialRate(a,b){ return Number((R.k*Math.pow(a,R.x)*Math.pow(b,R.y)).toPrecision(3)); }
+
+// ---------- beaker scene ----------
+const NS="http://www.w3.org/2000/svg";
+const scene=$("scene");
+function el(tag, attrs, parent){ const e=document.createElementNS(NS,tag); for (const k in attrs) e.setAttribute(k,attrs[k]); (parent||scene).appendChild(e); return e; }
+function tint(rgb, c){ const s = 0.25 + 0.75*c/0.008; return `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${s.toFixed(2)})`; }
+// small beaker drawn around (0,0): body x -32..32, y -38..38
+function makeSource(id, rgb, name){
+  const g = el("g",{id});
+  const liq = el("rect",{x:-30,y:-14,width:60,height:50,rx:3,fill:"#ccc"},g);
+  el("path",{d:"M-34,-40 L-32,-38 L-32,34 Q-32,38 -28,38 L28,38 Q32,38 32,34 L32,-38 L34,-40",fill:"none",stroke:"#5b6575","stroke-width":2.2,"stroke-linejoin":"round"},g);
+  for (let i=0;i<3;i++) el("line",{x1:20,x2:30,y1:-4+i*12,y2:-4+i*12,stroke:"#8a94a3","stroke-width":1},g);
+  el("rect",{x:-24,y:2,width:40,height:24,rx:4,fill:"#fff",stroke:"#aab4c3","stroke-width":1},g);
+  const t1 = el("text",{x:-4,y:20,"text-anchor":"middle","font-size":15,"font-weight":700,fill:"#1d2430"},g); t1.innerHTML=name;
+  const t2 = el("text",{"text-anchor":"middle","font-size":13,"font-weight":700,fill:"#1d2430"});
+  return {g, liq, t2, rgb};
+}
+function buildScene(){
+  scene.innerHTML="";
+  // mixing beaker (bottom centre): body x 95..205, y 140..240
+  const mix = el("g",{id:"mix"});
+  el("ellipse",{cx:150,cy:243,rx:66,ry:5,fill:"rgba(0,0,0,.08)"},mix);
+  const mixLiq = el("rect",{x:98,y:238,width:104,height:0,fill:"#ccc"},mix);
+  el("path",{d:"M92,136 L95,139 L95,234 Q95,240 101,240 L199,240 Q205,240 205,234 L205,139 L208,136",fill:"none",stroke:"#5b6575","stroke-width":2.4,"stroke-linejoin":"round"},mix);
+  for (let i=0;i<4;i++) el("line",{x1:190,x2:203,y1:160+i*18,y2:160+i*18,stroke:"#8a94a3","stroke-width":1},mix);
+  const mixLbl = el("text",{x:150,y:158,"text-anchor":"middle","font-size":11,"font-weight":700,fill:"#5b6575"},mix);
+  const timer = el("text",{x:150,y:200,"text-anchor":"middle","font-size":15,"font-weight":700,fill:"#1d2430"},mix);
+  const streamA = el("path",{d:"",stroke:"#999","stroke-width":4,"stroke-linecap":"round",fill:"none",opacity:0});
+  const streamB = el("path",{d:"",stroke:"#999","stroke-width":4,"stroke-linecap":"round",fill:"none",opacity:0});
+  const A = makeSource("srcA", COL_A, "OCl<tspan font-size='10' dy='-6'>−</tspan>");
+  const B = makeSource("srcB", COL_B, "I<tspan font-size='10' dy='-6'>−</tspan>");
+  const phA = el("g",{}), phB = el("g",{});
+  [[phA,62,"[OCl⁻]"],[phB,238,"[I⁻]"]].forEach(([g,x,n])=>{
+    el("rect",{x:x-32,y:14,width:64,height:76,rx:6,fill:"none",stroke:"#c3cad5","stroke-width":1.5,"stroke-dasharray":"5 4"},g);
+    const t=el("text",{x,y:50,"text-anchor":"middle","font-size":11,fill:"#8a94a3"},g); t.textContent="choose";
+    const t2=el("text",{x,y:64,"text-anchor":"middle","font-size":11,fill:"#8a94a3"},g); t2.textContent=n;
+  });
+  return {mixLiq, mixLbl, timer, streamA, streamB, A, B, phA, phB};
+}
+const S = buildScene();
+function placeSource(src, cx, cy, ang, level, conc, show){
+  src.g.setAttribute("transform",`translate(${cx},${cy}) rotate(${ang})`);
+  src.g.style.opacity = show;
+  const h = 50*level;
+  src.liq.setAttribute("y", 36-h); src.liq.setAttribute("height", h);
+  if (conc){ src.liq.setAttribute("fill", tint(src.rgb, conc)); src.t2.textContent = fmtC(conc)+" mol/L"; }
+  src.t2.setAttribute("x", cx); src.t2.setAttribute("y", cy+54);
+  src.t2.style.opacity = (ang===0 && show) ? 1 : 0;
+}
+function mixColour(a,b){
+  const sa = 0.25+0.75*a/0.008, sb = 0.25+0.75*b/0.008, w = sa/(sa+sb);
+  const c = COL_A.map((v,i)=>Math.round(v*w + COL_B[i]*(1-w)));
+  return `rgba(${c[0]},${c[1]},${c[2]},${(0.6*Math.max(sa,sb)).toFixed(2)})`;
+}
+function setMix(level, a, b, label){
+  const h = 90*level;
+  S.mixLiq.setAttribute("y", 238-h); S.mixLiq.setAttribute("height", h);
+  if (a) S.mixLiq.setAttribute("fill", mixColour(a,b));
+  S.mixLbl.textContent = label||"";
+}
+// resting state: source beakers show the current selections, mixing beaker empty or holding last trial
+function sceneIdle(){
+  const a = +$("cA").value || 0, b = +$("cB").value || 0;
+  placeSource(S.A, 62, 52, 0, 1, a, a?1:0); placeSource(S.B, 238, 52, 0, 1, b, b?1:0);
+  S.phA.style.opacity = a?0:1; S.phB.style.opacity = b?0:1;
+  S.streamA.setAttribute("opacity",0); S.streamB.setAttribute("opacity",0);
+  if (mixed){ setMix(0.8, mixed.a, mixed.b, `Trial ${trials.indexOf(mixed)+1}`); S.timer.textContent = `t = ${TMAX.toFixed(1)} s`; }
+  else { setMix(0); S.timer.textContent = ""; }
+  $("run").disabled = !(a && b) || !!anim;
+}
+const ease = p => p<.5 ? 2*p*p : 1-Math.pow(-2*p+2,2)/2;
+const lerp = (a,b,p)=>a+(b-a)*p;
+function pourFrame(p, a, b){ // p 0..1
+  S.phA.style.opacity=0; S.phB.style.opacity=0;
+  let m = Math.min(1,p/0.3), r = Math.min(1,Math.max(0,(p-0.25)/0.2)), d = Math.min(1,Math.max(0,(p-0.4)/0.45)), f = Math.min(1,Math.max(0,(p-0.85)/0.15));
+  m=ease(m); r=ease(r);
+  const ax = lerp(62,92,m), ay = lerp(52,92,m), bx = lerp(238,208,m);
+  placeSource(S.A, ax, ay, 75*r, 1-d, a, 1-f);
+  placeSource(S.B, bx, ay, -75*r, 1-d, b, 1-f);
+  const on = (r>=1 && d<1) ? 1 : 0;
+  const surf = 238 - 90*0.8*d;
+  // lip positions after rotation (local corner ±34,-40)
+  const rad = 75*r*Math.PI/180;
+  const lx = ax + 34*Math.cos(rad) + 40*Math.sin(rad), ly = ay + 34*Math.sin(rad) - 40*Math.cos(rad);
+  const rx = bx - 34*Math.cos(rad) - 40*Math.sin(rad);
+  S.streamA.setAttribute("d",`M${lx},${ly} Q${lx+6},${ly+20} ${lx+4},${surf}`); S.streamA.setAttribute("stroke",tint(COL_A,a)); S.streamA.setAttribute("opacity",on);
+  S.streamB.setAttribute("d",`M${rx},${ly} Q${rx-6},${ly+20} ${rx-4},${surf}`); S.streamB.setAttribute("stroke",tint(COL_B,b)); S.streamB.setAttribute("opacity",on);
+  setMix(0.8*d, a, b, "Mixing…");
+  S.timer.textContent = "";
+}
 
 // ---------- mode ----------
 function newMystery(){
   let x,y;
-  do { x = Math.floor(Math.random()*3); y = Math.floor(Math.random()*3); } while (x===R.x && y===R.y && mode==="mystery");
-  // choose k so rate at 0.0020/0.0020 is ~0.0002–0.0008 mol/(L·s)
+  do { x = Math.floor(Math.random()*3); y = Math.floor(Math.random()*3); } while (x===R.x && y===R.y);
   const target = [2,3,4,5,6,8][Math.floor(Math.random()*6)] * 1e-4;
-  const k = target / (Math.pow(0.002,x)*Math.pow(0.002,y));
-  R = {x, y, k:Number(k.toPrecision(2))};
+  R = {x, y, k:Number((target / (Math.pow(0.002,x)*Math.pow(0.002,y))).toPrecision(2))};
 }
 function setMode(m){
   mode = m;
   $("mWorksheet").classList.toggle("active", m==="worksheet");
   $("mMystery").classList.toggle("active", m==="mystery");
-  if (m==="worksheet"){ R={...WS}; $("loadWs").hidden=false;
-    $("modeNote").innerHTML = "This is the reaction from the warm-up question. Run your own trials, or load the worksheet's three trials, then work out x, y and k.";
-    $("mMystery").textContent = "Mystery reaction";
-  } else { newMystery(); $("loadWs").hidden=true;
-    $("modeNote").innerHTML = "Same reaction, but the orders are hidden and random (0, 1 or 2). Design your own trials. Click <b>New mystery</b> for another one.";
-    $("mMystery").textContent = "New mystery";
-  }
+  if (m==="worksheet"){ R={...WS}; $("loadWs").hidden=false; $("mMystery").textContent = "Mystery reaction"; }
+  else { newMystery(); $("loadWs").hidden=true; $("mMystery").textContent = "New mystery"; }
   resetAll();
+  $("runMsg").innerHTML = m==="worksheet"
+    ? `<div class="msg info">The reaction from the warm-up question. Run your own trials, or load the worksheet's three trials.</div>`
+    : `<div class="msg info">Mystery reaction: the orders are hidden (0, 1 or 2). Design your own trials.</div>`;
 }
 function resetAll(){
   if (anim) cancelAnimationFrame(anim), anim=null;
-  trials=[]; sel=-1; solved={x:false,y:false,k:false};
+  trials=[]; sel=-1; mixed=null; solved={x:false,y:false,k:false};
   $("runMsg").innerHTML=""; $("final").innerHTML="";
   ["a","b"].forEach(p=>{ $(p+"Work").hidden=true; $(p+"PairMsg").innerHTML=""; $(p+"Msg").innerHTML=""; $(p+"X").value=""; $("q"+p.toUpperCase()).classList.remove("ok"); });
   $("kVal").value=""; $("kUnits").value=""; $("kMsg").innerHTML="";
   $("tSlide").value=0;
-  refresh();
+  refresh(); sceneIdle();
 }
 
 // ---------- trials ----------
-function pairInfo(i,j){ // which concentration differs
+function pairInfo(i,j){
   const A=trials[i], B=trials[j];
   const da = Math.abs(A.a-B.a)>1e-9, db = Math.abs(A.b-B.b)>1e-9;
   if (da && db) return "both"; if (!da && !db) return "same";
@@ -284,32 +382,40 @@ function runTrial(a,b, quiet){
   const n = trials.length;
   if (!quiet){
     let html;
-    if (n===1) html = `<div class="msg info">Trial 1 is your starting point. For the next trial, change <b>one</b> concentration only.</div>`;
+    if (n===1) html = `<div class="msg info">Trial 1 is your starting point. Next, change <b>one</b> concentration only.</div>`;
     else {
-      const same = trials.slice(0,-1).findIndex((t)=>Math.abs(t.a-a)<1e-9 && Math.abs(t.b-b)<1e-9);
+      const same = trials.slice(0,-1).findIndex(t=>Math.abs(t.a-a)<1e-9 && Math.abs(t.b-b)<1e-9);
       const ps = partners(n-1);
-      if (same>=0) html = `<div class="msg info">Trial ${n} repeats Trial ${same+1} (same concentrations), so it gives the same initial rate. A repeat can't tell you an order.</div>`;
+      if (same>=0) html = `<div class="msg info">Trial ${n} repeats Trial ${same+1}, so it gives the same initial rate. A repeat can't tell you an order.</div>`;
       else if (ps.length){
         const p = ps[ps.length-1];
-        html = `<div class="msg good">✓ Compared with Trial ${p.j+1}, only ${NAME[p.p]} changed. Any change in rate between these two trials is caused by ${p.p==="A"?"OCl<sup>−</sup>":"I<sup>−</sup>"}.</div>`;
-      } else {
-        html = `<div class="msg bad">⚠ Trial ${n} changes <b>both</b> concentrations compared with every earlier trial. If the rate changes, you can't tell which reactant caused it, so this trial can't be paired with anything yet.</div>`;
-      }
+        html = `<div class="msg good">✓ Compared with Trial ${p.j+1}, only ${NAME[p.p]} changed, so any change in rate is caused by ${p.p==="A"?"OCl<sup>−</sup>":"I<sup>−</sup>"}.</div>`;
+      } else html = `<div class="msg bad">⚠ Trial ${n} changes <b>both</b> concentrations compared with every earlier trial. You can't tell which reactant caused a rate change, so it can't be paired yet.</div>`;
     }
     $("runMsg").innerHTML = html;
     animate(tr);
-  }
+  } else mixed = tr;
   refresh();
 }
 function animate(tr){
   if (anim) cancelAnimationFrame(anim);
   trials.forEach(t=>t.shown=1); tr.shown=0;
-  const t0 = performance.now(), dur = 1600;
+  const t0 = performance.now(), pourDur = 1700, plotDur = 2200;
   $("run").disabled = true;
+  const n = trials.indexOf(tr)+1;
   const step = now => {
-    tr.shown = Math.min(1,(now-t0)/dur);
+    const e = now-t0;
+    if (e < pourDur){ pourFrame(e/pourDur, tr.a, tr.b); tr.shown=0; }
+    else {
+      tr.shown = Math.min(1,(e-pourDur)/plotDur);
+      setMix(0.8, tr.a, tr.b, `Trial ${n}`);
+      placeSource(S.A,0,0,0,0,0,0); placeSource(S.B,0,0,0,0,0,0);
+      S.streamA.setAttribute("opacity",0); S.streamB.setAttribute("opacity",0);
+      S.timer.textContent = `t = ${(tr.shown*TMAX).toFixed(1)} s`;
+    }
     draw();
-    if (tr.shown<1) anim = requestAnimationFrame(step); else { anim=null; $("run").disabled=false; draw(); updateReadout(); }
+    if (tr.shown<1) anim = requestAnimationFrame(step);
+    else { anim=null; mixed=tr; draw(); updateReadout(); setTimeout(()=>{ if(!anim) sceneIdle(); }, 900); }
   };
   anim = requestAnimationFrame(step);
 }
@@ -321,7 +427,7 @@ function refresh(){
   else tb.innerHTML = trials.map((t,i)=>{
     let tag="";
     const same = trials.some((u,j)=>j!==i && pairInfo(i,j)==="same");
-    if (trials.length>1 && !partners(i).length) tag = same ? ` <span class="tag rep">repeat</span>` : ` <span class="tag lone" title="Both concentrations differ from every other trial">no fair partner</span>`;
+    if (trials.length>1 && !partners(i).length) tag = same ? ` <span class="tag rep">repeat</span>` : `<br><span class="tag lone" title="Both concentrations differ from every other trial">no fair partner</span>`;
     return `<tr data-i="${i}" class="${i===sel?"sel":""}"><td><span class="dot" style="background:${t.color}"></span>${i+1}${tag}</td><td class="num">${fmtC(t.a)}</td><td class="num">${fmtC(t.b)}</td><td class="num">${fmt(t.rate)}</td></tr>`;
   }).join("");
   tb.querySelectorAll("tr[data-i]").forEach(r=>r.onclick=()=>{ sel=+r.dataset.i; refresh(); });
@@ -332,47 +438,51 @@ function refresh(){
 
 // ---------- graph ----------
 const cv = $("g"), ctx = cv.getContext("2d");
-const PAD = {l:78, r:16, t:16, b:52};
+let GW=600, GH=360;
+function sizeCanvas(){
+  const r = cv.getBoundingClientRect(), dpr = window.devicePixelRatio||1;
+  GW = Math.max(200, r.width); GH = Math.max(160, r.height);
+  cv.width = Math.round(GW*dpr); cv.height = Math.round(GH*dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  draw();
+}
 function yMax(){
   let m = 0; trials.forEach(t=>m=Math.max(m,Math.min(t.a,t.b)));
   if (!m) m = 0.004;
-  const steps=[0.001,0.002,0.003,0.004,0.005,0.006,0.008,0.010];
-  return steps.find(s=>s>=m*1.05) || 0.01;
+  return [0.001,0.002,0.003,0.004,0.005,0.006,0.008,0.010].find(s=>s>=m*1.05) || 0.01;
 }
 function draw(){
-  const W=cv.width, H=cv.height, pw=W-PAD.l-PAD.r, ph=H-PAD.t-PAD.b, ym=yMax();
+  const PAD = {l:66, r:12, t:12, b:40};
+  const W=GW, H=GH, pw=W-PAD.l-PAD.r, ph=H-PAD.t-PAD.b, ym=yMax();
   const X = t => PAD.l + t/TMAX*pw, Y = c => PAD.t + ph - c/ym*ph;
   ctx.clearRect(0,0,W,H);
-  ctx.font = "14px system-ui, sans-serif"; ctx.fillStyle="#5b6575"; ctx.strokeStyle="#e4e8ef"; ctx.lineWidth=1;
-  for (let t=0;t<=TMAX;t+=1){ ctx.beginPath(); ctx.moveTo(X(t),PAD.t); ctx.lineTo(X(t),PAD.t+ph); ctx.stroke(); ctx.textAlign="center"; ctx.fillText(t,X(t),PAD.t+ph+18); }
-  const ny = 5;
-  for (let i=0;i<=ny;i++){ const c=ym*i/ny; ctx.beginPath(); ctx.moveTo(PAD.l,Y(c)); ctx.lineTo(PAD.l+pw,Y(c)); ctx.stroke(); ctx.textAlign="right"; ctx.fillText(c.toFixed(4),PAD.l-6,Y(c)+5); }
+  ctx.font = "12px system-ui, sans-serif"; ctx.fillStyle="#5b6575"; ctx.strokeStyle="#e4e8ef"; ctx.lineWidth=1;
+  for (let t=0;t<=TMAX;t+=1){ ctx.beginPath(); ctx.moveTo(X(t),PAD.t); ctx.lineTo(X(t),PAD.t+ph); ctx.stroke(); ctx.textAlign="center"; ctx.fillText(t,X(t),PAD.t+ph+15); }
+  for (let i=0;i<=5;i++){ const c=ym*i/5; ctx.beginPath(); ctx.moveTo(PAD.l,Y(c)); ctx.lineTo(PAD.l+pw,Y(c)); ctx.stroke(); ctx.textAlign="right"; ctx.fillText(c.toFixed(4),PAD.l-5,Y(c)+4); }
   ctx.strokeStyle="#1d2430"; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(PAD.l,PAD.t); ctx.lineTo(PAD.l,PAD.t+ph); ctx.lineTo(PAD.l+pw,PAD.t+ph); ctx.stroke();
-  ctx.fillStyle="#1d2430"; ctx.textAlign="center"; ctx.font="600 14px system-ui, sans-serif";
-  ctx.fillText("Time (s)", PAD.l+pw/2, H-10);
-  ctx.save(); ctx.translate(16, PAD.t+ph/2); ctx.rotate(-Math.PI/2); ctx.fillText("[OI⁻] formed (mol/L)",0,0); ctx.restore();
-  if (!trials.length){ ctx.fillStyle="#5b6575"; ctx.font="15px system-ui, sans-serif"; ctx.fillText("Run a trial to see the product concentration over time.", PAD.l+pw/2, PAD.t+ph/2); return; }
+  ctx.fillStyle="#1d2430"; ctx.textAlign="center"; ctx.font="600 13px system-ui, sans-serif";
+  ctx.fillText("Time (s)", PAD.l+pw/2, H-6);
+  ctx.save(); ctx.translate(13, PAD.t+ph/2); ctx.rotate(-Math.PI/2); ctx.fillText("[OI⁻] formed (mol/L)",0,0); ctx.restore();
+  if (!trials.length){ ctx.fillStyle="#5b6575"; ctx.font="14px system-ui, sans-serif"; ctx.fillText("Choose concentrations and press Start.", PAD.l+pw/2, PAD.t+ph/2); return; }
   ctx.save(); ctx.beginPath(); ctx.rect(PAD.l,PAD.t,pw,ph); ctx.clip();
   trials.forEach((t,i)=>{
     const n = Math.max(1, Math.floor(t.pts.length*t.shown));
-    ctx.strokeStyle=t.color; ctx.lineWidth = i===sel?3.2:1.8; ctx.globalAlpha = (sel<0||i===sel)?1:0.45;
+    ctx.strokeStyle=t.color; ctx.lineWidth = i===sel?3:1.7; ctx.globalAlpha = (sel<0||i===sel)?1:0.45;
     ctx.beginPath(); for (let k=0;k<n;k++){ const p=t.pts[k]; k?ctx.lineTo(X(p[0]),Y(p[1])):ctx.moveTo(X(p[0]),Y(p[1])); } ctx.stroke();
   });
   ctx.globalAlpha=1;
-  // tangent on selected trial
   const tr = trials[sel];
   if (tr && tr.shown>=1){
     const t0 = +$("tSlide").value, x0 = xAtT(tr,t0), m = rateAt(tr.a,tr.b,x0);
-    // segment spanning +/- 2.5 s or until it leaves the plot
-    const span = 2.5, ta = Math.max(0,t0-span), tb = t0+span;
+    const ta = Math.max(0,t0-2.5), tb = t0+2.5;
     ctx.setLineDash([8,6]); ctx.strokeStyle="#1d2430"; ctx.lineWidth=2;
     ctx.beginPath(); ctx.moveTo(X(ta),Y(x0+m*(ta-t0))); ctx.lineTo(X(tb),Y(x0+m*(tb-t0))); ctx.stroke(); ctx.setLineDash([]);
-    ctx.fillStyle="#1d2430"; ctx.beginPath(); ctx.arc(X(t0),Y(x0),5,0,7); ctx.fill();
-    // label
-    ctx.font="600 14px system-ui, sans-serif"; ctx.textAlign="left";
+    ctx.fillStyle="#1d2430"; ctx.beginPath(); ctx.arc(X(t0),Y(x0),4.5,0,7); ctx.fill();
+    ctx.font="600 13px system-ui, sans-serif"; ctx.textAlign="left";
     const lbl = t0===0 ? "initial rate = slope of tangent at t = 0" : "slope = instantaneous rate";
-    const lx = Math.min(X(t0)+10, PAD.l+pw-ctx.measureText(lbl).width-6), ly = Math.max(PAD.t+16, Math.min(PAD.t+ph-10, Y(x0)-10));
-    ctx.fillStyle="rgba(255,255,255,.85)"; ctx.fillRect(lx-3,ly-15,ctx.measureText(lbl).width+6,20);
+    const w = ctx.measureText(lbl).width;
+    const lx = Math.min(X(t0)+10, PAD.l+pw-w-6), ly = Math.max(PAD.t+16, Math.min(PAD.t+ph-10, Y(x0)-10));
+    ctx.fillStyle="rgba(255,255,255,.85)"; ctx.fillRect(lx-3,ly-14,w+6,19);
     ctx.fillStyle="#1d2430"; ctx.fillText(lbl, lx, ly);
   }
   ctx.restore();
@@ -382,34 +492,32 @@ function updateReadout(){
   $("tVal").textContent = t0.toFixed(1);
   if (!tr){ $("readout").innerHTML = `<span class="muted">The dashed tangent's slope is the rate at that moment. At t = 0 it is the <b>initial rate</b>.</span>`; return; }
   const x0 = xAtT(tr,t0), r = rateAt(tr.a,tr.b,x0), r0 = tr.rate;
-  if (t0===0){
-    $("readout").innerHTML = `Trial ${sel+1}: <b>initial rate = ${fmt(r0)} mol/(L·s)</b>. At t = 0 the concentrations are exactly the ones in the table. Drag the slider to see what happens later.`;
-  } else {
+  if (t0===0) $("readout").innerHTML = `Trial ${sel+1}: <b>initial rate = ${fmt(r0)} mol/(L·s)</b>. At t = 0 the concentrations are exactly the ones in the table. Drag the slider to see later times.`;
+  else {
     const A = Math.max(tr.a-x0,0), B=Math.max(tr.b-x0,0);
-    $("readout").innerHTML = `Trial ${sel+1} at t = ${t0.toFixed(1)} s: rate = ${fmt(r)} mol/(L·s), only <b>${Math.round(100*r/r0)}%</b> of the initial rate. Reactants have been used up, so [OCl<sup>−</sup>] = ${fmtC(A)} and [I<sup>−</sup>] = ${fmtC(B)} mol/L, not the values in the table. That's why we only use <b>initial</b> rates.`;
+    $("readout").innerHTML = `Trial ${sel+1} at t = ${t0.toFixed(1)} s: rate = ${fmt(r)} mol/(L·s), only <b>${Math.round(100*r/r0)}%</b> of the initial rate. Now [OCl<sup>−</sup>] = ${fmtC(A)} and [I<sup>−</sup>] = ${fmtC(B)} mol/L, not the table values. That's why we only use <b>initial</b> rates.`;
   }
 }
 
 // ---------- solving ----------
 function ratioStr(v){ const r = Number(v.toPrecision(3)); return Number.isInteger(r)? r.toFixed(0) : String(r); }
-function usePair(p){ // p = "a" (OCl-) or "b" (I-)
+function usePair(p){
   const which = p==="a"?"A":"B", other = p==="a"?"[I<sup>−</sup>]":"[OCl<sup>−</sup>]";
   const msg=$(p+"PairMsg"); $(p+"Work").hidden=true; $(p+"Msg").innerHTML="";
   if (trials.length<2){ msg.innerHTML=`<div class="msg warn">Run at least two trials first.</div>`; return; }
   const i=+$(p+"T1").value, j=+$(p+"T2").value;
   if (i===j){ msg.innerHTML=`<div class="msg bad">Pick two different trials.</div>`; return; }
   const info = pairInfo(i,j);
-  if (info==="both"){ msg.innerHTML=`<div class="msg bad">Both concentrations change between Trials ${i+1} and ${j+1}. You can't tell which reactant caused the rate change. Find two trials where only ${NAME[which]} changes.</div>`; return; }
+  if (info==="both"){ msg.innerHTML=`<div class="msg bad">Both concentrations change between Trials ${i+1} and ${j+1}, so you can't tell which reactant caused the rate change. Find two trials where only ${NAME[which]} changes.</div>`; return; }
   if (info==="same"){ msg.innerHTML=`<div class="msg bad">These trials have the same concentrations, so nothing was changed.</div>`; return; }
-  if (info!==which){ msg.innerHTML=`<div class="msg bad">Between these trials ${other.replace(/^/,"")} is what changes, and ${NAME[which]} stays the same. That pair is for the other reactant.</div>`; return; }
-  msg.innerHTML=`<div class="msg good">✓ Fair pair: only ${NAME[which]} changes and ${other} stays the same.</div>`;
+  if (info!==which){ msg.innerHTML=`<div class="msg bad">Between these trials ${other} changes and ${NAME[which]} stays the same. That pair is for the other reactant.</div>`; return; }
+  msg.innerHTML=`<div class="msg good">✓ Fair pair: only ${NAME[which]} changes.</div>`;
   const T1=trials[i], T2=trials[j];
   const c1 = which==="A"?T1.a:T1.b, c2 = which==="A"?T2.a:T2.b;
   const sp = which==="A"?"OCl<sup>−</sup>":"I<sup>−</sup>", v = p==="a"?"x":"y";
   $(p+"Eq").innerHTML =
     `rate<sub>${i+1}</sub> / rate<sub>${j+1}</sub> = ([${sp}]<sub>${i+1}</sub> / [${sp}]<sub>${j+1}</sub>)<sup>${v}</sup><br>`+
-    `${fmt(T1.rate)} / ${fmt(T2.rate)} = (${fmtC(c1)} / ${fmtC(c2)})<sup>${v}</sup><br>`+
-    `<span class="muted">Simplify both ratios, then solve for ${v}.</span>`;
+    `${fmt(T1.rate)} / ${fmt(T2.rate)} = (${fmtC(c1)} / ${fmtC(c2)})<sup>${v}</sup>`;
   $(p+"Work").hidden=false;
   $(p+"Work").dataset.cr = c1/c2; $(p+"Work").dataset.rr = T1.rate/T2.rate;
 }
@@ -421,10 +529,10 @@ function checkOrder(p){
   const cr = +$(p+"Work").dataset.cr, rr = +$(p+"Work").dataset.rr;
   if (Math.abs(n-truth)<0.05){
     solved[v]=true; $("q"+p.toUpperCase()).classList.add("ok");
-    const word = ["zero","first","second"][truth];
-    msg.innerHTML = `<div class="msg good">✓ Correct: ${ratioStr(rr)} = ${ratioStr(cr)}<sup>${truth}</sup>, so the reaction is <b>${word} order</b> in ${p==="a"?"OCl<sup>−</sup>":"I<sup>−</sup>"}.${truth===0?" Changing its concentration doesn't change the rate.":""}</div>`;
+    msg.innerHTML = `<div class="msg good">✓ ${ratioStr(rr)} = ${ratioStr(cr)}<sup>${truth}</sup>, so it is <b>${["zero","first","second"][truth]} order</b> in ${p==="a"?"OCl<sup>−</sup>":"I<sup>−</sup>"}.${truth===0?" Changing its concentration doesn't change the rate.":""}</div>`;
   } else {
-    msg.innerHTML = `<div class="msg bad">Not quite. The concentration ratio is ${ratioStr(cr)} and the rate ratio is ${ratioStr(rr)}. What power of ${ratioStr(cr)} gives ${ratioStr(rr)}? (Remember: anything to the power 0 is 1.)</div>`;
+    solved[v]=false; $("q"+p.toUpperCase()).classList.remove("ok");
+    msg.innerHTML = `<div class="msg bad">Not quite. The concentration ratio is ${ratioStr(cr)} and the rate ratio is ${ratioStr(rr)}. What power of ${ratioStr(cr)} gives ${ratioStr(rr)}? (Anything to the power 0 is 1.)</div>`;
   }
   updateK();
 }
@@ -437,7 +545,7 @@ function updateK(){
   const t = trials[+$("kT").value] || trials[0];
   const a = power(`(${fmtC(t.a)})`,R.x), b = power(`(${fmtC(t.b)})`,R.y);
   const rl = `k${power("[OCl<sup>−</sup>]",R.x)}${power("[I<sup>−</sup>]",R.y)}`;
-  $("kEq").innerHTML = `rate = ${rl}<br>${fmt(t.rate)} = k${a}${b}${(!a&&!b)?" <span class='muted'>(zero order overall: k equals the rate)</span>":""}<br><span class="muted">Rearrange for k, then work out its units.</span>`;
+  $("kEq").innerHTML = `rate = ${rl}<br>${fmt(t.rate)} = k${a}${b}${(!a&&!b)?" <span class='muted'>(zero order overall: k equals the rate)</span>":""}`;
   renderFinal();
 }
 function checkK(){
@@ -445,31 +553,45 @@ function checkK(){
   const raw = $("kVal").value.replace(/\s/g,"").replace(/×10\^?/i,"e").replace(/x10\^?/i,"e");
   const v = Number(raw), u = $("kUnits").value;
   const kTrue = t.rate/(Math.pow(t.a,R.x)*Math.pow(t.b,R.y));
-  const overall = R.x+R.y;
-  const parts=[];
-  let good = true;
+  const overall = R.x+R.y, parts=[];
   if (!isFinite(v) || raw===""){ msg.innerHTML=`<div class="msg warn">Enter a number for k (e.g. 57500 or 5.75e4).</div>`; return; }
-  if (Math.abs(v-kTrue)/kTrue > 0.05){ good=false; parts.push(`The value is off. Square or cube a concentration only if its order is 2 or 3, and divide the rate by the product of the concentration terms.`); }
-  if (u===""){ good=false; parts.push("Choose the units of k."); }
-  else if (+u!==overall){ good=false; parts.push(`Check the units: the overall order is ${R.x} + ${R.y} = ${overall}. Units of k must make k × (mol/L)<sup>${overall}</sup> come out as mol/(L·s).`); }
-  if (good){ solved.k=true; msg.innerHTML=`<div class="msg good">✓ k ≈ ${fmtBig(kTrue)} ${UNIT_TXT[overall]}${parts.length?"":""}</div>`; }
+  if (Math.abs(v-kTrue)/kTrue > 0.05) parts.push(`The value is off. Divide the rate by the concentration terms, each raised to its order.`);
+  if (u==="") parts.push("Choose the units of k.");
+  else if (+u!==overall) parts.push(`Check the units: the overall order is ${R.x} + ${R.y} = ${overall}. k × (mol/L)<sup>${overall}</sup> must come out as mol/(L·s).`);
+  if (!parts.length){ solved.k=true; msg.innerHTML=`<div class="msg good">✓ k ≈ ${fmtBig(kTrue)} ${UNIT_TXT[overall]}</div>`; }
   else { solved.k=false; msg.innerHTML=`<div class="msg bad">${parts.join("<br>")}</div>`; }
   renderFinal();
 }
 function renderFinal(){
   if (!(solved.x && solved.y && solved.k)){ $("final").innerHTML=""; return; }
-  const overall=R.x+R.y;
-  const t = trials[+$("kT").value] || trials[0];
+  const overall=R.x+R.y, t = trials[+$("kT").value] || trials[0];
   const kv = t.rate/(Math.pow(t.a,R.x)*Math.pow(t.b,R.y));
-  let law = `rate = ${fmtBig(kv)} ${UNIT_TXT[overall]} ${power("[OCl<sup>−</sup>]",R.x)}${power("[I<sup>−</sup>]",R.y)}`;
-  $("final").innerHTML = `<div class="final">${law}</div><p class="muted" style="text-align:center">Overall order = ${R.x} + ${R.y} = ${overall}.${(R.x===0||R.y===0)?" A zero-order reactant is left out of the rate law because [ ]<sup>0</sup> = 1.":""}${mode==="mystery"?" Try another with <b>New mystery</b>.":""}</p>`;
+  $("final").innerHTML = `<div class="final">rate = ${fmtBig(kv)} ${UNIT_TXT[overall]} ${power("[OCl<sup>−</sup>]",R.x)}${power("[I<sup>−</sup>]",R.y)}</div><p class="muted" style="text-align:center;margin:4px 0 0">Overall order = ${R.x} + ${R.y} = ${overall}.${(R.x===0||R.y===0)?" A zero-order reactant is left out because [ ]<sup>0</sup> = 1.":""}</p>`;
 }
 
+// ---------- full screen ----------
+(function(){
+  const d=document, root=d.documentElement, b=$("fsBtn");
+  const req=root.requestFullscreen||root.webkitRequestFullscreen, exit=d.exitFullscreen||d.webkitExitFullscreen;
+  const cur=()=>d.fullscreenElement||d.webkitFullscreenElement;
+  const enabled = d.fullscreenEnabled || d.webkitFullscreenEnabled;
+  if (!req || !enabled){ b.hidden=true; return; }
+  const enter='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 5V1h4M11 1h4v4M15 11v4h-4M5 15H1v-4"/></svg>';
+  const leave='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 1v4H1M15 5h-4V1M11 15v-4h4M1 11h4v4"/></svg>';
+  const paint=()=>{ const on=!!cur(); b.innerHTML=(on?leave:enter)+(on?"Exit full screen":"Full screen"); };
+  b.onclick=()=>{ if(cur()) exit.call(d); else { const p=req.call(root); if(p&&p.catch) p.catch(()=>{ b.hidden=true; }); } };
+  d.addEventListener("fullscreenchange",paint); d.addEventListener("webkitfullscreenchange",paint);
+  paint();
+})();
+
 // ---------- wire up ----------
-$("cA").innerHTML = $("cB").innerHTML = CONCS.map(c=>`<option value="${c}">${fmtC(c)}</option>`).join("");
-$("run").onclick = ()=>runTrial(+$("cA").value, +$("cB").value, false);
+const opt = c=>`<option value="${c}">${fmtC(c)}</option>`;
+$("cA").innerHTML = `<option value="">choose…</option>` + CONCS.map(opt).join("");
+$("cB").innerHTML = `<option value="">choose…</option>` + CONCS.map(opt).join("");
+$("cA").onchange = $("cB").onchange = ()=>{ if(!anim){ mixed=null; sceneIdle(); } };
+$("run").onclick = ()=>{ const a=+$("cA").value, b=+$("cB").value; if (a&&b) runTrial(a,b,false); };
 $("clear").onclick = resetAll;
-$("loadWs").onclick = ()=>{ resetAll(); WS_TRIALS.forEach(([a,b])=>runTrial(a,b,true)); sel=0; $("runMsg").innerHTML=`<div class="msg info">Loaded the worksheet's three trials. Which pairs change only one concentration?</div>`; refresh(); };
+$("loadWs").onclick = ()=>{ resetAll(); WS_TRIALS.forEach(([a,b])=>runTrial(a,b,true)); sel=0; sceneIdle(); $("runMsg").innerHTML=`<div class="msg info">Loaded the worksheet's three trials. Which pairs change only one concentration?</div>`; refresh(); };
 $("mWorksheet").onclick = ()=>setMode("worksheet");
 $("mMystery").onclick = ()=>setMode("mystery");
 $("tSlide").oninput = ()=>{ draw(); updateReadout(); };
@@ -477,13 +599,15 @@ $("aPair").onclick = ()=>usePair("a"); $("bPair").onclick = ()=>usePair("b");
 $("aCheck").onclick = ()=>checkOrder("a"); $("bCheck").onclick = ()=>checkOrder("b");
 $("aX").onkeydown = e=>{ if(e.key==="Enter") checkOrder("a"); };
 $("bX").onkeydown = e=>{ if(e.key==="Enter") checkOrder("b"); };
-$("kT").onchange = ()=>{ updateK(); $("kMsg").innerHTML=""; solved.k=false; renderFinal(); };
+$("kT").onchange = ()=>{ solved.k=false; $("kMsg").innerHTML=""; updateK(); };
 $("kCheck").onclick = checkK;
 $("kVal").onkeydown = e=>{ if(e.key==="Enter") checkK(); };
+window.addEventListener("resize", sizeCanvas);
+if (window.ResizeObserver) new ResizeObserver(sizeCanvas).observe(cv);
 setMode("worksheet");
+sizeCanvas();
 window.__rl = {get R(){return R;}, get trials(){return trials;}, runTrial};
 })();
 </script>
-<script src="../../assets/fullscreen.js?v=202611191215" defer></script>
 </body>
 </html>
