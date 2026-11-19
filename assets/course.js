@@ -1,5 +1,6 @@
 (function(){
   var id=document.currentScript.dataset.course, c=window.COURSES[id];
+  document.body.dataset.course=id;
   document.title=c.name+" Simulations";
   document.getElementById("t").textContent=c.name+" Simulations";
   document.getElementById("s").textContent=c.full;
