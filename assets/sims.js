@@ -2,7 +2,7 @@
 // 1. Put the .html file in the right course/unit folder.
 // 2. Add one line to that unit's "sims" list below: { title, file, blurb }.
 // Bump this number whenever a simulation file changes, so browsers load the new copy.
-window.SIMS_VERSION = "202611181200";
+window.SIMS_VERSION = "202611191420";
 
 window.COURSES = {
   sph4u1: {
@@ -31,7 +31,8 @@ window.COURSES = {
         { title: "Enthalpy of Solution Lab", file: "enthalpy-of-solution-lab.html", blurb: "Virtual coffee-cup calorimetry: measure mass and volume, dissolve the solid, and collect temperature data to find ΔH." },
         { title: "Enthalpy of Reaction Lab", file: "enthalpy-of-reaction-lab.html", blurb: "Coffee-cup calorimetry for six aqueous reactions: neutralization, precipitation, single displacement and an endothermic fizz. Find ΔH per mole of the limiting reactant." },
         { title: "Collision Theory", file: "collision-theory-lab.html", blurb: "Rotate the molecules and set the temperature to see how orientation and energy decide whether a collision reacts, with a live potential energy diagram." },
-        { title: "Factors Affecting Reaction Rates", file: "factors-affecting-rates.html", blurb: "After the rate factors lab: identify the factor tested in each experiment, choose the explanation, then watch the particle collisions you couldn't see." }
+        { title: "Factors Affecting Reaction Rates", file: "factors-affecting-rates.html", blurb: "After the rate factors lab: identify the factor tested in each experiment, choose the explanation, then watch the particle collisions you couldn't see." },
+        { title: "Method of Initial Rates", file: "rate-law-initial-rates.html", blurb: "Pick concentrations, mix the beakers, and run trials changing one concentration at a time, measure initial rates from tangents, then find the orders, k and the rate law. Includes a spectrophotometer pop-up." }
       ]},
       { id: "equilibrium", name: "E. Chemical Systems and Equilibrium", sims: [] },
       { id: "electrochemistry", name: "F. Electrochemistry", sims: [] }
