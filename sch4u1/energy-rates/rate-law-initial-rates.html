@@ -95,8 +95,6 @@ sup,sub{font-size:72%}
   <div class="eq">OCl<sup>−</sup><sub>(aq)</sub> + I<sup>−</sup><sub>(aq)</sub> → OI<sup>−</sup><sub>(aq)</sub> + Cl<sup>−</sup><sub>(aq)</sub></div>
   <div class="goal">Find: rate = k[OCl<sup>−</sup>]<sup>x</sup>[I<sup>−</sup>]<sup>y</sup></div>
   <div class="mode">
-    <button id="mWorksheet" class="active">Worksheet reaction</button>
-    <button id="mMystery">Mystery reaction</button>
     <button id="fsBtn" class="fs" title="Full screen"></button>
   </div>
 </header>
@@ -239,7 +237,6 @@ const WS = {x:2, y:1, k:57500};
 const WS_TRIALS = [[0.0040,0.0020],[0.0020,0.0040],[0.0020,0.0020]];
 const COL_A = [150,200,90], COL_B = [110,160,230];   // OCl- (green), I- (blue) tints
 
-let mode = "worksheet";
 let R = {...WS};            // current reaction {x,y,k}
 let trials = [];            // {a,b,rate,pts,color,shown}
 let sel = -1;
@@ -370,24 +367,6 @@ function pourFrame(p, a, b){ // p 0..1
   S.timer.textContent = "";
 }
 
-// ---------- mode ----------
-function newMystery(){
-  let x,y;
-  do { x = Math.floor(Math.random()*3); y = Math.floor(Math.random()*3); } while (x===R.x && y===R.y);
-  const target = [2,3,4,5,6,8][Math.floor(Math.random()*6)] * 1e-4;
-  R = {x, y, k:Number((target / (Math.pow(0.002,x)*Math.pow(0.002,y))).toPrecision(2))};
-}
-function setMode(m){
-  mode = m;
-  $("mWorksheet").classList.toggle("active", m==="worksheet");
-  $("mMystery").classList.toggle("active", m==="mystery");
-  if (m==="worksheet"){ R={...WS}; $("loadWs").hidden=false; $("mMystery").textContent = "Mystery reaction"; }
-  else { newMystery(); $("loadWs").hidden=true; $("mMystery").textContent = "New mystery"; }
-  resetAll();
-  $("runMsg").innerHTML = m==="worksheet"
-    ? `<div class="msg info">The reaction from the warm-up question. Run your own trials, or load the worksheet's three trials.</div>`
-    : `<div class="msg info">Mystery reaction: the orders are hidden (0, 1 or 2). Design your own trials.</div>`;
-}
 function resetAll(){
   if (anim) cancelAnimationFrame(anim), anim=null;
   trials=[]; sel=-1; mixed=null; solved={x:false,y:false,k:false};
@@ -613,8 +592,6 @@ $("cA").onchange = $("cB").onchange = ()=>{ if(!anim){ mixed=null; sceneIdle(); 
 $("run").onclick = ()=>{ const a=+$("cA").value, b=+$("cB").value; if (a&&b) runTrial(a,b,false); };
 $("clear").onclick = resetAll;
 $("loadWs").onclick = ()=>{ resetAll(); WS_TRIALS.forEach(([a,b])=>runTrial(a,b,true)); sel=0; sceneIdle(); $("runMsg").innerHTML=`<div class="msg info">Loaded the worksheet's three trials. Which pairs change only one concentration?</div>`; refresh(); };
-$("mWorksheet").onclick = ()=>setMode("worksheet");
-$("mMystery").onclick = ()=>setMode("mystery");
 $("tSlide").oninput = ()=>{ draw(); updateReadout(); };
 $("aCheck").onclick = ()=>checkOrder("a"); $("bCheck").onclick = ()=>checkOrder("b");
 $("aX").onkeydown = e=>{ if(e.key==="Enter") checkOrder("a"); };
@@ -623,7 +600,8 @@ $("kCheck").onclick = checkK;
 $("kVal").onkeydown = e=>{ if(e.key==="Enter") checkK(); };
 window.addEventListener("resize", sizeCanvas);
 if (window.ResizeObserver) new ResizeObserver(sizeCanvas).observe(cv);
-setMode("worksheet");
+resetAll();
+$("runMsg").innerHTML = `<div class="msg info">The reaction from the warm-up question. Run your own trials, or load the worksheet's three trials.</div>`;
 sizeCanvas();
 window.__rl = {get R(){return R;}, get trials(){return trials;}, runTrial};
 })();
