@@ -74,6 +74,17 @@ tbody tr{cursor:pointer}
 .q.locked{opacity:.55}
 .work{font-size:14px;margin:6px 0;padding:5px 8px;background:#fff;border:1px dashed var(--line);border-radius:6px;line-height:1.6}
 .final{font-size:17px;font-weight:700;text-align:center;padding:6px;border:2px solid var(--good);border-radius:8px;background:#fff;color:#135c33;margin-top:6px}
+.h2row{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.modal{position:fixed;inset:0;background:rgba(15,25,45,.55);display:flex;align-items:center;justify-content:center;padding:16px;z-index:50}
+.modal[hidden]{display:none}
+.mbox{background:#fff;border-radius:12px;max-width:760px;width:100%;max-height:calc(100vh - 32px);overflow:auto;padding:14px 18px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.mbox h2{display:flex;justify-content:space-between;align-items:center;font-size:17px}
+.mbox .x{background:none;border:0;font-size:24px;line-height:1;cursor:pointer;color:var(--muted)}
+.mbox svg{width:100%;height:auto;display:block;margin:6px 0 8px}
+.mbox ul{margin:0 0 8px;padding-left:20px} .mbox li{margin:4px 0}
+.beam{stroke-dasharray:6 6;animation:flow 0.8s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-12}}
+.think{background:#f5f8fd;border-radius:8px;padding:8px 12px;font-size:14px}
 sup,sub{font-size:72%}
 .muted{color:var(--muted);font-size:12px}
 </style>
@@ -103,7 +114,8 @@ sup,sub{font-size:72%}
   </section>
 
   <section class="card graphcard">
-    <h2>2. Measure the initial rate</h2>
+    <div class="h2row"><h2 style="margin:0">2. Measure the initial rate</h2><button class="btn ghost small" id="specBtn">🔬 How is the rate being monitored?</button></div>
+    <div style="height:6px"></div>
     <div class="gwrap"><canvas id="g"></canvas></div>
     <div class="slider">
       <span>Tangent at <b>t = <span id="tVal">0.0</span> s</b></span>
@@ -129,50 +141,28 @@ sup,sub{font-size:72%}
   </section>
 
   <section class="card solvecard">
-    <h2>3. Solve for the rate law <span class="muted" style="font-weight:400">: use pairs of trials where only one concentration changes</span></h2>
+    <h2>3. Solve for the rate law <span class="muted" style="font-weight:400">: work it out on paper from your data table, then enter your answers</span></h2>
     <div class="solve">
       <div class="q" id="qA">
-        <h3>Order of OCl<sup>−</sup> (x)</h3>
+        <h3>Order of OCl<sup>−</sup></h3>
         <div class="row">
-          <label class="field"><span>Trial</span><select id="aT1"></select></label>
-          <label class="field"><span>compared with</span><select id="aT2"></select></label>
-          <button class="btn small" id="aPair">Use pair</button>
+          <label class="field"><span>x =</span><input type="text" id="aX" inputmode="numeric" autocomplete="off"></label>
+          <button class="btn small" id="aCheck">Check</button>
         </div>
-        <div id="aPairMsg"></div>
-        <div id="aWork" hidden>
-          <div class="work" id="aEq"></div>
-          <div class="row">
-            <label class="field"><span>x =</span><input type="text" id="aX" inputmode="numeric" autocomplete="off"></label>
-            <button class="btn small" id="aCheck">Check</button>
-          </div>
-          <div id="aMsg"></div>
-        </div>
+        <div id="aMsg"></div>
       </div>
       <div class="q" id="qB">
-        <h3>Order of I<sup>−</sup> (y)</h3>
+        <h3>Order of I<sup>−</sup></h3>
         <div class="row">
-          <label class="field"><span>Trial</span><select id="bT1"></select></label>
-          <label class="field"><span>compared with</span><select id="bT2"></select></label>
-          <button class="btn small" id="bPair">Use pair</button>
+          <label class="field"><span>y =</span><input type="text" id="bX" inputmode="numeric" autocomplete="off"></label>
+          <button class="btn small" id="bCheck">Check</button>
         </div>
-        <div id="bPairMsg"></div>
-        <div id="bWork" hidden>
-          <div class="work" id="bEq"></div>
-          <div class="row">
-            <label class="field"><span>y =</span><input type="text" id="bX" inputmode="numeric" autocomplete="off"></label>
-            <button class="btn small" id="bCheck">Check</button>
-          </div>
-          <div id="bMsg"></div>
-        </div>
+        <div id="bMsg"></div>
       </div>
       <div class="q locked" id="qK">
         <h3>Rate constant k</h3>
         <p class="muted" id="kLock">Find both orders first.</p>
         <div id="kBody" hidden>
-          <div class="row">
-            <label class="field"><span>Use trial</span><select id="kT"></select></label>
-          </div>
-          <div class="work" id="kEq"></div>
           <div class="row">
             <label class="field"><span>k =</span><input type="text" id="kVal" inputmode="decimal" autocomplete="off"></label>
             <label class="field"><span>units</span><select id="kUnits">
@@ -186,12 +176,58 @@ sup,sub{font-size:72%}
             <button class="btn small" id="kCheck">Check</button>
           </div>
           <div id="kMsg"></div>
-          <div id="final"></div>
         </div>
       </div>
     </div>
+    <div id="final"></div>
   </section>
 </main>
+<div class="modal" id="specModal" hidden role="dialog" aria-modal="true" aria-labelledby="specTitle">
+  <div class="mbox">
+    <h2><span id="specTitle">How is the rate being monitored?</span><button class="x" id="specClose" aria-label="Close">×</button></h2>
+    <p style="margin:0">Chemists follow this reaction with a <b>spectrophotometer</b>, which measures how much light a solution absorbs.</p>
+    <svg viewBox="0 0 720 200" aria-label="Spectrophotometer diagram">
+      <defs><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#7b4fd6"/></marker></defs>
+      <!-- lamp -->
+      <circle cx="60" cy="95" r="26" fill="#fff4b8" stroke="#c9a400" stroke-width="2"/>
+      <path d="M50,95 q5,-12 10,0 t10,0" fill="none" stroke="#c9a400" stroke-width="2"/>
+      <text x="60" y="150" text-anchor="middle" font-size="14" font-weight="700" fill="#1d2430">Lamp</text>
+      <text x="60" y="167" text-anchor="middle" font-size="12" fill="#5b6575">many wavelengths</text>
+      <line x1="88" y1="95" x2="178" y2="95" stroke="#e0b400" stroke-width="5" class="beam"/>
+      <!-- wavelength selector -->
+      <polygon points="190,125 230,55 270,125" fill="#e8eef8" stroke="#5b6575" stroke-width="2"/>
+      <text x="230" y="150" text-anchor="middle" font-size="14" font-weight="700" fill="#1d2430">Wavelength selector</text>
+      <text x="230" y="167" text-anchor="middle" font-size="12" fill="#5b6575">picks 292 nm (UV)</text>
+      <line x1="272" y1="95" x2="372" y2="95" stroke="#7b4fd6" stroke-width="5" class="beam"/>
+      <!-- cuvette -->
+      <rect x="380" y="45" width="56" height="100" rx="4" fill="#eef7f0" stroke="#5b6575" stroke-width="2"/>
+      <rect x="383" y="70" width="50" height="72" fill="rgba(140,185,170,.55)"/>
+      <text x="408" y="112" text-anchor="middle" font-size="12" font-weight="700" fill="#1d2430">OI⁻</text>
+      <text x="408" y="167" text-anchor="middle" font-size="14" font-weight="700" fill="#1d2430">Cuvette</text>
+      <text x="408" y="184" text-anchor="middle" font-size="12" fill="#5b6575">reaction mixture</text>
+      <line x1="444" y1="95" x2="530" y2="95" stroke="#7b4fd6" stroke-width="2.5" class="beam" marker-end="url(#arr)"/>
+      <text x="487" y="82" text-anchor="middle" font-size="11" fill="#5b6575">less light</text>
+      <!-- detector + screen -->
+      <rect x="540" y="65" width="34" height="60" rx="4" fill="#5b6575"/>
+      <text x="557" y="150" text-anchor="middle" font-size="14" font-weight="700" fill="#1d2430">Detector</text>
+      <line x1="574" y1="95" x2="600" y2="95" stroke="#5b6575" stroke-width="2"/>
+      <rect x="600" y="50" width="108" height="80" rx="6" fill="#14325f"/>
+      <polyline points="610,118 622,95 636,84 652,78 670,75 698,73" fill="none" stroke="#7fe0a5" stroke-width="2.5"/>
+      <text x="654" y="66" text-anchor="middle" font-size="11" fill="#fff">Absorbance vs time</text>
+      <text x="654" y="150" text-anchor="middle" font-size="14" font-weight="700" fill="#1d2430">Computer</text>
+    </svg>
+    <ul>
+      <li>The product, hypoiodite (<b>OI<sup>−</sup></b>), absorbs ultraviolet light at about <b>292 nm</b>. OCl<sup>−</sup> and I<sup>−</sup> barely absorb at that wavelength.</li>
+      <li>As OI<sup>−</sup> forms, less light gets through to the detector, so the <b>absorbance rises</b>.</li>
+      <li>Absorbance is directly proportional to [OI<sup>−</sup>], so the computer turns each reading into a concentration and plots the graph you see.</li>
+      <li>The real reaction is very fast, so chemists use a <i>stopped-flow</i> mixer that mixes the two solutions and starts measuring within milliseconds.</li>
+    </ul>
+    <div class="think"><b>Think about it:</b> why wouldn't a conductivity meter work for this reaction?
+      <button class="btn ghost small" id="thinkBtn" style="margin-left:6px">Show answer</button>
+      <div id="thinkAns" hidden style="margin-top:6px">Two ions react and two ions form (OCl<sup>−</sup> + I<sup>−</sup> → OI<sup>−</sup> + Cl<sup>−</sup>), so the number of ions in solution, and therefore the conductivity, hardly changes.</div>
+    </div>
+  </div>
+</div>
 <script>
 (function(){
 const $ = id => document.getElementById(id);
@@ -356,7 +392,7 @@ function resetAll(){
   if (anim) cancelAnimationFrame(anim), anim=null;
   trials=[]; sel=-1; mixed=null; solved={x:false,y:false,k:false};
   $("runMsg").innerHTML=""; $("final").innerHTML="";
-  ["a","b"].forEach(p=>{ $(p+"Work").hidden=true; $(p+"PairMsg").innerHTML=""; $(p+"Msg").innerHTML=""; $(p+"X").value=""; $("q"+p.toUpperCase()).classList.remove("ok"); });
+  ["a","b"].forEach(p=>{ $(p+"Msg").innerHTML=""; $(p+"X").value=""; $("q"+p.toUpperCase()).classList.remove("ok"); });
   $("kVal").value=""; $("kUnits").value=""; $("kMsg").innerHTML="";
   $("tSlide").value=0;
   refresh(); sceneIdle();
@@ -431,8 +467,6 @@ function refresh(){
     return `<tr data-i="${i}" class="${i===sel?"sel":""}"><td><span class="dot" style="background:${t.color}"></span>${i+1}${tag}</td><td class="num">${fmtC(t.a)}</td><td class="num">${fmtC(t.b)}</td><td class="num">${fmt(t.rate)}</td></tr>`;
   }).join("");
   tb.querySelectorAll("tr[data-i]").forEach(r=>r.onclick=()=>{ sel=+r.dataset.i; refresh(); });
-  const opts = trials.map((t,i)=>`<option value="${i}">Trial ${i+1}</option>`).join("") || `<option value="">–</option>`;
-  ["aT1","aT2","bT1","bT2","kT"].forEach((id,k)=>{ const s=$(id), v=s.value; s.innerHTML=opts; if (v!=="" && +v<trials.length) s.value=v; else if (trials.length) s.value = String(Math.min(k%2, trials.length-1)); });
   draw(); updateReadout(); updateK();
 }
 
@@ -500,39 +534,24 @@ function updateReadout(){
 }
 
 // ---------- solving ----------
-function ratioStr(v){ const r = Number(v.toPrecision(3)); return Number.isInteger(r)? r.toFixed(0) : String(r); }
-function usePair(p){
-  const which = p==="a"?"A":"B", other = p==="a"?"[I<sup>−</sup>]":"[OCl<sup>−</sup>]";
-  const msg=$(p+"PairMsg"); $(p+"Work").hidden=true; $(p+"Msg").innerHTML="";
-  if (trials.length<2){ msg.innerHTML=`<div class="msg warn">Run at least two trials first.</div>`; return; }
-  const i=+$(p+"T1").value, j=+$(p+"T2").value;
-  if (i===j){ msg.innerHTML=`<div class="msg bad">Pick two different trials.</div>`; return; }
-  const info = pairInfo(i,j);
-  if (info==="both"){ msg.innerHTML=`<div class="msg bad">Both concentrations change between Trials ${i+1} and ${j+1}, so you can't tell which reactant caused the rate change. Find two trials where only ${NAME[which]} changes.</div>`; return; }
-  if (info==="same"){ msg.innerHTML=`<div class="msg bad">These trials have the same concentrations, so nothing was changed.</div>`; return; }
-  if (info!==which){ msg.innerHTML=`<div class="msg bad">Between these trials ${other} changes and ${NAME[which]} stays the same. That pair is for the other reactant.</div>`; return; }
-  msg.innerHTML=`<div class="msg good">✓ Fair pair: only ${NAME[which]} changes.</div>`;
-  const T1=trials[i], T2=trials[j];
-  const c1 = which==="A"?T1.a:T1.b, c2 = which==="A"?T2.a:T2.b;
-  const sp = which==="A"?"OCl<sup>−</sup>":"I<sup>−</sup>", v = p==="a"?"x":"y";
-  $(p+"Eq").innerHTML =
-    `rate<sub>${i+1}</sub> / rate<sub>${j+1}</sub> = ([${sp}]<sub>${i+1}</sub> / [${sp}]<sub>${j+1}</sub>)<sup>${v}</sup><br>`+
-    `${fmt(T1.rate)} / ${fmt(T2.rate)} = (${fmtC(c1)} / ${fmtC(c2)})<sup>${v}</sup>`;
-  $(p+"Work").hidden=false;
-  $(p+"Work").dataset.cr = c1/c2; $(p+"Work").dataset.rr = T1.rate/T2.rate;
+const SP = {a:"OCl<sup>−</sup>", b:"I<sup>−</sup>"};
+function hasFairPair(which){ // "A" or "B"
+  for (let i=0;i<trials.length;i++) for (let j=i+1;j<trials.length;j++) if (pairInfo(i,j)===which) return true;
+  return false;
 }
 function checkOrder(p){
-  const v = p==="a"?"x":"y", truth = p==="a"?R.x:R.y;
-  const s = $(p+"X").value.trim(); const msg=$(p+"Msg");
+  const v = p==="a"?"x":"y", truth = p==="a"?R.x:R.y, which = p==="a"?"A":"B";
+  const s = $(p+"X").value.trim(), msg=$(p+"Msg"), box=$("q"+p.toUpperCase());
+  if (!hasFairPair(which)){
+    msg.innerHTML=`<div class="msg warn">Your table has no fair pair for ${SP[p]} yet. Run a trial that changes only ${NAME[which]} compared with an earlier trial.</div>`; return;
+  }
   if (s===""){ msg.innerHTML=`<div class="msg warn">Enter a value for ${v}.</div>`; return; }
-  const n = Number(s);
-  const cr = +$(p+"Work").dataset.cr, rr = +$(p+"Work").dataset.rr;
-  if (Math.abs(n-truth)<0.05){
-    solved[v]=true; $("q"+p.toUpperCase()).classList.add("ok");
-    msg.innerHTML = `<div class="msg good">✓ ${ratioStr(rr)} = ${ratioStr(cr)}<sup>${truth}</sup>, so it is <b>${["zero","first","second"][truth]} order</b> in ${p==="a"?"OCl<sup>−</sup>":"I<sup>−</sup>"}.${truth===0?" Changing its concentration doesn't change the rate.":""}</div>`;
+  if (Math.abs(Number(s)-truth)<0.05){
+    solved[v]=true; box.classList.add("ok");
+    msg.innerHTML = `<div class="msg good">✓ Correct: <b>${["zero","first","second"][truth]} order</b> in ${SP[p]}.${truth===0?" Changing its concentration doesn't change the rate.":""}</div>`;
   } else {
-    solved[v]=false; $("q"+p.toUpperCase()).classList.remove("ok");
-    msg.innerHTML = `<div class="msg bad">Not quite. The concentration ratio is ${ratioStr(cr)} and the rate ratio is ${ratioStr(rr)}. What power of ${ratioStr(cr)} gives ${ratioStr(rr)}? (Anything to the power 0 is 1.)</div>`;
+    solved[v]=false; box.classList.remove("ok");
+    msg.innerHTML = `<div class="msg bad">Not quite. Use two trials where only ${NAME[which]} changes, and check that you divided the rates in the same order as the concentrations.</div>`;
   }
   updateK();
 }
@@ -541,32 +560,25 @@ function power(base, e){ return e===0?"":e===1?base:`${base}<sup>${e}</sup>`; }
 function updateK(){
   const ok = solved.x && solved.y;
   $("qK").classList.toggle("locked", !ok); $("kBody").hidden=!ok; $("kLock").hidden=ok;
-  if (!ok || !trials.length) { renderFinal(); return; }
-  const t = trials[+$("kT").value] || trials[0];
-  const a = power(`(${fmtC(t.a)})`,R.x), b = power(`(${fmtC(t.b)})`,R.y);
-  const rl = `k${power("[OCl<sup>−</sup>]",R.x)}${power("[I<sup>−</sup>]",R.y)}`;
-  $("kEq").innerHTML = `rate = ${rl}<br>${fmt(t.rate)} = k${a}${b}${(!a&&!b)?" <span class='muted'>(zero order overall: k equals the rate)</span>":""}`;
+  if (!ok){ solved.k=false; $("kMsg").innerHTML=""; }
   renderFinal();
 }
 function checkK(){
-  const msg=$("kMsg"); const t = trials[+$("kT").value] || trials[0];
+  const msg=$("kMsg");
   const raw = $("kVal").value.replace(/\s/g,"").replace(/×10\^?/i,"e").replace(/x10\^?/i,"e");
-  const v = Number(raw), u = $("kUnits").value;
-  const kTrue = t.rate/(Math.pow(t.a,R.x)*Math.pow(t.b,R.y));
-  const overall = R.x+R.y, parts=[];
-  if (!isFinite(v) || raw===""){ msg.innerHTML=`<div class="msg warn">Enter a number for k (e.g. 57500 or 5.75e4).</div>`; return; }
-  if (Math.abs(v-kTrue)/kTrue > 0.05) parts.push(`The value is off. Divide the rate by the concentration terms, each raised to its order.`);
+  const v = Number(raw), u = $("kUnits").value, overall = R.x+R.y, parts=[];
+  if (raw==="" || !isFinite(v)){ msg.innerHTML=`<div class="msg warn">Enter a number for k (e.g. 57500 or 5.75e4).</div>`; return; }
+  if (Math.abs(v-R.k)/R.k > 0.05) parts.push("The value of k is off. Check your substitution and the exponents.");
   if (u==="") parts.push("Choose the units of k.");
-  else if (+u!==overall) parts.push(`Check the units: the overall order is ${R.x} + ${R.y} = ${overall}. k × (mol/L)<sup>${overall}</sup> must come out as mol/(L·s).`);
-  if (!parts.length){ solved.k=true; msg.innerHTML=`<div class="msg good">✓ k ≈ ${fmtBig(kTrue)} ${UNIT_TXT[overall]}</div>`; }
+  else if (+u!==overall) parts.push("The units are not right. Units of k must make the rate come out in mol/(L·s).");
+  if (!parts.length){ solved.k=true; msg.innerHTML=`<div class="msg good">✓ Correct value and units.</div>`; }
   else { solved.k=false; msg.innerHTML=`<div class="msg bad">${parts.join("<br>")}</div>`; }
   renderFinal();
 }
 function renderFinal(){
   if (!(solved.x && solved.y && solved.k)){ $("final").innerHTML=""; return; }
-  const overall=R.x+R.y, t = trials[+$("kT").value] || trials[0];
-  const kv = t.rate/(Math.pow(t.a,R.x)*Math.pow(t.b,R.y));
-  $("final").innerHTML = `<div class="final">rate = ${fmtBig(kv)} ${UNIT_TXT[overall]} ${power("[OCl<sup>−</sup>]",R.x)}${power("[I<sup>−</sup>]",R.y)}</div><p class="muted" style="text-align:center;margin:4px 0 0">Overall order = ${R.x} + ${R.y} = ${overall}.${(R.x===0||R.y===0)?" A zero-order reactant is left out because [ ]<sup>0</sup> = 1.":""}</p>`;
+  const overall=R.x+R.y;
+  $("final").innerHTML = `<div class="final">rate = ${fmtBig(R.k)} ${UNIT_TXT[overall]} ${power("[OCl<sup>−</sup>]",R.x)}${power("[I<sup>−</sup>]",R.y)}</div><p class="muted" style="text-align:center;margin:4px 0 0">Overall order = ${R.x} + ${R.y} = ${overall}.${(R.x===0||R.y===0)?" A zero-order reactant is left out because [ ]<sup>0</sup> = 1.":""}</p>`;
 }
 
 // ---------- full screen ----------
@@ -584,6 +596,15 @@ function renderFinal(){
   paint();
 })();
 
+// ---------- spectrophotometer pop-up ----------
+const modal=$("specModal");
+const openM=()=>{ modal.hidden=false; $("specClose").focus(); };
+const closeM=()=>{ modal.hidden=true; $("specBtn").focus(); };
+$("specBtn").onclick=openM; $("specClose").onclick=closeM;
+modal.addEventListener("click",e=>{ if(e.target===modal) closeM(); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape" && !modal.hidden) closeM(); });
+$("thinkBtn").onclick=()=>{ const a=$("thinkAns"); a.hidden=!a.hidden; $("thinkBtn").textContent=a.hidden?"Show answer":"Hide answer"; };
+
 // ---------- wire up ----------
 const opt = c=>`<option value="${c}">${fmtC(c)}</option>`;
 $("cA").innerHTML = `<option value="">choose…</option>` + CONCS.map(opt).join("");
@@ -595,11 +616,9 @@ $("loadWs").onclick = ()=>{ resetAll(); WS_TRIALS.forEach(([a,b])=>runTrial(a,b,
 $("mWorksheet").onclick = ()=>setMode("worksheet");
 $("mMystery").onclick = ()=>setMode("mystery");
 $("tSlide").oninput = ()=>{ draw(); updateReadout(); };
-$("aPair").onclick = ()=>usePair("a"); $("bPair").onclick = ()=>usePair("b");
 $("aCheck").onclick = ()=>checkOrder("a"); $("bCheck").onclick = ()=>checkOrder("b");
 $("aX").onkeydown = e=>{ if(e.key==="Enter") checkOrder("a"); };
 $("bX").onkeydown = e=>{ if(e.key==="Enter") checkOrder("b"); };
-$("kT").onchange = ()=>{ solved.k=false; $("kMsg").innerHTML=""; updateK(); };
 $("kCheck").onclick = checkK;
 $("kVal").onkeydown = e=>{ if(e.key==="Enter") checkK(); };
 window.addEventListener("resize", sizeCanvas);
