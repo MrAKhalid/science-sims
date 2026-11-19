@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Method of Initial Rates</title>
+<style>
+:root{
+  color-scheme:light;
+  --bg:#eef1f5; --panel:#fff; --ink:#1d2430; --muted:#5b6575; --line:#d5dbe4;
+  --accent:#1f5fbf; --accent2:#e2e9f6; --good:#1e8a4c; --goodbg:#e3f4ea; --bad:#b3261e; --badbg:#fbe7e5;
+  --warn:#8a5a00; --warnbg:#fff3d6;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.4}
+header{background:#14325f;color:#fff;padding:10px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
+header h1{font-size:18px;margin:0;font-weight:700}
+header .eq{font-size:17px;font-weight:600;background:#24477f;border-radius:6px;padding:5px 12px}
+header .mode{margin-left:auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+header .mode button{background:#24477f;color:#fff;border:0;border-radius:6px;padding:7px 11px;font-size:14px;cursor:pointer;font-weight:600}
+header .mode button.active{background:#fff;color:#14325f}
+main{max-width:1180px;margin:0 auto;padding:14px 16px 40px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:14px}
+h2{font-size:17px;margin:0 0 8px}
+h3{font-size:15px;margin:0 0 6px}
+.intro{color:var(--muted);margin:0 0 10px}
+.top{display:grid;grid-template-columns:minmax(280px,400px) 1fr;gap:16px;align-items:start}
+@media (max-width:820px){ .top{grid-template-columns:1fr} }
+.row{display:flex;gap:10px;align-items:end;flex-wrap:wrap}
+.field{display:flex;flex-direction:column;gap:3px;flex:1 1 120px}
+.field span{font-size:13px;color:var(--muted);font-weight:600}
+select,input[type=text]{font-size:15px;padding:7px;border:1px solid #aab4c3;border-radius:6px;background:#fff;color:var(--ink);width:100%}
+input[type=text]{font-family:inherit}
+.btn{background:var(--accent);color:#fff;border:0;border-radius:6px;padding:9px 16px;font-size:15px;font-weight:600;cursor:pointer}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.ghost{background:var(--accent2);color:var(--accent)}
+.btn.small{padding:6px 10px;font-size:13px}
+.msg{padding:8px 12px;border-radius:6px;margin-top:10px;font-size:14px}
+.msg.good{background:var(--goodbg);color:var(--good)} .msg.bad{background:var(--badbg);color:var(--bad)}
+.msg.info{background:var(--accent2);color:#1a3d78} .msg.warn{background:var(--warnbg);color:var(--warn)}
+.rule{border-left:4px solid var(--accent);background:#f5f8fd;padding:8px 12px;border-radius:0 6px 6px 0;font-size:14px;margin-bottom:12px}
+table{border-collapse:collapse;width:100%;font-size:14px;margin-top:12px}
+th,td{border-bottom:1px solid var(--line);padding:6px 6px;text-align:left}
+th{background:#f3f5f9;font-size:13px}
+td.num{font-variant-numeric:tabular-nums}
+tr.sel td{background:#eef4ff}
+tbody tr{cursor:pointer}
+.dot{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.tag{display:inline-block;font-size:12px;border-radius:10px;padding:1px 7px;font-weight:600}
+.tag.lone{background:var(--warnbg);color:var(--warn)}
+.tag.rep{background:#eceff3;color:var(--muted)}
+.graphwrap{position:relative}
+canvas#g{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:8px;background:#fff}
+.slider{display:flex;gap:10px;align-items:center;margin-top:8px;flex-wrap:wrap;font-size:14px}
+.slider input{flex:1 1 180px}
+.readout{font-size:14px;margin-top:6px;min-height:40px}
+.solve{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media (max-width:900px){ .solve{grid-template-columns:1fr} }
+.q{padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:#fafbfd}
+.q.ok{border-color:#9fd4b4;background:var(--goodbg)}
+.q.locked{opacity:.55}
+.q .row{margin-top:6px}
+.work{font-size:15px;margin:8px 0;padding:8px;background:#fff;border:1px dashed var(--line);border-radius:6px;line-height:1.7}
+.final{font-size:20px;font-weight:700;text-align:center;padding:12px;border:2px solid var(--good);border-radius:8px;background:var(--goodbg);color:#135c33;margin-top:12px}
+sup,sub{font-size:72%}
+.muted{color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Method of Initial Rates</h1>
+  <div class="eq">OCl<sup>−</sup><sub>(aq)</sub> + I<sup>−</sup><sub>(aq)</sub> → OI<sup>−</sup><sub>(aq)</sub> + Cl<sup>−</sup><sub>(aq)</sub></div>
+  <div class="mode">
+    <button id="mWorksheet" class="active">Worksheet reaction</button>
+    <button id="mMystery">Mystery reaction</button>
+  </div>
+</header>
+<main>
+  <div class="card">
+    <h2>Goal: find the rate law, rate = k[OCl<sup>−</sup>]<sup>x</sup>[I<sup>−</sup>]<sup>y</sup></h2>
+    <p class="intro" id="modeNote"></p>
+    <div class="top">
+      <div>
+        <h3>1. Run a trial</h3>
+        <div class="rule"><b>Fair test:</b> to see what one reactant does, change <b>only that one</b> concentration and keep the other the same as an earlier trial.</div>
+        <div class="row">
+          <label class="field"><span>[OCl<sup>−</sup>]<sub>0</sub> (mol/L)</span><select id="cA"></select></label>
+          <label class="field"><span>[I<sup>−</sup>]<sub>0</sub> (mol/L)</span><select id="cB"></select></label>
+          <button class="btn" id="run">Run trial</button>
+        </div>
+        <div id="runMsg"></div>
+        <table>
+          <thead><tr><th>Trial</th><th>[OCl<sup>−</sup>] (mol/L)</th><th>[I<sup>−</sup>] (mol/L)</th><th>Initial rate (mol/(L·s))</th></tr></thead>
+          <tbody id="tbody"><tr><td colspan="4" class="muted">No trials yet.</td></tr></tbody>
+        </table>
+        <div class="row" style="margin-top:10px">
+          <button class="btn ghost small" id="clear">Clear trials</button>
+          <button class="btn ghost small" id="loadWs">Load the worksheet's 3 trials</button>
+        </div>
+        <p class="muted" style="margin-top:8px">Click a row to show that trial's tangent on the graph.</p>
+      </div>
+      <div>
+        <h3>2. Measure the initial rate</h3>
+        <div class="graphwrap"><canvas id="g" width="760" height="440"></canvas></div>
+        <div class="slider">
+          <span>Tangent at <b>t = <span id="tVal">0.0</span> s</b></span>
+          <input type="range" id="tSlide" min="0" max="10" step="0.1" value="0">
+        </div>
+        <div class="readout" id="readout"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>3. Solve for the rate law</h2>
+    <p class="intro">Use pairs of trials from your table. Each pair must have only one concentration changed.</p>
+    <div class="solve">
+      <div class="q" id="qA">
+        <h3>Order of OCl<sup>−</sup> (x)</h3>
+        <div class="row">
+          <label class="field"><span>Trial</span><select id="aT1"></select></label>
+          <label class="field"><span>compared with trial</span><select id="aT2"></select></label>
+          <button class="btn small" id="aPair">Use pair</button>
+        </div>
+        <div id="aPairMsg"></div>
+        <div id="aWork" hidden>
+          <div class="work" id="aEq"></div>
+          <div class="row">
+            <label class="field"><span>x =</span><input type="text" id="aX" inputmode="numeric" autocomplete="off"></label>
+            <button class="btn small" id="aCheck">Check</button>
+          </div>
+          <div id="aMsg"></div>
+        </div>
+      </div>
+      <div class="q" id="qB">
+        <h3>Order of I<sup>−</sup> (y)</h3>
+        <div class="row">
+          <label class="field"><span>Trial</span><select id="bT1"></select></label>
+          <label class="field"><span>compared with trial</span><select id="bT2"></select></label>
+          <button class="btn small" id="bPair">Use pair</button>
+        </div>
+        <div id="bPairMsg"></div>
+        <div id="bWork" hidden>
+          <div class="work" id="bEq"></div>
+          <div class="row">
+            <label class="field"><span>y =</span><input type="text" id="bX" inputmode="numeric" autocomplete="off"></label>
+            <button class="btn small" id="bCheck">Check</button>
+          </div>
+          <div id="bMsg"></div>
+        </div>
+      </div>
+      <div class="q locked" id="qK">
+        <h3>Rate constant k</h3>
+        <p class="muted" id="kLock">Find both orders first.</p>
+        <div id="kBody" hidden>
+          <div class="row">
+            <label class="field"><span>Use trial</span><select id="kT"></select></label>
+          </div>
+          <div class="work" id="kEq"></div>
+          <div class="row">
+            <label class="field"><span>k =</span><input type="text" id="kVal" inputmode="decimal" autocomplete="off"></label>
+            <label class="field"><span>units</span><select id="kUnits">
+              <option value="">choose…</option>
+              <option value="0">mol/(L·s)</option>
+              <option value="1">s⁻¹</option>
+              <option value="2">L/(mol·s)</option>
+              <option value="3">L²/(mol²·s)</option>
+              <option value="4">L³/(mol³·s)</option>
+            </select></label>
+            <button class="btn small" id="kCheck">Check</button>
+          </div>
+          <div id="kMsg"></div>
+        </div>
+      </div>
+    </div>
+    <div id="final"></div>
+  </div>
+</main>
+<script>
+(function(){
+const $ = id => document.getElementById(id);
+const CONCS = [0.0020, 0.0040, 0.0060, 0.0080];
+const COLORS = ["#1f5fbf","#d1495b","#2a9d55","#8e44ad","#e67e22","#00838f","#7a5c2e","#c2185b"];
+const TMAX = 10;            // s shown on the graph
+const MAXTRIALS = 8;
+const WS = {x:2, y:1, k:57500};
+const WS_TRIALS = [[0.0040,0.0020],[0.0020,0.0040],[0.0020,0.0020]];
+
+let mode = "worksheet";
+let R = {...WS};            // current reaction {x,y,k}
+let trials = [];            // {a,b,rate,pts,color}
+let sel = -1;
+let anim = null;
+let solved = {x:false, y:false, k:false};
+
+// ---------- number formatting ----------
+function fmt(v, sf=3){
+  if (v === 0) return "0";
+  const s = Number(v.toPrecision(sf));
+  if (Math.abs(s) >= 1e5 || Math.abs(s) < 1e-6) return s.toExponential(sf-1);
+  // plain decimal with sf significant figures
+  const mag = Math.floor(Math.log10(Math.abs(s)));
+  const dec = Math.max(0, sf - 1 - mag);
+  return s.toFixed(dec);
+}
+function fmtC(c){ return c.toFixed(4); }
+function fmtBig(v){ // k values like 57500
+  const s = Number(v.toPrecision(3));
+  if (s >= 1000) return s.toLocaleString("en-CA").replace(/,/g," ");
+  return fmt(s,3);
+}
+
+// ---------- kinetics ----------
+function rateAt(a,b,xi){ // xi = [OI-] formed
+  const A = Math.max(a-xi,0), B = Math.max(b-xi,0);
+  if (A<=0 || B<=0) return 0;
+  return R.k * Math.pow(A,R.x) * Math.pow(B,R.y);
+}
+function simulate(a,b){
+  const pts=[]; let xi=0; const dt=0.0005; const lim=Math.min(a,b);
+  for (let i=0, t=0; t<=TMAX+1e-9; i++){
+    if (i%20===0) pts.push([t,xi]);
+    let r = rateAt(a,b,xi);
+    xi = Math.min(lim, xi + r*dt);
+    t = (i+1)*dt;
+  }
+  return pts;
+}
+function xAtT(tr,t){
+  const i = Math.min(tr.pts.length-1, Math.round(t/0.01));
+  return tr.pts[i][1];
+}
+function initialRate(a,b){ return Number((R.k*Math.pow(a,R.x)*Math.pow(b,R.y)).toPrecision(3)); }
+
+// ---------- mode ----------
+function newMystery(){
+  let x,y;
+  do { x = Math.floor(Math.random()*3); y = Math.floor(Math.random()*3); } while (x===R.x && y===R.y && mode==="mystery");
+  // choose k so rate at 0.0020/0.0020 is ~0.0002–0.0008 mol/(L·s)
+  const target = [2,3,4,5,6,8][Math.floor(Math.random()*6)] * 1e-4;
+  const k = target / (Math.pow(0.002,x)*Math.pow(0.002,y));
+  R = {x, y, k:Number(k.toPrecision(2))};
+}
+function setMode(m){
+  mode = m;
+  $("mWorksheet").classList.toggle("active", m==="worksheet");
+  $("mMystery").classList.toggle("active", m==="mystery");
+  if (m==="worksheet"){ R={...WS}; $("loadWs").hidden=false;
+    $("modeNote").innerHTML = "This is the reaction from the warm-up question. Run your own trials, or load the worksheet's three trials, then work out x, y and k.";
+    $("mMystery").textContent = "Mystery reaction";
+  } else { newMystery(); $("loadWs").hidden=true;
+    $("modeNote").innerHTML = "Same reaction, but the orders are hidden and random (0, 1 or 2). Design your own trials. Click <b>New mystery</b> for another one.";
+    $("mMystery").textContent = "New mystery";
+  }
+  resetAll();
+}
+function resetAll(){
+  if (anim) cancelAnimationFrame(anim), anim=null;
+  trials=[]; sel=-1; solved={x:false,y:false,k:false};
+  $("runMsg").innerHTML=""; $("final").innerHTML="";
+  ["a","b"].forEach(p=>{ $(p+"Work").hidden=true; $(p+"PairMsg").innerHTML=""; $(p+"Msg").innerHTML=""; $(p+"X").value=""; $("q"+p.toUpperCase()).classList.remove("ok"); });
+  $("kVal").value=""; $("kUnits").value=""; $("kMsg").innerHTML="";
+  $("tSlide").value=0;
+  refresh();
+}
+
+// ---------- trials ----------
+function pairInfo(i,j){ // which concentration differs
+  const A=trials[i], B=trials[j];
+  const da = Math.abs(A.a-B.a)>1e-9, db = Math.abs(A.b-B.b)>1e-9;
+  if (da && db) return "both"; if (!da && !db) return "same";
+  return da ? "A" : "B";
+}
+function partners(i){
+  const out=[]; trials.forEach((_,j)=>{ if (j!==i){ const p=pairInfo(i,j); if (p==="A"||p==="B") out.push({j,p}); } });
+  return out;
+}
+const NAME = {A:"[OCl<sup>−</sup>]", B:"[I<sup>−</sup>]"};
+
+function runTrial(a,b, quiet){
+  if (trials.length>=MAXTRIALS){ $("runMsg").innerHTML = `<div class="msg warn">The table is full (${MAXTRIALS} trials). Clear trials to start again.</div>`; return; }
+  const tr = {a,b,rate:initialRate(a,b),pts:simulate(a,b),color:COLORS[trials.length%COLORS.length],shown:quiet?1:0};
+  trials.push(tr); sel = trials.length-1; $("tSlide").value=0;
+  const n = trials.length;
+  if (!quiet){
+    let html;
+    if (n===1) html = `<div class="msg info">Trial 1 is your starting point. For the next trial, change <b>one</b> concentration only.</div>`;
+    else {
+      const same = trials.slice(0,-1).findIndex((t)=>Math.abs(t.a-a)<1e-9 && Math.abs(t.b-b)<1e-9);
+      const ps = partners(n-1);
+      if (same>=0) html = `<div class="msg info">Trial ${n} repeats Trial ${same+1} (same concentrations), so it gives the same initial rate. A repeat can't tell you an order.</div>`;
+      else if (ps.length){
+        const p = ps[ps.length-1];
+        html = `<div class="msg good">✓ Compared with Trial ${p.j+1}, only ${NAME[p.p]} changed. Any change in rate between these two trials is caused by ${p.p==="A"?"OCl<sup>−</sup>":"I<sup>−</sup>"}.</div>`;
+      } else {
+        html = `<div class="msg bad">⚠ Trial ${n} changes <b>both</b> concentrations compared with every earlier trial. If the rate changes, you can't tell which reactant caused it, so this trial can't be paired with anything yet.</div>`;
+      }
+    }
+    $("runMsg").innerHTML = html;
+    animate(tr);
+  }
+  refresh();
+}
+function animate(tr){
+  if (anim) cancelAnimationFrame(anim);
+  trials.forEach(t=>t.shown=1); tr.shown=0;
+  const t0 = performance.now(), dur = 1600;
+  $("run").disabled = true;
+  const step = now => {
+    tr.shown = Math.min(1,(now-t0)/dur);
+    draw();
+    if (tr.shown<1) anim = requestAnimationFrame(step); else { anim=null; $("run").disabled=false; draw(); updateReadout(); }
+  };
+  anim = requestAnimationFrame(step);
+}
+
+// ---------- table & selects ----------
+function refresh(){
+  const tb = $("tbody");
+  if (!trials.length) tb.innerHTML = `<tr><td colspan="4" class="muted">No trials yet.</td></tr>`;
+  else tb.innerHTML = trials.map((t,i)=>{
+    let tag="";
+    const same = trials.some((u,j)=>j!==i && pairInfo(i,j)==="same");
+    if (trials.length>1 && !partners(i).length) tag = same ? ` <span class="tag rep">repeat</span>` : ` <span class="tag lone" title="Both concentrations differ from every other trial">no fair partner</span>`;
+    return `<tr data-i="${i}" class="${i===sel?"sel":""}"><td><span class="dot" style="background:${t.color}"></span>${i+1}${tag}</td><td class="num">${fmtC(t.a)}</td><td class="num">${fmtC(t.b)}</td><td class="num">${fmt(t.rate)}</td></tr>`;
+  }).join("");
+  tb.querySelectorAll("tr[data-i]").forEach(r=>r.onclick=()=>{ sel=+r.dataset.i; refresh(); });
+  const opts = trials.map((t,i)=>`<option value="${i}">Trial ${i+1}</option>`).join("") || `<option value="">–</option>`;
+  ["aT1","aT2","bT1","bT2","kT"].forEach((id,k)=>{ const s=$(id), v=s.value; s.innerHTML=opts; if (v!=="" && +v<trials.length) s.value=v; else if (trials.length) s.value = String(Math.min(k%2, trials.length-1)); });
+  draw(); updateReadout(); updateK();
+}
+
+// ---------- graph ----------
+const cv = $("g"), ctx = cv.getContext("2d");
+const PAD = {l:78, r:16, t:16, b:52};
+function yMax(){
+  let m = 0; trials.forEach(t=>m=Math.max(m,Math.min(t.a,t.b)));
+  if (!m) m = 0.004;
+  const steps=[0.001,0.002,0.003,0.004,0.005,0.006,0.008,0.010];
+  return steps.find(s=>s>=m*1.05) || 0.01;
+}
+function draw(){
+  const W=cv.width, H=cv.height, pw=W-PAD.l-PAD.r, ph=H-PAD.t-PAD.b, ym=yMax();
+  const X = t => PAD.l + t/TMAX*pw, Y = c => PAD.t + ph - c/ym*ph;
+  ctx.clearRect(0,0,W,H);
+  ctx.font = "14px system-ui, sans-serif"; ctx.fillStyle="#5b6575"; ctx.strokeStyle="#e4e8ef"; ctx.lineWidth=1;
+  for (let t=0;t<=TMAX;t+=1){ ctx.beginPath(); ctx.moveTo(X(t),PAD.t); ctx.lineTo(X(t),PAD.t+ph); ctx.stroke(); ctx.textAlign="center"; ctx.fillText(t,X(t),PAD.t+ph+18); }
+  const ny = 5;
+  for (let i=0;i<=ny;i++){ const c=ym*i/ny; ctx.beginPath(); ctx.moveTo(PAD.l,Y(c)); ctx.lineTo(PAD.l+pw,Y(c)); ctx.stroke(); ctx.textAlign="right"; ctx.fillText(c.toFixed(4),PAD.l-6,Y(c)+5); }
+  ctx.strokeStyle="#1d2430"; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(PAD.l,PAD.t); ctx.lineTo(PAD.l,PAD.t+ph); ctx.lineTo(PAD.l+pw,PAD.t+ph); ctx.stroke();
+  ctx.fillStyle="#1d2430"; ctx.textAlign="center"; ctx.font="600 14px system-ui, sans-serif";
+  ctx.fillText("Time (s)", PAD.l+pw/2, H-10);
+  ctx.save(); ctx.translate(16, PAD.t+ph/2); ctx.rotate(-Math.PI/2); ctx.fillText("[OI⁻] formed (mol/L)",0,0); ctx.restore();
+  if (!trials.length){ ctx.fillStyle="#5b6575"; ctx.font="15px system-ui, sans-serif"; ctx.fillText("Run a trial to see the product concentration over time.", PAD.l+pw/2, PAD.t+ph/2); return; }
+  ctx.save(); ctx.beginPath(); ctx.rect(PAD.l,PAD.t,pw,ph); ctx.clip();
+  trials.forEach((t,i)=>{
+    const n = Math.max(1, Math.floor(t.pts.length*t.shown));
+    ctx.strokeStyle=t.color; ctx.lineWidth = i===sel?3.2:1.8; ctx.globalAlpha = (sel<0||i===sel)?1:0.45;
+    ctx.beginPath(); for (let k=0;k<n;k++){ const p=t.pts[k]; k?ctx.lineTo(X(p[0]),Y(p[1])):ctx.moveTo(X(p[0]),Y(p[1])); } ctx.stroke();
+  });
+  ctx.globalAlpha=1;
+  // tangent on selected trial
+  const tr = trials[sel];
+  if (tr && tr.shown>=1){
+    const t0 = +$("tSlide").value, x0 = xAtT(tr,t0), m = rateAt(tr.a,tr.b,x0);
+    // segment spanning +/- 2.5 s or until it leaves the plot
+    const span = 2.5, ta = Math.max(0,t0-span), tb = t0+span;
+    ctx.setLineDash([8,6]); ctx.strokeStyle="#1d2430"; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(X(ta),Y(x0+m*(ta-t0))); ctx.lineTo(X(tb),Y(x0+m*(tb-t0))); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle="#1d2430"; ctx.beginPath(); ctx.arc(X(t0),Y(x0),5,0,7); ctx.fill();
+    // label
+    ctx.font="600 14px system-ui, sans-serif"; ctx.textAlign="left";
+    const lbl = t0===0 ? "initial rate = slope of tangent at t = 0" : "slope = instantaneous rate";
+    const lx = Math.min(X(t0)+10, PAD.l+pw-ctx.measureText(lbl).width-6), ly = Math.max(PAD.t+16, Math.min(PAD.t+ph-10, Y(x0)-10));
+    ctx.fillStyle="rgba(255,255,255,.85)"; ctx.fillRect(lx-3,ly-15,ctx.measureText(lbl).width+6,20);
+    ctx.fillStyle="#1d2430"; ctx.fillText(lbl, lx, ly);
+  }
+  ctx.restore();
+}
+function updateReadout(){
+  const tr = trials[sel], t0 = +$("tSlide").value;
+  $("tVal").textContent = t0.toFixed(1);
+  if (!tr){ $("readout").innerHTML = `<span class="muted">The dashed tangent's slope is the rate at that moment. At t = 0 it is the <b>initial rate</b>.</span>`; return; }
+  const x0 = xAtT(tr,t0), r = rateAt(tr.a,tr.b,x0), r0 = tr.rate;
+  if (t0===0){
+    $("readout").innerHTML = `Trial ${sel+1}: <b>initial rate = ${fmt(r0)} mol/(L·s)</b>. At t = 0 the concentrations are exactly the ones in the table. Drag the slider to see what happens later.`;
+  } else {
+    const A = Math.max(tr.a-x0,0), B=Math.max(tr.b-x0,0);
+    $("readout").innerHTML = `Trial ${sel+1} at t = ${t0.toFixed(1)} s: rate = ${fmt(r)} mol/(L·s), only <b>${Math.round(100*r/r0)}%</b> of the initial rate. Reactants have been used up, so [OCl<sup>−</sup>] = ${fmtC(A)} and [I<sup>−</sup>] = ${fmtC(B)} mol/L, not the values in the table. That's why we only use <b>initial</b> rates.`;
+  }
+}
+
+// ---------- solving ----------
+function ratioStr(v){ const r = Number(v.toPrecision(3)); return Number.isInteger(r)? r.toFixed(0) : String(r); }
+function usePair(p){ // p = "a" (OCl-) or "b" (I-)
+  const which = p==="a"?"A":"B", other = p==="a"?"[I<sup>−</sup>]":"[OCl<sup>−</sup>]";
+  const msg=$(p+"PairMsg"); $(p+"Work").hidden=true; $(p+"Msg").innerHTML="";
+  if (trials.length<2){ msg.innerHTML=`<div class="msg warn">Run at least two trials first.</div>`; return; }
+  const i=+$(p+"T1").value, j=+$(p+"T2").value;
+  if (i===j){ msg.innerHTML=`<div class="msg bad">Pick two different trials.</div>`; return; }
+  const info = pairInfo(i,j);
+  if (info==="both"){ msg.innerHTML=`<div class="msg bad">Both concentrations change between Trials ${i+1} and ${j+1}. You can't tell which reactant caused the rate change. Find two trials where only ${NAME[which]} changes.</div>`; return; }
+  if (info==="same"){ msg.innerHTML=`<div class="msg bad">These trials have the same concentrations, so nothing was changed.</div>`; return; }
+  if (info!==which){ msg.innerHTML=`<div class="msg bad">Between these trials ${other.replace(/^/,"")} is what changes, and ${NAME[which]} stays the same. That pair is for the other reactant.</div>`; return; }
+  msg.innerHTML=`<div class="msg good">✓ Fair pair: only ${NAME[which]} changes and ${other} stays the same.</div>`;
+  const T1=trials[i], T2=trials[j];
+  const c1 = which==="A"?T1.a:T1.b, c2 = which==="A"?T2.a:T2.b;
+  const sp = which==="A"?"OCl<sup>−</sup>":"I<sup>−</sup>", v = p==="a"?"x":"y";
+  $(p+"Eq").innerHTML =
+    `rate<sub>${i+1}</sub> / rate<sub>${j+1}</sub> = ([${sp}]<sub>${i+1}</sub> / [${sp}]<sub>${j+1}</sub>)<sup>${v}</sup><br>`+
+    `${fmt(T1.rate)} / ${fmt(T2.rate)} = (${fmtC(c1)} / ${fmtC(c2)})<sup>${v}</sup><br>`+
+    `<span class="muted">Simplify both ratios, then solve for ${v}.</span>`;
+  $(p+"Work").hidden=false;
+  $(p+"Work").dataset.cr = c1/c2; $(p+"Work").dataset.rr = T1.rate/T2.rate;
+}
+function checkOrder(p){
+  const v = p==="a"?"x":"y", truth = p==="a"?R.x:R.y;
+  const s = $(p+"X").value.trim(); const msg=$(p+"Msg");
+  if (s===""){ msg.innerHTML=`<div class="msg warn">Enter a value for ${v}.</div>`; return; }
+  const n = Number(s);
+  const cr = +$(p+"Work").dataset.cr, rr = +$(p+"Work").dataset.rr;
+  if (Math.abs(n-truth)<0.05){
+    solved[v]=true; $("q"+p.toUpperCase()).classList.add("ok");
+    const word = ["zero","first","second"][truth];
+    msg.innerHTML = `<div class="msg good">✓ Correct: ${ratioStr(rr)} = ${ratioStr(cr)}<sup>${truth}</sup>, so the reaction is <b>${word} order</b> in ${p==="a"?"OCl<sup>−</sup>":"I<sup>−</sup>"}.${truth===0?" Changing its concentration doesn't change the rate.":""}</div>`;
+  } else {
+    msg.innerHTML = `<div class="msg bad">Not quite. The concentration ratio is ${ratioStr(cr)} and the rate ratio is ${ratioStr(rr)}. What power of ${ratioStr(cr)} gives ${ratioStr(rr)}? (Remember: anything to the power 0 is 1.)</div>`;
+  }
+  updateK();
+}
+const UNIT_TXT = ["mol/(L·s)","s⁻¹","L/(mol·s)","L²/(mol²·s)","L³/(mol³·s)"];
+function power(base, e){ return e===0?"":e===1?base:`${base}<sup>${e}</sup>`; }
+function updateK(){
+  const ok = solved.x && solved.y;
+  $("qK").classList.toggle("locked", !ok); $("kBody").hidden=!ok; $("kLock").hidden=ok;
+  if (!ok || !trials.length) { renderFinal(); return; }
+  const t = trials[+$("kT").value] || trials[0];
+  const a = power(`(${fmtC(t.a)})`,R.x), b = power(`(${fmtC(t.b)})`,R.y);
+  const rl = `k${power("[OCl<sup>−</sup>]",R.x)}${power("[I<sup>−</sup>]",R.y)}`;
+  $("kEq").innerHTML = `rate = ${rl}<br>${fmt(t.rate)} = k${a}${b}${(!a&&!b)?" <span class='muted'>(zero order overall: k equals the rate)</span>":""}<br><span class="muted">Rearrange for k, then work out its units.</span>`;
+  renderFinal();
+}
+function checkK(){
+  const msg=$("kMsg"); const t = trials[+$("kT").value] || trials[0];
+  const raw = $("kVal").value.replace(/\s/g,"").replace(/×10\^?/i,"e").replace(/x10\^?/i,"e");
+  const v = Number(raw), u = $("kUnits").value;
+  const kTrue = t.rate/(Math.pow(t.a,R.x)*Math.pow(t.b,R.y));
+  const overall = R.x+R.y;
+  const parts=[];
+  let good = true;
+  if (!isFinite(v) || raw===""){ msg.innerHTML=`<div class="msg warn">Enter a number for k (e.g. 57500 or 5.75e4).</div>`; return; }
+  if (Math.abs(v-kTrue)/kTrue > 0.05){ good=false; parts.push(`The value is off. Square or cube a concentration only if its order is 2 or 3, and divide the rate by the product of the concentration terms.`); }
+  if (u===""){ good=false; parts.push("Choose the units of k."); }
+  else if (+u!==overall){ good=false; parts.push(`Check the units: the overall order is ${R.x} + ${R.y} = ${overall}. Units of k must make k × (mol/L)<sup>${overall}</sup> come out as mol/(L·s).`); }
+  if (good){ solved.k=true; msg.innerHTML=`<div class="msg good">✓ k ≈ ${fmtBig(kTrue)} ${UNIT_TXT[overall]}${parts.length?"":""}</div>`; }
+  else { solved.k=false; msg.innerHTML=`<div class="msg bad">${parts.join("<br>")}</div>`; }
+  renderFinal();
+}
+function renderFinal(){
+  if (!(solved.x && solved.y && solved.k)){ $("final").innerHTML=""; return; }
+  const overall=R.x+R.y;
+  const t = trials[+$("kT").value] || trials[0];
+  const kv = t.rate/(Math.pow(t.a,R.x)*Math.pow(t.b,R.y));
+  let law = `rate = ${fmtBig(kv)} ${UNIT_TXT[overall]} ${power("[OCl<sup>−</sup>]",R.x)}${power("[I<sup>−</sup>]",R.y)}`;
+  $("final").innerHTML = `<div class="final">${law}</div><p class="muted" style="text-align:center">Overall order = ${R.x} + ${R.y} = ${overall}.${(R.x===0||R.y===0)?" A zero-order reactant is left out of the rate law because [ ]<sup>0</sup> = 1.":""}${mode==="mystery"?" Try another with <b>New mystery</b>.":""}</p>`;
+}
+
+// ---------- wire up ----------
+$("cA").innerHTML = $("cB").innerHTML = CONCS.map(c=>`<option value="${c}">${fmtC(c)}</option>`).join("");
+$("run").onclick = ()=>runTrial(+$("cA").value, +$("cB").value, false);
+$("clear").onclick = resetAll;
+$("loadWs").onclick = ()=>{ resetAll(); WS_TRIALS.forEach(([a,b])=>runTrial(a,b,true)); sel=0; $("runMsg").innerHTML=`<div class="msg info">Loaded the worksheet's three trials. Which pairs change only one concentration?</div>`; refresh(); };
+$("mWorksheet").onclick = ()=>setMode("worksheet");
+$("mMystery").onclick = ()=>setMode("mystery");
+$("tSlide").oninput = ()=>{ draw(); updateReadout(); };
+$("aPair").onclick = ()=>usePair("a"); $("bPair").onclick = ()=>usePair("b");
+$("aCheck").onclick = ()=>checkOrder("a"); $("bCheck").onclick = ()=>checkOrder("b");
+$("aX").onkeydown = e=>{ if(e.key==="Enter") checkOrder("a"); };
+$("bX").onkeydown = e=>{ if(e.key==="Enter") checkOrder("b"); };
+$("kT").onchange = ()=>{ updateK(); $("kMsg").innerHTML=""; solved.k=false; renderFinal(); };
+$("kCheck").onclick = checkK;
+$("kVal").onkeydown = e=>{ if(e.key==="Enter") checkK(); };
+setMode("worksheet");
+window.__rl = {get R(){return R;}, get trials(){return trials;}, runTrial};
+})();
+</script>
+<script src="../../assets/fullscreen.js?v=202611191215" defer></script>
+</body>
+</html>
