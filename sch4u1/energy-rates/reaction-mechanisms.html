@@ -58,7 +58,7 @@ h2{font-size:14px;margin:0 0 4px;display:flex;justify-content:space-between;alig
 .diagram{grid-column:3;grid-row:1 / 3}
 .side{grid-column:4;grid-row:1 / 3}
 svg.fill{width:100%;flex:1 1 auto;min-height:0;display:block}
-#chamberSvg{background:radial-gradient(ellipse at center,#fbfcff 0%,#eef2f9 100%);border:1px solid var(--line);border-radius:8px}
+#chamberSvg{flex:1 1 0;min-height:120px;background:radial-gradient(ellipse at center,#fbfcff 0%,#eef2f9 100%);border:1px solid var(--line);border-radius:8px}
 #peSvg{background:#fff}
 .status{font-size:13px;min-height:36px;margin-top:4px;padding:4px 8px;border-radius:6px;background:#f5f8fd}
 .legend{display:flex;gap:10px;font-size:12px;color:var(--muted);flex-wrap:wrap}
@@ -137,6 +137,7 @@ body.quiz .badge,body.quiz #catNote{display:none}
   <section class="card chamber">
     <h2><span>Inside the reaction</span>
       <span class="legend"><span><i class="ring i"></i>intermediate</span><span><i class="ring c"></i>catalyst</span></span></h2>
+    <button class="btn small" id="moreBtn" style="margin-bottom:5px">Show more molecules (×5)</button>
     <svg id="chamberSvg" class="fill" viewBox="0 0 260 300" preserveAspectRatio="xMidYMid meet"></svg>
     <div class="status" id="status"></div>
     <button class="btn ghost small" id="replayBtn" hidden style="margin-top:5px">⟲ Replay in slow motion</button>
@@ -145,7 +146,7 @@ body.quiz .badge,body.quiz #catNote{display:none}
   <section class="card ledger">
     <h2><span>Species tracker</span><span class="muted">− consumed &nbsp; + produced</span></h2>
     <div class="tablewrap"><table id="ledgerTbl"></table></div>
-    <div class="rule"><div><b>Intermediate:</b> produced, then consumed</div><div class="c"><b>Catalyst:</b> consumed, then produced</div></div>
+    <div class="rule"><div><b>Intermediate:</b> produced via an elementary step and later consumed. Not part of the net reaction.</div><div class="c"><b>Catalyst:</b> consumed in an elementary step then later re-formed. Not part of the net reaction.</div></div>
   </section>
 
   <section class="card diagram">
@@ -191,7 +192,7 @@ const MOL={
   H2O2:[["H",-2,.7],["O",-.8,0],["O",.8,0],["H",2,-.7]], "I-":[["I",0,0]], "IO-":[["I",-.9,0],["O",1.2,0]],
   O2:[["O",-.8,0],["O",.8,0]], O:[["O",0,0]]
 };
-let S=11;
+let S=11, SB=11, MULT=1;
 const PAL=["#1f5fbf","#c2185b","#00838f","#6a3fb5","#8d5524","#b8860b","#455a64","#ad1457"];
 const colorOn=false;
 function spCol(sp){const i=M?M.order.indexOf(sp):-1;return i<0?"#33415a":PAL[i%PAL.length];}
@@ -244,6 +245,31 @@ const MECHS=[
   steps:[{L:{NO:2,H2:2},R:{N2:1,H2O:2},slow:1,Ea:150,dH:-330}]}
 ];
 
+// activated complexes: atoms [el,x,y] and bonds [i,j,solid?] (dotted = breaking or forming)
+const NN={a:[["N",-.8,.3],["O",-1.6,-.9],["N",.8,.3],["O",1.6,-.9]],b:[[0,1,1],[2,3,1],[0,2,0]]};
+const N2O2H2={a:[["O",-2.6,-.9],["N",-1.6,.2],["N",0,.2],["O",1.2,-.8],["H",2.5,-.2],["H",2.2,-2]],b:[[0,1,1],[1,2,1],[2,3,0],[3,4,0],[3,5,0],[4,5,0]]};
+const AC={
+ no2co:[{a:[["N",-1.6,0],["O",-2.5,1.2],["O",-1,1.3],["O",0,-.3],["N",1.5,-.9],["O",2.8,-.3]],b:[[0,1,1],[0,2,1],[0,3,0],[3,4,0],[4,5,1]]},
+        {a:[["N",-1.6,0],["O",-2.5,1.1],["O",-2.5,-1.1],["O",0,0],["C",1.6,0],["O",3.1,0]],b:[[0,1,1],[0,2,1],[0,3,0],[3,4,0],[4,5,1]]}],
+ noh2:[NN,N2O2H2,{a:[["N",-2.4,0],["N",-.9,0],["O",.5,0],["H",1.6,.9],["H",1.6,-.9]],b:[[0,1,1],[1,2,0],[2,3,0],[2,4,0],[3,4,0]]}],
+ h2o2:[{a:[["I",-3,0],["O",-1,0],["O",.6,.7],["H",-.2,1.5],["H",1.9,0]],b:[[0,1,0],[1,2,0],[1,3,0],[3,2,0],[2,4,1]]},
+       {a:[["I",-3.2,.3],["O",-1.6,.3],["O",0,0],["O",1.4,.8],["H",1.1,-.7],["H",2.7,.3]],b:[[0,1,0],[1,2,0],[2,3,0],[2,4,0],[4,3,0],[3,5,1]]}],
+ noo2:[NN,{a:[["O",-1.9,-1],["N",-.9,0],["N",.9,0],["O",1.9,-1],["O",-.8,1.5],["O",.8,1.5]],b:[[0,1,1],[2,3,1],[1,2,0],[4,5,0],[1,4,0],[2,5,0]]}],
+ pA:[{a:[["N",-1.6,0],["O",-2.4,1.2],["O",0,0],["C",1.6,0],["O",3.1,0]],b:[[0,1,1],[0,2,0],[2,3,0],[3,4,1]]}],
+ pB:[{a:[["N",0,0],["O",0,-1.5],["Cl",-1.5,1.2],["Cl",1.5,1.2]],b:[[0,1,1],[0,2,0],[0,3,0],[2,3,0]]},
+     {a:[["Cl",-2.9,.5],["N",-1.5,0],["O",-1.5,-1.5],["Cl",0,.9],["N",1.5,0],["O",2.6,-1]],b:[[0,1,1],[1,2,1],[1,3,0],[3,4,0],[4,5,1]]}],
+ pC:[NN,N2O2H2,{a:[["N",-1.6,0],["N",-.1,0],["O",1.5,0]],b:[[0,1,1],[1,2,0]]}],
+ pD:[{a:[["N",-.8,0],["N",.8,0],["O",-2,-.9],["O",2,-.9],["H",-3.3,-.3],["H",-2.6,-2.2],["H",3.3,-.3],["H",2.6,-2.2]],b:[[0,1,0],[0,2,0],[1,3,0],[2,4,0],[2,5,0],[4,5,0],[3,6,0],[3,7,0],[6,7,0]]}]
+};
+function acSVG(ac,cx,cy){
+  const u=SB*1.75, P=ac.a.map(([e,x,y])=>[cx+x*u,cy+y*u]);
+  let s="";
+  for(const [i,j,sol] of ac.b){const [x1,y1]=P[i],[x2,y2]=P[j];
+    s+=sol?`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#333" stroke-width="3.5" stroke-linecap="round"/>`
+          :`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#222" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="0 8"/>`;}
+  ac.a.forEach(([e],k)=>{s+=`<circle cx="${P[k][0].toFixed(1)}" cy="${P[k][1].toFixed(1)}" r="${(RAD[e]*SB*.78).toFixed(1)}" fill="${COL[e]}" stroke="rgba(0,0,0,.35)"/>`;});
+  return s;
+}
 function prep(m){
   if(m.ready) return m;
   const order=[];const add=s=>{if(!order.includes(s))order.push(s);};
@@ -299,7 +325,7 @@ function prep(m){
 // ---------- state ----------
 let M=null, done=0, busy=false, runId=0, pool=[], fx=null, markerU=0, nid=1, quiz=true;
 const CH={w:260,h:300,cx:130,cy:130};
-function sizeChamber(){const sv=$("chamberSvg"),w=sv.clientWidth,h=sv.clientHeight;if(w>80&&h>80){CH.w=w;CH.h=h;CH.cx=w/2;CH.cy=h*.45;S=Math.max(10,Math.min(15,Math.min(w,h)/24));sv.setAttribute("viewBox",`0 0 ${w} ${h}`);}}
+function sizeChamber(){const sv=$("chamberSvg"),w=sv.clientWidth,h=sv.clientHeight;if(w>80&&h>80){CH.w=w;CH.h=h;CH.cx=w/2;CH.cy=h*.45;SB=Math.max(10,Math.min(15,Math.min(w,h)/24));S=SB*(MULT>1?.55:1);sv.setAttribute("viewBox",`0 0 ${w} ${h}`);}}
 const sel=$("mechSel");
 {let g=null,og=null;MECHS.forEach((m,i)=>{if(m.grp!==g){og=document.createElement("optgroup");og.label=m.grp;sel.appendChild(og);g=m.grp;}const o=document.createElement("option");o.value=i;o.textContent=m.name;og.appendChild(o);});}
 
@@ -317,7 +343,8 @@ function counts(){const c={};M.order.forEach(s=>c[s]=0);pool.forEach(p=>c[p.sp]=
 
 function load(i){
   runId++; busy=false; playing=false; SM=1; lastSnap=null; M=prep(MECHS[i]); done=0; pool=[]; fx=null; markerU=0; sizeChamber();
-  for(const s of M.order) for(let k=0;k<M.init[s];k++){const q=freeSpot(extent(s));spawn(s,q.x,q.y);}
+  for(const s of M.order) for(let k=0;k<M.init[s]*MULT;k++){const q=freeSpot(extent(s));spawn(s,q.x,q.y);}
+  $("moreBtn").textContent=MULT>1?"Show fewer molecules":"Show more molecules (×5)";
   $("uncatWrap").style.display=M.uncat?"":"none"; $("uncat").checked=false;
   setStatus(M.judge?"Play the proposed steps, then decide: is this mechanism plausible?":"Press <b>▶ Next step</b> to watch the first elementary step.");
   renderSteps(); renderLedger(); renderPE(); renderPlaus(); renderQuiz(); updBtns();
@@ -346,11 +373,11 @@ function renderLedger(){
     M.steps.forEach((st,i)=>{
       const d=M.delta[i][s];
       if(i>=done||d===undefined){h+="<td></td>";return;}
-      const parts=[];if(st.L[s])parts.push("−"+st.L[s]);if(st.R[s])parts.push("+"+st.R[s]);
+      const parts=[];if(st.L[s])parts.push("−"+st.L[s]*MULT);if(st.R[s])parts.push("+"+st.R[s]*MULT);
       const cls=st.L[s]&&st.R[s]?"":st.L[s]?"neg":"pos";
       h+=`<td class="${cls}">${parts.join(" ")}</td>`;
     });
-    h+=`<td><b>${c[s]||0}</b> <span class="dots" style="color:${colorOn?spCol(s):"inherit"}">${"●".repeat(Math.min(c[s]||0,6))}</span></td>`;
+    h+=`<td><b>${c[s]||0}</b> <span class="dots" style="color:${colorOn?spCol(s):"inherit"}">${(MULT>1?"":"●".repeat(Math.min(c[s]||0,6)))}</span></td>`;
     h+=`<td>${showRole?`<span class="role ${M.role[s]}">${M.role[s]}</span>`:(quiz&&end?"?":"")}</td></tr>`;
   }
   $("ledgerTbl").innerHTML=h+"</tbody>";
@@ -450,7 +477,7 @@ function drawMarker(){
 }
 
 // ---------- animation ----------
-let SM=1, playing=false, lastSnap=null;
+let SM=1, playing=false, lastSnap=null, flashes=[];
 function tween(ms,f,id){ms*=SM;return new Promise(res=>{const t0=performance.now();
   function fr(t){if(id!==runId){res(false);return;}const p=Math.min(1,(t-t0)/ms);f(p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2,p);if(p<1)requestAnimationFrame(fr);else res(true);}
   requestAnimationFrame(fr);});}
@@ -481,12 +508,22 @@ async function runStep(){
   const fast=!st.slow, tA=fast?550:1300;
   setStatus(`${sm}${quiz?"":`<b>Step ${k+1} (${st.slow?"slow":"fast"}).</b> `}${side(st.L)} collide with enough energy and the correct orientation…`);
   if(!await tween(tA,(e)=>{R.forEach((p,j)=>{p.x=home[j].x+(tgt[j].x-home[j].x)*e;p.y=home[j].y+(tgt[j].y-home[j].y)*e;});markerU=stepU(k,.5*e);drawMarker();},id)) return false;
-  fx={type:"complex",x:CH.cx,y:CH.cy,r:Math.max(...R.map(p=>extent(p.sp)))+nR*18};
-  setStatus(`${sm}‡ <b>Activated complex ${k+1}</b>: the top of the hump on the energy diagram. Bonds are breaking and forming.`);
+  const ac=(AC[M.id]||[])[k];
+  if(ac){R.forEach(p=>p.hide=true);}
+  fx={type:"complex",x:CH.cx,y:CH.cy,ac,r:ac?Math.max(...ac.a.map(([e,x,y])=>Math.hypot(x,y)))*SB*1.75+SB*1.3:Math.max(...R.map(p=>extent(p.sp)))+nR*18};
+  setStatus(`${sm}‡ <b>Activated complex ${k+1}</b>: the top of the hump on the energy diagram. Bonds are breaking and forming at the same time (dotted lines).`);
   if(!await wait(fast?600:1800,id)) return false;
   pool=pool.filter(p=>!R.includes(p)); fx=null;
   const P=[];for(const s in st.R) for(let j=0;j<st.R[s];j++) P.push(s);
   const born=P.map((s,j)=>{const p=spawn(s,CH.cx+(j-(P.length-1)/2)*44,CH.cy);p.busy=true;return p;});
+  // with more molecules, the other sets of reactant particles react elsewhere in the mixture at the same time
+  for(let b=1;b<MULT;b++){
+    const set=[];for(const s in st.L) for(let j=0;j<st.L[s];j++){const p=pool.find(q=>q.sp===s&&!q.busy&&!set.includes(q));if(p)set.push(p);}
+    if(set.length<entities(st.L)) break;
+    const cx=set.reduce((a,p)=>a+p.x,0)/set.length, cy=set.reduce((a,p)=>a+p.y,0)/set.length;
+    pool=pool.filter(p=>!set.includes(p)); flashes.push({x:cx,y:cy,t:performance.now()});
+    P.forEach((s,j)=>{const p=spawn(s,cx+(j-(P.length-1)/2)*14,cy);p.busy=true;born.push(p);});
+  }
   const dest=born.map(p=>freeSpot(extent(p.sp)));
   const start=born.map(p=>({x:p.x,y:p.y}));
   if(!await tween(fast?650:1300,(e)=>{born.forEach((p,j)=>{p.x=start[j].x+(dest[j].x-start[j].x)*e;p.y=start[j].y+(dest[j].y-start[j].y)*e;});markerU=stepU(k,.5+.5*e);drawMarker();},id)) return false;
@@ -523,12 +560,19 @@ function frame(t){
     p.vx+=(Math.random()-.5)*20*dt; p.vy+=(Math.random()-.5)*20*dt;
     const sp=Math.hypot(p.vx,p.vy); if(sp>16){p.vx*=16/sp;p.vy*=16/sp;}
     p.x+=p.vx*dt; p.y+=p.vy*dt;
+    if(fx&&fx.type==="complex"){const dx=p.x-fx.x,dy=p.y-fx.y,dd=Math.hypot(dx,dy)||1,need=fx.r+r+4;
+      if(dd<need){const k=Math.min(need-dd,120*dt)/dd;p.x+=dx*k;p.y+=dy*k;}}
     if(p.x<r+4){p.x=r+4;p.vx=Math.abs(p.vx);} if(p.x>CH.w-r-4){p.x=CH.w-r-4;p.vx=-Math.abs(p.vx);}
     if(p.y<r+4){p.y=r+4;p.vy=Math.abs(p.vy);} if(p.y>CH.h-r-16){p.y=CH.h-r-16;p.vy=-Math.abs(p.vy);}
   }
+  for(let i=0;i<pool.length;i++)for(let j=i+1;j<pool.length;j++){const A=pool[i],B=pool[j];if(A.busy&&B.busy)continue;
+    const dx=B.x-A.x,dy=B.y-A.y,dd=Math.hypot(dx,dy)||1,need=extent(A.sp)+extent(B.sp)+3;
+    if(dd<need){const k=Math.min(need-dd,60*dt)/dd/2;if(!A.busy){A.x-=dx*k;A.y-=dy*k;}if(!B.busy){B.x+=dx*k;B.y+=dy*k;}}}
   let s="";
-  if(fx&&fx.type==="complex") s+=`<circle cx="${fx.x}" cy="${fx.y}" r="${fx.r}" fill="#ffd54a" opacity=".35"/><text x="${fx.x}" y="${fx.y-fx.r-6}" text-anchor="middle" font-size="14" font-weight="700" fill="#8a5a00" stroke="#fff" stroke-width="4" paint-order="stroke">‡ activated complex</text>`;
-  for(const p of pool) s+=molSVG(p.sp,p.x,p.y,ringFor(p.sp),true,false);
+  const now=performance.now(); flashes=flashes.filter(q=>now-q.t<700);
+  for(const q of flashes){const a=(now-q.t)/700;s+=`<circle cx="${q.x}" cy="${q.y}" r="${6+22*a}" fill="#ffd54a" opacity="${(.6*(1-a)).toFixed(2)}"/>`;}
+  if(fx&&fx.type==="complex") s+=`<circle cx="${fx.x}" cy="${fx.y}" r="${fx.r}" fill="#ffd54a" opacity=".35"/>${fx.ac?acSVG(fx.ac,fx.x,fx.y)+`<text x="${fx.x}" y="${fx.y+fx.r+14}" text-anchor="middle" font-size="11" font-weight="600" fill="#5b6575" stroke="#fff" stroke-width="3" paint-order="stroke">· · · bond breaking or forming</text>`:""}<text x="${fx.x}" y="${fx.y-fx.r-6}" text-anchor="middle" font-size="14" font-weight="700" fill="#8a5a00" stroke="#fff" stroke-width="4" paint-order="stroke">‡ activated complex</text>`;
+  for(const p of pool) if(!p.hide) s+=molSVG(p.sp,p.x,p.y,ringFor(p.sp),MULT===1,false);
   if(fx&&fx.type==="bounce") s+=`<text x="${fx.x}" y="${fx.y}" text-anchor="middle" font-size="14" font-weight="700" fill="#b3261e" stroke="#fff" stroke-width="4" paint-order="stroke">not enough energy!</text>`;
   $("chamberSvg").innerHTML=s;
   requestAnimationFrame(frame);
@@ -637,6 +681,7 @@ function checkQ(show){
 $("nextBtn").onclick=()=>runStep();
 $("allBtn").onclick=()=>playAll();
 $("replayBtn").onclick=()=>replay();
+$("moreBtn").onclick=()=>{MULT=MULT>1?1:5;load(+sel.value);};
 $("resetBtn").onclick=()=>load(+sel.value);
 sel.onchange=()=>load(+sel.value);
 $("uncat").onchange=renderPE;
