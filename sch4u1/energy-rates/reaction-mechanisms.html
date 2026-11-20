@@ -123,7 +123,6 @@ body.quiz .badge{display:none}
     <table class="eqt" id="eqTbl"></table>
     <div class="catnote" id="catNote"></div>
     <div class="exp">Experimental: <b id="expLaw"></b></div>
-    <label class="opt"><input type="checkbox" id="colorCode" checked> Colour-code each species</label>
     <div class="ctrls">
       <button class="btn" id="nextBtn">▶ Next step</button>
       <button class="btn ghost" id="allBtn">▶▶ Play all</button>
@@ -190,7 +189,7 @@ const MOL={
 };
 let S=11;
 const PAL=["#1f5fbf","#c2185b","#00838f","#6a3fb5","#8d5524","#b8860b","#455a64","#ad1457"];
-let colorOn=true;
+const colorOn=false;
 function spCol(sp){const i=M?M.order.indexOf(sp):-1;return i<0?"#33415a":PAL[i%PAL.length];}
 function spHTML(c,sp){const t=term(c,sp);return colorOn?`<span class="sp" style="color:${spCol(sp)}">${t}</span>`:t;}
 function sideHTML(o){return Object.keys(o).map(k=>spHTML(o[k],k)).join(" + ");} // px per layout unit
@@ -621,7 +620,6 @@ $("allBtn").onclick=()=>playAll();
 $("resetBtn").onclick=()=>load(+sel.value);
 sel.onchange=()=>load(+sel.value);
 $("uncat").onchange=renderPE;
-$("colorCode").onchange=e=>{colorOn=e.target.checked;renderSteps();renderLedger();};
 let rT=null;window.addEventListener("resize",()=>{clearTimeout(rT);rT=setTimeout(()=>{renderPE();sizeChamber();},120);});
 $("quizMode").onchange=e=>{quiz=e.target.checked;document.body.classList.toggle("quiz",quiz);renderSteps();renderLedger();renderPE();renderPlaus();};
 $("tabP").onclick=()=>{$("tabP").className="on";$("tabQ").className="";$("paneP").hidden=false;$("paneQ").hidden=true;};
