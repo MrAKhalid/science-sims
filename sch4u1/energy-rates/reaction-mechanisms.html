@@ -112,12 +112,12 @@ body.quiz .badge,body.quiz #catNote{display:none}
 }
 </style>
 </head>
-<body class="quiz">
+<body>
 <header>
   <h1>Reaction Mechanisms</h1>
   <select id="mechSel" aria-label="Choose a mechanism"></select>
   <div class="right">
-    <label class="qz" title="Hide the labels and answers so students can practise"><input type="checkbox" id="quizMode" checked> Quiz mode</label>
+    <label class="qz" title="Hide the labels and answers so students can practise"><input type="checkbox" id="quizMode"> Quiz mode</label>
     <button id="fsBtn" title="Full screen"></button>
   </div>
 </header>
@@ -295,7 +295,7 @@ function prep(m){
 }
 
 // ---------- state ----------
-let M=null, done=0, busy=false, runId=0, pool=[], fx=null, markerU=0, nid=1, quiz=true;
+let M=null, done=0, busy=false, runId=0, pool=[], fx=null, markerU=0, nid=1, quiz=false;
 const CH={w:260,h:300,cx:130,cy:130};
 function sizeChamber(){const sv=$("chamberSvg"),w=sv.clientWidth,h=sv.clientHeight;if(w>80&&h>80){CH.w=w;CH.h=h;CH.cx=w/2;CH.cy=h*.45;S=Math.max(10,Math.min(15,Math.min(w,h)/24));sv.setAttribute("viewBox",`0 0 ${w} ${h}`);}}
 const sel=$("mechSel");
@@ -578,7 +578,7 @@ function buildQ(){
 }
 function renderQuiz(){
   quizChecked=false; Q=buildQ();
-  let h=`<p class="muted" style="margin:0 0 6px"><b>Quiz mode</b> is on: labels, slow/fast tags and roles are hidden, and the diagram shows letters like your test. Turn it off (top right) to see everything labelled.</p>`;
+  let h=`<p class="muted" style="margin:0 0 6px">Tip: turn on <b>Quiz mode</b> (top right) to hide the labels, slow/fast tags and roles. The diagram then shows letters like your test.</p>`;
   Q.forEach((q,i)=>{
     h+=`<div class="q" id="q${i}"><div class="qt">${i+1}. ${q.t}</div>`;
     if(q.type==="checks") h+=q.opts.map(o=>`<label><input type="checkbox" name="q${i}" value="${o}">${o}</label>`).join("");
