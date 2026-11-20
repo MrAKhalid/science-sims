@@ -22,33 +22,36 @@ header button{background:#24477f;color:#fff;border:0;border-radius:6px;padding:6
 header button svg{width:14px;height:14px}
 header label.qz{display:flex;align-items:center;gap:5px;font-size:13px;font-weight:600;background:#24477f;border-radius:6px;padding:5px 9px;cursor:pointer}
 
-.strip{flex:none;margin:8px 10px 0;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px 10px;display:flex;gap:8px 14px;align-items:stretch;flex-wrap:wrap}
-.overall{display:flex;flex-direction:column;justify-content:center;min-width:220px}
-.overall .lbl{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.03em}
-.overall .ov{font-size:16px;font-weight:700}
-.overall .exp{font-size:14px}
-.steps{display:flex;gap:6px;flex:1 1 380px;flex-wrap:wrap;align-items:stretch}
-.step{border:2px solid var(--line);border-radius:8px;padding:4px 9px;background:#fafbfd;display:flex;flex-direction:column;justify-content:center;min-width:0;transition:all .2s}
-.step .n{font-size:11px;color:var(--muted);font-weight:700}
-.step .e{font-size:15px;font-weight:600;white-space:nowrap}
-.step.cur{border-color:var(--accent);background:#eef4ff;box-shadow:0 0 0 3px #c9dbf7}
-.step.done{opacity:.75}
-.badge{display:inline-block;font-size:11px;border-radius:10px;padding:0 7px;font-weight:700;margin-left:4px;vertical-align:1px}
+.eqt{border-collapse:collapse;width:100%;font-size:15px;font-weight:600}
+.eqt td{border:0;padding:5px 3px;white-space:nowrap;text-align:left}
+.eqt td.lab{font-size:12px;color:var(--muted);font-weight:700;line-height:1.25;padding-left:6px;white-space:normal;width:1%}
+.eqt td.lhs{text-align:right} .eqt td.arr{text-align:center;width:1%;padding:5px 2px} .eqt td.rhs{text-align:left}
+.eqt tr.st td{border-bottom:1px solid #eef1f5;transition:background .2s}
+.eqt tr.cur td{background:#e6efff} .eqt tr.cur td.lab{box-shadow:inset 4px 0 0 var(--accent)}
+.eqt tr.ov td{border-top:2px solid #33415a;font-size:16px;padding-top:7px}
+.eqt tr.ov td.lab{color:var(--ink)}
+.mechcard .exp{font-size:14px;margin:6px 0 2px;text-align:center}
+.mechcard .catnote{font-size:12px;color:var(--cat);text-align:center;font-weight:600}
+.sp{font-weight:700}
+.badge{display:inline-block;font-size:11px;border-radius:10px;padding:0 7px;font-weight:700;vertical-align:1px}
 .badge.slow{background:#fbe1de;color:var(--slow)} .badge.fast{background:#e1effc;color:#1f5fbf}
-.ctrls{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.ctrls{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:auto;padding-top:8px}
+.ctrls .btn{flex:1 1 auto}
+.opt{display:flex;align-items:center;gap:5px;font-size:13px;font-weight:600;color:var(--muted);margin-top:8px;cursor:pointer}
 .btn{background:var(--accent);color:#fff;border:0;border-radius:6px;padding:7px 12px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap}
 .btn:disabled{opacity:.45;cursor:default}
 .btn.ghost{background:var(--accent2);color:var(--accent)}
 .btn.small{padding:4px 9px;font-size:13px}
 
 main{flex:1 1 auto;min-height:0;padding:8px 10px 10px;display:grid;gap:8px;
-  grid-template-columns:minmax(0,1fr) minmax(0,1.25fr) minmax(300px,.95fr);grid-template-rows:minmax(0,1.25fr) minmax(0,1fr)}
+  grid-template-columns:minmax(250px,.85fr) minmax(220px,.75fr) minmax(0,1.35fr) minmax(290px,.95fr);grid-template-rows:minmax(0,1.3fr) minmax(0,1fr)}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:7px 10px;min-width:0;min-height:0;display:flex;flex-direction:column}
 h2{font-size:14px;margin:0 0 4px;display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap}
-.chamber{grid-column:1;grid-row:1}
-.ledger{grid-column:1;grid-row:2}
-.diagram{grid-column:2;grid-row:1 / 3}
-.side{grid-column:3;grid-row:1 / 3}
+.mechcard{grid-column:1;grid-row:1}
+.chamber{grid-column:2;grid-row:1}
+.ledger{grid-column:1 / 3;grid-row:2}
+.diagram{grid-column:3;grid-row:1 / 3}
+.side{grid-column:4;grid-row:1 / 3}
 svg.fill{width:100%;flex:1 1 auto;min-height:0;display:block}
 #chamberSvg{background:radial-gradient(ellipse at center,#fbfcff 0%,#eef2f9 100%);border:1px solid var(--line);border-radius:8px}
 #peSvg{background:#fff}
@@ -98,7 +101,7 @@ body.quiz .badge{display:none}
 @media (max-width:1000px), (orientation:portrait){
   body{min-height:0}
   main{grid-template-columns:1fr;grid-template-rows:none}
-  .chamber,.ledger,.diagram,.side{grid-column:1;grid-row:auto}
+  .mechcard,.chamber,.ledger,.diagram,.side{grid-column:1;grid-row:auto}
   #chamberSvg{height:280px;flex:none} #peSvg{height:360px;flex:none}
   .pane{max-height:none}
 }
@@ -114,25 +117,24 @@ body.quiz .badge{display:none}
   </div>
 </header>
 
-<div class="strip">
-  <div class="overall">
-    <div class="lbl">Overall reaction</div>
-    <div class="ov" id="ovEq"></div>
-    <div class="exp">Experimental: <b id="expLaw"></b></div>
-  </div>
-  <div class="steps" id="steps"></div>
-  <div class="ctrls">
-    <button class="btn" id="nextBtn">▶ Next step</button>
-    <button class="btn ghost" id="allBtn">▶▶ Play all</button>
-    <button class="btn ghost" id="resetBtn">↺ Reset</button>
-  </div>
-</div>
-
 <main>
+  <section class="card mechcard">
+    <h2><span>Mechanism</span></h2>
+    <table class="eqt" id="eqTbl"></table>
+    <div class="catnote" id="catNote"></div>
+    <div class="exp">Experimental: <b id="expLaw"></b></div>
+    <label class="opt"><input type="checkbox" id="colorCode" checked> Colour-code each species</label>
+    <div class="ctrls">
+      <button class="btn" id="nextBtn">▶ Next step</button>
+      <button class="btn ghost" id="allBtn">▶▶ Play all</button>
+      <button class="btn ghost" id="resetBtn">↺ Reset</button>
+    </div>
+  </section>
+
   <section class="card chamber">
     <h2><span>Inside the reaction</span>
       <span class="legend"><span><i class="ring i"></i>intermediate</span><span><i class="ring c"></i>catalyst</span></span></h2>
-    <svg id="chamberSvg" class="fill" viewBox="0 0 460 260" preserveAspectRatio="xMidYMid meet"></svg>
+    <svg id="chamberSvg" class="fill" viewBox="0 0 260 300" preserveAspectRatio="xMidYMid meet"></svg>
     <div class="status" id="status"></div>
   </section>
 
@@ -186,11 +188,17 @@ const MOL={
   H2O2:[["H",-2,.7],["O",-.8,0],["O",.8,0],["H",2,-.7]], "I-":[["I",0,0]], "IO-":[["I",-.9,0],["O",1.2,0]],
   O2:[["O",-.8,0],["O",.8,0]], O:[["O",0,0]]
 };
-const S=12; // px per layout unit
+let S=11;
+const PAL=["#1f5fbf","#c2185b","#00838f","#6a3fb5","#8d5524","#b8860b","#455a64","#ad1457"];
+let colorOn=true;
+function spCol(sp){const i=M?M.order.indexOf(sp):-1;return i<0?"#33415a":PAL[i%PAL.length];}
+function spHTML(c,sp){const t=term(c,sp);return colorOn?`<span class="sp" style="color:${spCol(sp)}">${t}</span>`:t;}
+function sideHTML(o){return Object.keys(o).map(k=>spHTML(o[k],k)).join(" + ");} // px per layout unit
 function extent(sp){let m=0;for(const [e,x,y] of MOL[sp]) m=Math.max(m,Math.hypot(x,y)+RAD[e]);return m*S;}
 function molSVG(sp,x,y,ring,label,glow){
   let s="";
-  const ext=extent(sp);
+  const ext=extent(sp), sc=colorOn?spCol(sp):null;
+  if(sc) s+=`<circle cx="${x}" cy="${y}" r="${ext+3}" fill="${sc}" opacity=".16" stroke="${sc}" stroke-opacity=".55" stroke-width="1.5"/>`;
   if(glow) s+=`<circle cx="${x}" cy="${y}" r="${ext+10}" fill="#ffd54a" opacity=".45"/>`;
   if(ring==="intermediate") s+=`<circle cx="${x}" cy="${y}" r="${ext+5}" fill="none" stroke="#e07b00" stroke-width="2.5" stroke-dasharray="5 4"/>`;
   if(ring==="catalyst") s+=`<circle cx="${x}" cy="${y}" r="${ext+5}" fill="none" stroke="#16915a" stroke-width="3"/>`;
@@ -198,7 +206,7 @@ function molSVG(sp,x,y,ring,label,glow){
     s+=`<circle cx="${(x+ax*S).toFixed(1)}" cy="${(y+ay*S).toFixed(1)}" r="${(RAD[e]*S*.95).toFixed(1)}" fill="${COL[e]}" stroke="rgba(0,0,0,.35)" stroke-width="1"/>`;
   }
   if(sp.endsWith("-")) s+=`<text x="${x+ext-2}" y="${y-ext+6}" font-size="14" font-weight="700" fill="#333">−</text>`;
-  if(label) s+=`<text x="${x}" y="${y+ext+12}" text-anchor="middle" font-size="11" font-weight="600" fill="#33415a">${U(sp)}</text>`;
+  if(label) s+=`<text x="${x}" y="${y+ext+12}" text-anchor="middle" font-size="11" font-weight="600" fill="${sc||"#33415a"}">${U(sp)}</text>`;
   return s;
 }
 
@@ -293,26 +301,27 @@ function prep(m){
 
 // ---------- state ----------
 let M=null, done=0, busy=false, runId=0, pool=[], fx=null, markerU=0, nid=1, quiz=false;
-const CH={w:460,h:260,cx:230,cy:118};
+const CH={w:260,h:300,cx:130,cy:130};
+function sizeChamber(){const sv=$("chamberSvg"),w=sv.clientWidth,h=sv.clientHeight;if(w>80&&h>80){CH.w=w;CH.h=h;CH.cx=w/2;CH.cy=h*.45;S=Math.max(10,Math.min(15,Math.min(w,h)/24));sv.setAttribute("viewBox",`0 0 ${w} ${h}`);}}
 const sel=$("mechSel");
 {let g=null,og=null;MECHS.forEach((m,i)=>{if(m.grp!==g){og=document.createElement("optgroup");og.label=m.grp;sel.appendChild(og);g=m.grp;}const o=document.createElement("option");o.value=i;o.textContent=m.name;og.appendChild(o);});}
 
 function ringFor(sp){return quiz?null:(M.role[sp]==="intermediate"||M.role[sp]==="catalyst")?M.role[sp]:null;}
 function freeSpot(r){
   for(let t=0;t<60;t++){
-    const x=40+Math.random()*(CH.w-80), y=36+Math.random()*(CH.h-80);
-    if(Math.hypot(x-CH.cx,y-CH.cy)<70) continue;
+    const x=r+8+Math.random()*(CH.w-2*r-16), y=r+8+Math.random()*(CH.h-2*r-28);
+    if(Math.hypot(x-CH.cx,y-CH.cy)<55) continue;
     if(pool.every(p=>Math.hypot(p.x-x,p.y-y)>r+extent(p.sp)+14)) return {x,y};
   }
-  return {x:40+Math.random()*(CH.w-80),y:36+Math.random()*(CH.h-80)};
+  return {x:r+8+Math.random()*(CH.w-2*r-16),y:r+8+Math.random()*(CH.h-2*r-28)};
 }
 function spawn(sp,x,y){const p={id:nid++,sp,x,y,vx:(Math.random()-.5)*18,vy:(Math.random()-.5)*18,busy:false};pool.push(p);return p;}
 function counts(){const c={};M.order.forEach(s=>c[s]=0);pool.forEach(p=>c[p.sp]=(c[p.sp]||0)+1);return c;}
 
 function load(i){
-  runId++; busy=false; M=prep(MECHS[i]); done=0; pool=[]; fx=null; markerU=0;
+  runId++; busy=false; M=prep(MECHS[i]); done=0; pool=[]; fx=null; markerU=0; sizeChamber();
   for(const s of M.order) for(let k=0;k<M.init[s];k++){const q=freeSpot(extent(s));spawn(s,q.x,q.y);}
-  $("ovEq").innerHTML=eqStr(M.overall)+(M.cat?` <span class="muted">(${U(M.cat)} catalyst)</span>`:"");
+  $("catNote").textContent=M.cat?`${U(M.cat)} is added as a catalyst`:"";
   $("expLaw").textContent=lawStr(M.exp);
   $("uncatWrap").style.display=M.uncat?"":"none"; $("uncat").checked=false;
   $("peNote").textContent= M.id==="h2o2"?"Ea values for H₂O₂ are real; other energies are illustrative.":"Energy values are illustrative.";
@@ -323,9 +332,12 @@ function setStatus(h){$("status").innerHTML=h;}
 function updBtns(){const end=done>=M.steps.length;$("nextBtn").disabled=busy||end;$("allBtn").disabled=busy||end;}
 
 function renderSteps(){
-  $("steps").innerHTML=M.steps.map((st,i)=>`<div class="step${i===done&&busy?" cur":""}${i<done?" done":""}" id="st${i}">
-    <div class="n">Step ${i+1}${st.slow?'<span class="badge slow">slow</span>':'<span class="badge fast">fast</span>'}${entities(st.L)>2&&!quiz?' <span class="badge slow">'+entities(st.L)+' particles!</span>':""}</div>
-    <div class="e">${eqStr(st)}</div></div>`).join("");
+  const arr=st=>st.eqm?"⇌":"→";
+  let h=M.steps.map((st,i)=>`<tr class="st${i===done&&busy?" cur":""}" id="st${i}">
+    <td class="lab">Step&nbsp;${i+1}<br>${st.slow?'<span class="badge slow">slow</span>':'<span class="badge fast">fast</span>'}${entities(st.L)>2&&!quiz?'<br><span class="badge slow">'+entities(st.L)+' particles!</span>':""}</td>
+    <td class="lhs">${sideHTML(st.L)}</td><td class="arr">${arr(st)}</td><td class="rhs">${sideHTML(st.R)}</td></tr>`).join("");
+  h+=`<tr class="ov"><td class="lab">Overall</td><td class="lhs">${sideHTML(M.overall.L)}</td><td class="arr">→</td><td class="rhs">${sideHTML(M.overall.R)}</td></tr>`;
+  $("eqTbl").innerHTML=h;
 }
 
 function renderLedger(){
@@ -333,7 +345,7 @@ function renderLedger(){
   let h="<thead><tr><th>Species</th>"+M.steps.map((_,i)=>`<th>Step ${i+1}</th>`).join("")+"<th>Present</th><th>Role</th></tr></thead><tbody>";
   for(const s of M.order){
     const showRole=end&&!quiz;
-    h+=`<tr class="${showRole?"r-"+M.role[s]:""}"><td>${U(s)}</td>`;
+    h+=`<tr class="${showRole?"r-"+M.role[s]:""}"><td>${spHTML(1,s)}</td>`;
     M.steps.forEach((st,i)=>{
       const d=M.delta[i][s];
       if(i>=done||d===undefined){h+="<td></td>";return;}
@@ -341,7 +353,7 @@ function renderLedger(){
       const cls=st.L[s]&&st.R[s]?"":st.L[s]?"neg":"pos";
       h+=`<td class="${cls}">${parts.join(" ")}</td>`;
     });
-    h+=`<td><b>${c[s]||0}</b> <span class="dots">${"●".repeat(Math.min(c[s]||0,6))}</span></td>`;
+    h+=`<td><b>${c[s]||0}</b> <span class="dots" style="color:${colorOn?spCol(s):"inherit"}">${"●".repeat(Math.min(c[s]||0,6))}</span></td>`;
     h+=`<td>${showRole?`<span class="role ${M.role[s]}">${M.role[s]}</span>`:(quiz&&end?"?":"")}</td></tr>`;
   }
   $("ledgerTbl").innerHTML=h+"</tbody>";
@@ -397,10 +409,11 @@ function renderPE(){
       const up=stepU(i,.5), y0=Y(M.levels[i]), y1=Y(M.peaks[i]), col=st.slow?"#c0392b":"#1f5fbf";
       s+=`<line x1="${X(stepU(i,0))}" y1="${y0}" x2="${X(up)}" y2="${y0}" stroke="${col}" stroke-dasharray="3 3"/>`;
       s+=arrow(X(up),y0,X(up),y1+2,col);
-      const eaTxt=`Ea${SUB[i+1]} = ${st.Ea} kJ`, longA=(y0-y1)>=95;
+      const eaTxt=`Ea${SUB[i+1]} = ${st.Ea} kJ`, stepW=X(stepU(1,0))-X(stepU(0,0)), longA=(y0-y1)>=95&&stepW>=120;
       if(longA){const cx=X(up)-6, cy=(y0+y1)/2;
         s+=`<text transform="translate(${cx} ${cy}) rotate(-90)" text-anchor="middle" font-size="12" font-weight="700" fill="${col}">${eaTxt}</text>`;}
-      s+=`<text x="${X(up)}" y="${y1-9}" text-anchor="middle" font-size="12" font-weight="700" fill="#33415a">‡ AC${SUB[i+1]}${st.slow?' <tspan fill="#c0392b">(slow: RDS)</tspan>':""}${longA?"":` <tspan fill="${col}">${eaTxt}</tspan>`}</text>`;
+      s+=`<text x="${X(up)}" y="${y1-9}" text-anchor="middle" font-size="12" font-weight="700" fill="#33415a">‡ AC${SUB[i+1]}${st.slow?' <tspan fill="#c0392b">(slow: RDS)</tspan>':""}</text>`;
+      if(!longA) s+=`<text x="${X(up)}" y="${y1-23}" text-anchor="middle" font-size="12" font-weight="700" fill="${col}">${eaTxt}</text>`;
     });
     // ΔH
     const xe=X(1)+10, yA=Y(M.levels[0]), yB=Y(M.levels[n]), dH=M.levels[n];
@@ -608,7 +621,8 @@ $("allBtn").onclick=()=>playAll();
 $("resetBtn").onclick=()=>load(+sel.value);
 sel.onchange=()=>load(+sel.value);
 $("uncat").onchange=renderPE;
-let rT=null;window.addEventListener("resize",()=>{clearTimeout(rT);rT=setTimeout(renderPE,120);});
+$("colorCode").onchange=e=>{colorOn=e.target.checked;renderSteps();renderLedger();};
+let rT=null;window.addEventListener("resize",()=>{clearTimeout(rT);rT=setTimeout(()=>{renderPE();sizeChamber();},120);});
 $("quizMode").onchange=e=>{quiz=e.target.checked;document.body.classList.toggle("quiz",quiz);renderSteps();renderLedger();renderPE();renderPlaus();};
 $("tabP").onclick=()=>{$("tabP").className="on";$("tabQ").className="";$("paneP").hidden=false;$("paneQ").hidden=true;};
 $("tabQ").onclick=()=>{$("tabQ").className="on";$("tabP").className="";$("paneQ").hidden=false;$("paneP").hidden=true;};
