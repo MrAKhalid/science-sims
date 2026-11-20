@@ -2,7 +2,7 @@
 // 1. Put the .html file in the right course/unit folder.
 // 2. Add one line to that unit's "sims" list below: { title, file, blurb }.
 // Bump this number whenever a simulation file changes, so browsers load the new copy.
-window.SIMS_VERSION = "202611200210";
+window.SIMS_VERSION = "202611200215";
 
 window.COURSES = {
   sph4u1: {
