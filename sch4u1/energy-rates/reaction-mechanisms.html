@@ -22,14 +22,19 @@ header button{background:#24477f;color:#fff;border:0;border-radius:6px;padding:6
 header button svg{width:14px;height:14px}
 header label.qz{display:flex;align-items:center;gap:5px;font-size:13px;font-weight:600;background:#24477f;border-radius:6px;padding:5px 9px;cursor:pointer}
 
-.eqt{border-collapse:collapse;width:100%;font-size:15px;font-weight:600}
-.eqt td{border:0;padding:5px 3px;white-space:nowrap;text-align:left}
+.eqt{border-collapse:collapse;width:100%;font-size:14.5px;font-weight:600}
+.eqt td{border:0;padding:5px 2px;white-space:nowrap;text-align:left}
 .eqt td.lab{font-size:12px;color:var(--muted);font-weight:700;line-height:1.25;padding-left:6px;white-space:normal;width:1%}
 .eqt td.lhs{text-align:right} .eqt td.arr{text-align:center;width:1%;padding:5px 2px} .eqt td.rhs{text-align:left}
 .eqt tr.st td{border-bottom:1px solid #eef1f5;transition:background .2s}
 .eqt tr.cur td{background:#e6efff} .eqt tr.cur td.lab{box-shadow:inset 4px 0 0 var(--accent)}
-.eqt tr.ov td{border-top:2px solid #33415a;font-size:16px;padding-top:7px}
-.eqt tr.ov td.lab{color:var(--ink)}
+.eqt tr.gap td{height:10px;padding:0;border:0}
+.eqt tr.ov td{background:#eef4ff;border-top:2px solid #14325f;font-size:17px;font-weight:800;padding:8px 2px 4px;color:#14325f}
+.eqt tr.ov td:first-child{border-left:2px solid #14325f;padding-left:8px}
+.eqt tr.ov td:last-child{border-right:2px solid #14325f}
+.eqt tr.ov td.lab{font-size:13px;color:#14325f;text-transform:uppercase;letter-spacing:.03em}
+.eqt tr.ovx td{background:#eef4ff;border:2px solid #14325f;border-top:0;text-align:center;font-size:15px;font-weight:600;padding:2px 6px 8px;white-space:normal}
+.eqt tr.ovx .catnote{font-size:12px;color:var(--cat);font-weight:600}
 .mechcard .exp{font-size:14px;margin:6px 0 2px;text-align:center}
 .mechcard .catnote{font-size:12px;color:var(--cat);text-align:center;font-weight:600}
 .sp{font-weight:700}
@@ -44,7 +49,7 @@ header label.qz{display:flex;align-items:center;gap:5px;font-size:13px;font-weig
 .btn.small{padding:4px 9px;font-size:13px}
 
 main{flex:1 1 auto;min-height:0;padding:8px 10px 10px;display:grid;gap:8px;
-  grid-template-columns:minmax(250px,.85fr) minmax(220px,.75fr) minmax(0,1.35fr) minmax(290px,.95fr);grid-template-rows:minmax(0,1.3fr) minmax(0,1fr)}
+  grid-template-columns:minmax(272px,.85fr) minmax(210px,.72fr) minmax(0,1.35fr) minmax(290px,.95fr);grid-template-rows:minmax(0,1.3fr) minmax(0,1fr)}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:7px 10px;min-width:0;min-height:0;display:flex;flex-direction:column}
 h2{font-size:14px;margin:0 0 4px;display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap}
 .mechcard{grid-column:1;grid-row:1}
@@ -121,8 +126,6 @@ body.quiz .badge,body.quiz #catNote{display:none}
   <section class="card mechcard">
     <h2><span>Mechanism</span></h2>
     <table class="eqt" id="eqTbl"></table>
-    <div class="catnote" id="catNote"></div>
-    <div class="exp">Experimental: <b id="expLaw"></b></div>
     <div class="ctrls">
       <button class="btn" id="nextBtn">▶ Next step</button>
       <button class="btn ghost" id="allBtn">▶▶ Play all</button>
@@ -147,7 +150,6 @@ body.quiz .badge,body.quiz #catNote{display:none}
     <h2><span>Potential energy diagram</span>
       <span class="pe-opts"><label id="uncatWrap"><input type="checkbox" id="uncat"> show uncatalyzed path</label></span></h2>
     <svg id="peSvg" class="fill" viewBox="0 0 560 420" preserveAspectRatio="xMidYMid meet"></svg>
-    <div class="muted" style="text-align:center">Each hatch mark on the energy axis = 10 kJ. <span id="peNote"></span></div>
   </section>
 
   <section class="card side">
@@ -314,10 +316,7 @@ function counts(){const c={};M.order.forEach(s=>c[s]=0);pool.forEach(p=>c[p.sp]=
 function load(i){
   runId++; busy=false; M=prep(MECHS[i]); done=0; pool=[]; fx=null; markerU=0; sizeChamber();
   for(const s of M.order) for(let k=0;k<M.init[s];k++){const q=freeSpot(extent(s));spawn(s,q.x,q.y);}
-  $("catNote").textContent=M.cat?`${U(M.cat)} is added as a catalyst`:"";
-  $("expLaw").textContent=lawStr(M.exp);
   $("uncatWrap").style.display=M.uncat?"":"none"; $("uncat").checked=false;
-  $("peNote").textContent= M.id==="h2o2"?"Ea values for H₂O₂ are real; other energies are illustrative.":"Energy values are illustrative.";
   setStatus(M.judge?"Play the proposed steps, then decide: is this mechanism plausible?":"Press <b>▶ Next step</b> to watch the first elementary step.");
   renderSteps(); renderLedger(); renderPE(); renderPlaus(); renderQuiz(); updBtns();
 }
@@ -329,7 +328,8 @@ function renderSteps(){
   let h=M.steps.map((st,i)=>`<tr class="st${i===done&&busy?" cur":""}" id="st${i}">
     <td class="lab">Step&nbsp;${i+1}<br>${st.slow?'<span class="badge slow">slow</span>':'<span class="badge fast">fast</span>'}${entities(st.L)>2&&!quiz?'<br><span class="badge slow">'+entities(st.L)+' particles!</span>':""}</td>
     <td class="lhs">${sideHTML(st.L)}</td><td class="arr">${arr(st)}</td><td class="rhs">${sideHTML(st.R)}</td></tr>`).join("");
-  h+=`<tr class="ov"><td class="lab">Overall</td><td class="lhs">${sideHTML(M.overall.L)}</td><td class="arr">→</td><td class="rhs">${sideHTML(M.overall.R)}</td></tr>`;
+  h+=`<tr class="gap"><td colspan="4"></td></tr><tr class="ov"><td class="lab">Overall</td><td class="lhs">${sideHTML(M.overall.L)}</td><td class="arr">→</td><td class="rhs">${sideHTML(M.overall.R)}</td></tr>`;
+  h+=`<tr class="ovx"><td colspan="4">${M.cat?`<div class="catnote" id="catNote">${U(M.cat)} is added as a catalyst</div>`:""}Experimental: <b>${lawStr(M.exp)}</b></td></tr>`;
   $("eqTbl").innerHTML=h;
 }
 
