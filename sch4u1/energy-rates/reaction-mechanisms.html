@@ -1,0 +1,637 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reaction Mechanisms</title>
+<style>
+:root{
+  color-scheme:light;
+  --bg:#eef1f5; --panel:#fff; --ink:#1d2430; --muted:#5b6575; --line:#d5dbe4;
+  --accent:#1f5fbf; --accent2:#e2e9f6; --good:#1e8a4c; --goodbg:#e3f4ea; --bad:#b3261e; --badbg:#fbe7e5;
+  --warn:#8a5a00; --warnbg:#fff3d6; --inter:#e07b00; --interbg:#fff1df; --cat:#16915a; --catbg:#e1f5ea; --slow:#c0392b;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);height:100%}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:var(--ink);font-size:14px;line-height:1.35;display:flex;flex-direction:column;min-height:100vh}
+header{background:#14325f;color:#fff;padding:6px 12px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;flex:none}
+header h1{font-size:17px;margin:0;font-weight:700}
+header select{font-size:14px;padding:4px 6px;border-radius:6px;border:0;max-width:420px;font-family:inherit}
+header .right{margin-left:auto;display:flex;gap:6px;align-items:center}
+header button{background:#24477f;color:#fff;border:0;border-radius:6px;padding:6px 10px;font-size:13px;cursor:pointer;font-weight:600;display:flex;align-items:center;gap:6px}
+header button svg{width:14px;height:14px}
+header label.qz{display:flex;align-items:center;gap:5px;font-size:13px;font-weight:600;background:#24477f;border-radius:6px;padding:5px 9px;cursor:pointer}
+
+.strip{flex:none;margin:8px 10px 0;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px 10px;display:flex;gap:8px 14px;align-items:stretch;flex-wrap:wrap}
+.overall{display:flex;flex-direction:column;justify-content:center;min-width:220px}
+.overall .lbl{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+.overall .ov{font-size:16px;font-weight:700}
+.overall .exp{font-size:14px}
+.steps{display:flex;gap:6px;flex:1 1 380px;flex-wrap:wrap;align-items:stretch}
+.step{border:2px solid var(--line);border-radius:8px;padding:4px 9px;background:#fafbfd;display:flex;flex-direction:column;justify-content:center;min-width:0;transition:all .2s}
+.step .n{font-size:11px;color:var(--muted);font-weight:700}
+.step .e{font-size:15px;font-weight:600;white-space:nowrap}
+.step.cur{border-color:var(--accent);background:#eef4ff;box-shadow:0 0 0 3px #c9dbf7}
+.step.done{opacity:.75}
+.badge{display:inline-block;font-size:11px;border-radius:10px;padding:0 7px;font-weight:700;margin-left:4px;vertical-align:1px}
+.badge.slow{background:#fbe1de;color:var(--slow)} .badge.fast{background:#e1effc;color:#1f5fbf}
+.ctrls{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.btn{background:var(--accent);color:#fff;border:0;border-radius:6px;padding:7px 12px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.ghost{background:var(--accent2);color:var(--accent)}
+.btn.small{padding:4px 9px;font-size:13px}
+
+main{flex:1 1 auto;min-height:0;padding:8px 10px 10px;display:grid;gap:8px;
+  grid-template-columns:minmax(0,1fr) minmax(0,1.25fr) minmax(300px,.95fr);grid-template-rows:minmax(0,1.25fr) minmax(0,1fr)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:7px 10px;min-width:0;min-height:0;display:flex;flex-direction:column}
+h2{font-size:14px;margin:0 0 4px;display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap}
+.chamber{grid-column:1;grid-row:1}
+.ledger{grid-column:1;grid-row:2}
+.diagram{grid-column:2;grid-row:1 / 3}
+.side{grid-column:3;grid-row:1 / 3}
+svg.fill{width:100%;flex:1 1 auto;min-height:0;display:block}
+#chamberSvg{background:radial-gradient(ellipse at center,#fbfcff 0%,#eef2f9 100%);border:1px solid var(--line);border-radius:8px}
+#peSvg{background:#fff}
+.status{font-size:13px;min-height:36px;margin-top:4px;padding:4px 8px;border-radius:6px;background:#f5f8fd}
+.legend{display:flex;gap:10px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.legend span{display:flex;align-items:center;gap:4px}
+.ring{width:14px;height:14px;border-radius:50%;display:inline-block}
+.ring.i{border:2.5px dashed var(--inter)} .ring.c{border:2.5px solid var(--cat)}
+.tablewrap{flex:1 1 auto;overflow:auto;min-height:0}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:3px 5px;text-align:center}
+th{background:#f3f5f9;font-size:12px;position:sticky;top:0}
+td:first-child,th:first-child{text-align:left;font-weight:600}
+td.neg{color:var(--bad);font-weight:700} td.pos{color:var(--good);font-weight:700}
+tr.r-intermediate td{background:var(--interbg)} tr.r-catalyst td{background:var(--catbg)}
+.role{font-size:11px;font-weight:700;border-radius:10px;padding:0 6px;white-space:nowrap}
+.role.intermediate{background:var(--inter);color:#fff} .role.catalyst{background:var(--cat);color:#fff}
+.role.reactant{background:#e6ebf2;color:#33415a} .role.product{background:#e6ebf2;color:#33415a}
+.dots{letter-spacing:1px;font-size:11px}
+.rule{font-size:12px;margin-top:4px;display:flex;gap:10px;flex-wrap:wrap}
+.rule div{border-left:4px solid var(--inter);background:var(--interbg);padding:2px 7px;border-radius:0 6px 6px 0;flex:1 1 150px}
+.rule div.c{border-color:var(--cat);background:var(--catbg)}
+.pe-opts{display:flex;gap:10px;font-size:12px;align-items:center;flex-wrap:wrap;font-weight:600;color:var(--muted)}
+.pe-opts label{display:flex;align-items:center;gap:4px;cursor:pointer}
+.tabs{display:flex;gap:4px;margin-bottom:6px}
+.tabs button{flex:1;border:1px solid var(--line);background:#f3f5f9;border-radius:6px;padding:5px;font-weight:700;font-size:13px;cursor:pointer;color:var(--muted)}
+.tabs button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.pane{flex:1 1 auto;overflow:auto;min-height:0;padding-right:2px}
+.chk{border:1px solid var(--line);border-radius:8px;padding:6px 9px;margin-bottom:7px;background:#fafbfd}
+.chk h3{font-size:13px;margin:0 0 4px}
+.chk .eqline{font-size:14px;margin:3px 0;line-height:1.6}
+.chk s{color:var(--bad);text-decoration-thickness:2px}
+.verdict{padding:6px 9px;border-radius:8px;font-weight:700;margin:4px 0 7px}
+.ok{color:var(--good)} .no{color:var(--bad)}
+.verdict.ok{background:var(--goodbg)} .verdict.no{background:var(--badbg)}
+.note{font-size:13px;background:var(--warnbg);color:#5d3d00;border-radius:6px;padding:5px 8px;margin:4px 0}
+.q{border:1px solid var(--line);border-radius:8px;padding:5px 8px;margin-bottom:6px;background:#fafbfd}
+.q .qt{font-weight:600;font-size:13px;margin-bottom:3px}
+.q.right{border-color:#9fd4b4;background:var(--goodbg)} .q.wrong{border-color:#efb3ad;background:var(--badbg)}
+.q label{display:inline-flex;align-items:center;gap:3px;margin:1px 8px 1px 0;font-size:13px;cursor:pointer}
+.q input[type=text]{width:90px;font-size:14px;padding:3px 5px;border:1px solid #aab4c3;border-radius:5px}
+.q select{font-size:13px;padding:2px 4px;border-radius:5px;border:1px solid #aab4c3}
+.q .ans{font-size:12px;color:var(--good);margin-top:2px}
+.score{font-weight:700;margin:4px 0}
+.muted{color:var(--muted);font-size:12px}
+body.quiz .badge{display:none}
+@media (max-width:1000px), (orientation:portrait){
+  body{min-height:0}
+  main{grid-template-columns:1fr;grid-template-rows:none}
+  .chamber,.ledger,.diagram,.side{grid-column:1;grid-row:auto}
+  #chamberSvg{height:280px;flex:none} #peSvg{height:360px;flex:none}
+  .pane{max-height:none}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Reaction Mechanisms</h1>
+  <select id="mechSel" aria-label="Choose a mechanism"></select>
+  <div class="right">
+    <label class="qz" title="Hide the labels and answers so students can practise"><input type="checkbox" id="quizMode"> Quiz mode</label>
+    <button id="fsBtn" title="Full screen"></button>
+  </div>
+</header>
+
+<div class="strip">
+  <div class="overall">
+    <div class="lbl">Overall reaction</div>
+    <div class="ov" id="ovEq"></div>
+    <div class="exp">Experimental: <b id="expLaw"></b></div>
+  </div>
+  <div class="steps" id="steps"></div>
+  <div class="ctrls">
+    <button class="btn" id="nextBtn">▶ Next step</button>
+    <button class="btn ghost" id="allBtn">▶▶ Play all</button>
+    <button class="btn ghost" id="resetBtn">↺ Reset</button>
+  </div>
+</div>
+
+<main>
+  <section class="card chamber">
+    <h2><span>Inside the reaction</span>
+      <span class="legend"><span><i class="ring i"></i>intermediate</span><span><i class="ring c"></i>catalyst</span></span></h2>
+    <svg id="chamberSvg" class="fill" viewBox="0 0 460 260" preserveAspectRatio="xMidYMid meet"></svg>
+    <div class="status" id="status"></div>
+  </section>
+
+  <section class="card ledger">
+    <h2><span>Species tracker</span><span class="muted">− consumed &nbsp; + produced</span></h2>
+    <div class="tablewrap"><table id="ledgerTbl"></table></div>
+    <div class="rule"><div><b>Intermediate:</b> produced, then consumed</div><div class="c"><b>Catalyst:</b> consumed, then produced</div></div>
+  </section>
+
+  <section class="card diagram">
+    <h2><span>Potential energy diagram</span>
+      <span class="pe-opts"><label id="uncatWrap"><input type="checkbox" id="uncat"> show uncatalyzed path</label></span></h2>
+    <svg id="peSvg" class="fill" viewBox="0 0 560 420" preserveAspectRatio="xMidYMid meet"></svg>
+    <div class="muted" style="text-align:center">Each hatch mark on the energy axis = 10 kJ. <span id="peNote"></span></div>
+  </section>
+
+  <section class="card side">
+    <div class="tabs"><button id="tabP" class="on">Is it plausible?</button><button id="tabQ">Your turn</button></div>
+    <div class="pane" id="paneP"></div>
+    <div class="pane" id="paneQ" hidden></div>
+  </section>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const SUB={0:"₀",1:"₁",2:"₂",3:"₃",4:"₄",5:"₅",6:"₆",7:"₇",8:"₈",9:"₉"};
+const SUP={2:"²",3:"³",4:"⁴"};
+const U=sp=>sp.replace(/-$/,"⁻").replace(/\d/g,d=>SUB[d]);
+const term=(c,sp)=>(c>1?c:"")+U(sp);
+const side=o=>Object.keys(o).map(k=>term(o[k],k)).join(" + ");
+const eqStr=st=>side(st.L)+(st.eqm?" ⇌ ":" → ")+side(st.R);
+const lawBody=law=>Object.keys(law).map(s=>"["+U(s)+"]"+(law[s]>1?SUP[law[s]]:"")).join("");
+const lawStr=(law,k="k")=>"rate = "+k+lawBody(law);
+const lawKey=law=>Object.keys(law).filter(s=>law[s]).sort().map(s=>s+law[s]).join("|");
+const sameMap=(a,b)=>lawKey(a)===lawKey(b);
+const entities=o=>Object.values(o).reduce((a,b)=>a+b,0);
+
+// ---------- molecules ----------
+const COL={N:"#3b6fd8",O:"#e04a3a",C:"#3d3d3d",H:"#f4f4f4",F:"#a6d94c",Cl:"#3fb64a",I:"#8a46c4"};
+const RAD={N:1,O:1,C:1,H:.7,F:.95,Cl:1.2,I:1.35};
+const MOL={
+  NO2:[["N",0,0],["O",-1.4,.9],["O",1.4,.9]],
+  NO3:[["N",0,0],["O",0,-1.6],["O",-1.4,.9],["O",1.4,.9]],
+  NO:[["N",-.8,0],["O",.8,0]], CO:[["C",-.8,0],["O",.8,0]], CO2:[["O",-1.6,0],["C",0,0],["O",1.6,0]],
+  F2:[["F",-.75,0],["F",.75,0]], F:[["F",0,0]], NO2F:[["N",0,0],["O",-1.4,.9],["O",1.4,.9],["F",0,-1.6]],
+  Cl2:[["Cl",-.9,0],["Cl",.9,0]], NOCl:[["Cl",-1.6,.4],["N",0,0],["O",1.5,.4]],
+  NOCl2:[["N",0,0],["O",0,-1.5],["Cl",-1.7,.6],["Cl",1.7,.6]],
+  N2O2:[["O",-1.6,-.9],["N",-.8,.5],["N",.8,.5],["O",1.6,-.9]], N2O:[["N",-1.6,0],["N",0,0],["O",1.6,0]],
+  H2:[["H",-.5,0],["H",.5,0]], H2O:[["O",0,0],["H",-1.1,.8],["H",1.1,.8]], N2:[["N",-.8,0],["N",.8,0]],
+  H2O2:[["H",-2,.7],["O",-.8,0],["O",.8,0],["H",2,-.7]], "I-":[["I",0,0]], "IO-":[["I",-.9,0],["O",1.2,0]],
+  O2:[["O",-.8,0],["O",.8,0]], O:[["O",0,0]]
+};
+const S=12; // px per layout unit
+function extent(sp){let m=0;for(const [e,x,y] of MOL[sp]) m=Math.max(m,Math.hypot(x,y)+RAD[e]);return m*S;}
+function molSVG(sp,x,y,ring,label,glow){
+  let s="";
+  const ext=extent(sp);
+  if(glow) s+=`<circle cx="${x}" cy="${y}" r="${ext+10}" fill="#ffd54a" opacity=".45"/>`;
+  if(ring==="intermediate") s+=`<circle cx="${x}" cy="${y}" r="${ext+5}" fill="none" stroke="#e07b00" stroke-width="2.5" stroke-dasharray="5 4"/>`;
+  if(ring==="catalyst") s+=`<circle cx="${x}" cy="${y}" r="${ext+5}" fill="none" stroke="#16915a" stroke-width="3"/>`;
+  for(const [e,ax,ay] of MOL[sp]){
+    s+=`<circle cx="${(x+ax*S).toFixed(1)}" cy="${(y+ay*S).toFixed(1)}" r="${(RAD[e]*S*.95).toFixed(1)}" fill="${COL[e]}" stroke="rgba(0,0,0,.35)" stroke-width="1"/>`;
+  }
+  if(sp.endsWith("-")) s+=`<text x="${x+ext-2}" y="${y-ext+6}" font-size="14" font-weight="700" fill="#333">−</text>`;
+  if(label) s+=`<text x="${x}" y="${y+ext+12}" text-anchor="middle" font-size="11" font-weight="600" fill="#33415a">${U(sp)}</text>`;
+  return s;
+}
+
+// ---------- mechanisms ----------
+const MECHS=[
+ {id:"no2co",grp:"Lesson examples",name:"Lesson: NO₂ + CO",
+  overall:{L:{NO2:1,CO:1},R:{NO:1,CO2:1}}, exp:{NO2:2},
+  steps:[{L:{NO2:2},R:{NO3:1,NO:1},slow:1,Ea:130,dH:90},{L:{NO3:1,CO:1},R:{NO2:1,CO2:1},Ea:20,dH:-320}],
+  note:"NO₂ is used in step 1 and one NO₂ is made again in step 2, so overall only one NO₂ is used up. That makes it a reactant, not a catalyst."},
+ {id:"no2f2",grp:"Lesson examples",name:"Example 1: 2NO₂ + F₂",
+  overall:{L:{NO2:2,F2:1},R:{NO2F:2}}, exp:{NO2:1,F2:1},
+  steps:[{L:{NO2:1,F2:1},R:{NO2F:1,F:1},slow:1,Ea:70,dH:40},{L:{NO2:1,F:1},R:{NO2F:1},Ea:10,dH:-220}]},
+ {id:"nocl2",grp:"Lesson examples",name:"Example 2: 2NO + Cl₂",
+  overall:{L:{NO:2,Cl2:1},R:{NOCl:2}}, exp:{NO:1,Cl2:1},
+  steps:[{L:{NO:1,Cl2:1},R:{NOCl2:1},slow:1,Ea:60,dH:20},{L:{NOCl2:1,NO:1},R:{NOCl:2},Ea:20,dH:-100}]},
+ {id:"noh2",grp:"Lesson examples",name:"Test question: 2NO + 2H₂ (3 steps)",
+  overall:{L:{NO:2,H2:2},R:{N2:1,H2O:2}}, exp:{NO:2},
+  steps:[{L:{NO:2},R:{N2O2:1},slow:1,Ea:100,dH:-20},{L:{N2O2:1,H2:1},R:{N2O:1,H2O:1},Ea:40,dH:-160},{L:{N2O:1,H2:1},R:{N2:1,H2O:1},Ea:50,dH:-150}]},
+ {id:"h2o2",grp:"Catalysts",name:"Catalyst: 2H₂O₂ with I⁻ (elephant toothpaste)",
+  overall:{L:{H2O2:2},R:{H2O:2,O2:1}}, cat:"I-", exp:{H2O2:1,"I-":1}, uncat:75,
+  steps:[{L:{H2O2:1,"I-":1},R:{H2O:1,"IO-":1},slow:1,Ea:56,dH:-60},{L:{H2O2:1,"IO-":1},R:{H2O:1,O2:1,"I-":1},Ea:30,dH:-136}],
+  note:"I⁻ is consumed in step 1 and produced again in step 2, so it is a catalyst. It can appear in the rate law (it is in the slow step) but not in the overall equation. The catalyzed path has a lower Ea (56 kJ) than the uncatalyzed path (75 kJ)."},
+ {id:"noo2",grp:"Intermediate in the slow step",name:"2NO + O₂ (step 2 is slow)",
+  overall:{L:{NO:2,O2:1},R:{NO2:2}}, exp:{NO:2,O2:1},
+  steps:[{L:{NO:2},R:{N2O2:1},eqm:1,Ea:20,dH:-30},{L:{N2O2:1,O2:1},R:{NO2:2},slow:1,Ea:70,dH:-80}],
+  note:"The slow step contains an intermediate (N₂O₂), so its rate law cannot be used as is. An intermediate can't appear in the overall rate law."},
+ {id:"pA",grp:"Is it plausible? (judge these)",name:"Proposal A: NO₂ + CO in one step",judge:1,
+  overall:{L:{NO2:1,CO:1},R:{NO:1,CO2:1}}, exp:{NO2:2},
+  steps:[{L:{NO2:1,CO:1},R:{NO:1,CO2:1},slow:1,Ea:130,dH:-230}]},
+ {id:"pB",grp:"Is it plausible? (judge these)",name:"Proposal B: 2NO + Cl₂ (step 2 slow)",judge:1,
+  overall:{L:{NO:2,Cl2:1},R:{NOCl:2}}, exp:{NO:1,Cl2:1},
+  steps:[{L:{NO:1,Cl2:1},R:{NOCl2:1},eqm:1,Ea:40,dH:20},{L:{NOCl2:1,NO:1},R:{NOCl:2},slow:1,Ea:70,dH:-100}]},
+ {id:"pC",grp:"Is it plausible? (judge these)",name:"Proposal C: 2NO + 2H₂ (3 steps)",judge:1,
+  overall:{L:{NO:2,H2:2},R:{N2:1,H2O:2}}, exp:{NO:2},
+  steps:[{L:{NO:2},R:{N2O2:1},slow:1,Ea:100,dH:-20},{L:{N2O2:1,H2:1},R:{N2O:1,H2O:1},Ea:40,dH:-160},{L:{N2O:1},R:{N2:1,O:1},Ea:60,dH:40}]},
+ {id:"pD",grp:"Is it plausible? (judge these)",name:"Proposal D: 2NO + 2H₂ in one step",judge:1,
+  overall:{L:{NO:2,H2:2},R:{N2:1,H2O:2}}, exp:{NO:2},
+  steps:[{L:{NO:2,H2:2},R:{N2:1,H2O:2},slow:1,Ea:150,dH:-330}]}
+];
+
+function prep(m){
+  if(m.ready) return m;
+  const order=[];const add=s=>{if(!order.includes(s))order.push(s);};
+  Object.keys(m.overall.L).forEach(add); if(m.cat) add(m.cat);
+  m.steps.forEach(st=>{Object.keys(st.L).forEach(add);Object.keys(st.R).forEach(add);});
+  Object.keys(m.overall.R).forEach(add);
+  m.delta=m.steps.map(st=>{const d={};order.forEach(s=>{const v=(st.R[s]||0)-(st.L[s]||0);if(v||st.L[s]||st.R[s])d[s]=v;});return d;});
+  m.role={};m.init={};
+  for(const s of order){
+    let net=0,first=null,cum=0,minc=0;
+    m.steps.forEach(st=>{
+      if(first===null){ if(st.L[s]) first="L"; else if(st.R[s]) first="R"; }
+      cum+=(st.R[s]||0)-(st.L[s]||0); minc=Math.min(minc,cum);
+    });
+    net=cum; m.init[s]=-minc;
+    m.role[s]= net<0?"reactant": net>0?"product": (first==="L"?"catalyst":"intermediate");
+  }
+  const rank={reactant:0,catalyst:1,intermediate:2,product:3};
+  m.order=order.slice().sort((a,b)=>rank[m.role[a]]-rank[m.role[b]]||order.indexOf(a)-order.indexOf(b));
+  m.levels=[0];m.steps.forEach(st=>m.levels.push(m.levels[m.levels.length-1]+st.dH));
+  m.peaks=m.steps.map((st,i)=>m.levels[i]+st.Ea);
+  m.slowIdx=m.steps.findIndex(st=>st.slow);
+  // sum of steps
+  const Lt={},Rt={};
+  m.steps.forEach(st=>{for(const s in st.L)Lt[s]=(Lt[s]||0)+st.L[s];for(const s in st.R)Rt[s]=(Rt[s]||0)+st.R[s];});
+  const nL={},nR={};
+  for(const s in Lt){const c=Math.min(Lt[s],Rt[s]||0);if(Lt[s]-c)nL[s]=Lt[s]-c;}
+  for(const s in Rt){const c=Math.min(Rt[s],Lt[s]||0);if(Rt[s]-c)nR[s]=Rt[s]-c;}
+  m.sum={Lt,Rt,nL,nR,ok:sameMap(nL,m.overall.L)&&sameMap(nR,m.overall.R)};
+  // predicted rate law
+  const slow=m.steps[m.slowIdx];
+  let law={...slow.L};const notes=[];
+  for(let g=0;g<5;g++){
+    const X=Object.keys(law).find(s=>m.role[s]==="intermediate"); if(!X)break;
+    const j=m.steps.findIndex((st,i)=>i<m.slowIdx&&st.R[X]); if(j<0)break;
+    const e=law[X];delete law[X];
+    for(const s in m.steps[j].L) law[s]=(law[s]||0)+m.steps[j].L[s]*e;
+    notes.push(`<b>${U(X)}</b> is an intermediate, so it must be removed. It was made from <b>${side(m.steps[j].L)}</b> in step ${j+1}, so replace [${U(X)}] with ${lawBody(m.steps[j].L)}.`);
+  }
+  const ordered={};m.order.forEach(s=>{if(law[s])ordered[s]=law[s];});
+  m.raw=slow.L; m.pred=ordered; m.predNotes=notes; m.lawOk=sameMap(ordered,m.exp);
+  m.tooMany=m.steps.map((st,i)=>entities(st.L)>2?i:-1).filter(i=>i>=0);
+  m.plausible=m.sum.ok&&m.lawOk;
+  // diagram letters: start, peak1, valley1, ..., end
+  const pts=[{kind:"start",i:0}];
+  m.steps.forEach((st,i)=>{pts.push({kind:"peak",i});if(i<m.steps.length-1)pts.push({kind:"valley",i:i+1});});
+  pts.push({kind:"end",i:m.steps.length});
+  pts.forEach((p,k)=>p.letter="ABCDEFGHIJ"[k]);
+  m.pts=pts;
+  m.ready=true;return m;
+}
+
+// ---------- state ----------
+let M=null, done=0, busy=false, runId=0, pool=[], fx=null, markerU=0, nid=1, quiz=false;
+const CH={w:460,h:260,cx:230,cy:118};
+const sel=$("mechSel");
+{let g=null,og=null;MECHS.forEach((m,i)=>{if(m.grp!==g){og=document.createElement("optgroup");og.label=m.grp;sel.appendChild(og);g=m.grp;}const o=document.createElement("option");o.value=i;o.textContent=m.name;og.appendChild(o);});}
+
+function ringFor(sp){return quiz?null:(M.role[sp]==="intermediate"||M.role[sp]==="catalyst")?M.role[sp]:null;}
+function freeSpot(r){
+  for(let t=0;t<60;t++){
+    const x=40+Math.random()*(CH.w-80), y=36+Math.random()*(CH.h-80);
+    if(Math.hypot(x-CH.cx,y-CH.cy)<70) continue;
+    if(pool.every(p=>Math.hypot(p.x-x,p.y-y)>r+extent(p.sp)+14)) return {x,y};
+  }
+  return {x:40+Math.random()*(CH.w-80),y:36+Math.random()*(CH.h-80)};
+}
+function spawn(sp,x,y){const p={id:nid++,sp,x,y,vx:(Math.random()-.5)*18,vy:(Math.random()-.5)*18,busy:false};pool.push(p);return p;}
+function counts(){const c={};M.order.forEach(s=>c[s]=0);pool.forEach(p=>c[p.sp]=(c[p.sp]||0)+1);return c;}
+
+function load(i){
+  runId++; busy=false; M=prep(MECHS[i]); done=0; pool=[]; fx=null; markerU=0;
+  for(const s of M.order) for(let k=0;k<M.init[s];k++){const q=freeSpot(extent(s));spawn(s,q.x,q.y);}
+  $("ovEq").innerHTML=eqStr(M.overall)+(M.cat?` <span class="muted">(${U(M.cat)} catalyst)</span>`:"");
+  $("expLaw").textContent=lawStr(M.exp);
+  $("uncatWrap").style.display=M.uncat?"":"none"; $("uncat").checked=false;
+  $("peNote").textContent= M.id==="h2o2"?"Ea values for H₂O₂ are real; other energies are illustrative.":"Energy values are illustrative.";
+  setStatus(M.judge?"Play the proposed steps, then decide: is this mechanism plausible?":"Press <b>▶ Next step</b> to watch the first elementary step.");
+  renderSteps(); renderLedger(); renderPE(); renderPlaus(); renderQuiz(); updBtns();
+}
+function setStatus(h){$("status").innerHTML=h;}
+function updBtns(){const end=done>=M.steps.length;$("nextBtn").disabled=busy||end;$("allBtn").disabled=busy||end;}
+
+function renderSteps(){
+  $("steps").innerHTML=M.steps.map((st,i)=>`<div class="step${i===done&&busy?" cur":""}${i<done?" done":""}" id="st${i}">
+    <div class="n">Step ${i+1}${st.slow?'<span class="badge slow">slow</span>':'<span class="badge fast">fast</span>'}${entities(st.L)>2&&!quiz?' <span class="badge slow">'+entities(st.L)+' particles!</span>':""}</div>
+    <div class="e">${eqStr(st)}</div></div>`).join("");
+}
+
+function renderLedger(){
+  const c=counts(), n=M.steps.length, end=done>=n;
+  let h="<thead><tr><th>Species</th>"+M.steps.map((_,i)=>`<th>Step ${i+1}</th>`).join("")+"<th>Present</th><th>Role</th></tr></thead><tbody>";
+  for(const s of M.order){
+    const showRole=end&&!quiz;
+    h+=`<tr class="${showRole?"r-"+M.role[s]:""}"><td>${U(s)}</td>`;
+    M.steps.forEach((st,i)=>{
+      const d=M.delta[i][s];
+      if(i>=done||d===undefined){h+="<td></td>";return;}
+      const parts=[];if(st.L[s])parts.push("−"+st.L[s]);if(st.R[s])parts.push("+"+st.R[s]);
+      const cls=st.L[s]&&st.R[s]?"":st.L[s]?"neg":"pos";
+      h+=`<td class="${cls}">${parts.join(" ")}</td>`;
+    });
+    h+=`<td><b>${c[s]||0}</b> <span class="dots">${"●".repeat(Math.min(c[s]||0,6))}</span></td>`;
+    h+=`<td>${showRole?`<span class="role ${M.role[s]}">${M.role[s]}</span>`:(quiz&&end?"?":"")}</td></tr>`;
+  }
+  $("ledgerTbl").innerHTML=h+"</tbody>";
+}
+
+// ---------- PE diagram ----------
+const PE={W:560,H:420,ml:58,mr:70,mt:26,mb:40,x0:.12,x1:.88};
+function E(u){
+  const n=M.steps.length,w=(PE.x1-PE.x0)/n;
+  if(u<=PE.x0) return M.levels[0]; if(u>=PE.x1) return M.levels[n];
+  let k=Math.min(n-1,Math.floor((u-PE.x0)/w)), s=(u-PE.x0)/w-k;
+  const L=M.levels[k],P=M.peaks[k],R=M.levels[k+1];
+  return s<.5? L+(P-L)*(1-Math.cos(2*Math.PI*s))/2 : P+(R-P)*(1-Math.cos(2*Math.PI*(s-.5)))/2;
+}
+function Eun(u){
+  if(!M.uncat) return 0; const L=M.levels[0],R=M.levels[M.steps.length],P=L+M.uncat;
+  if(u<=PE.x0)return L; if(u>=PE.x1)return R; const s=(u-PE.x0)/(PE.x1-PE.x0);
+  return s<.5? L+(P-L)*(1-Math.cos(2*Math.PI*s))/2 : P+(R-P)*(1-Math.cos(2*Math.PI*(s-.5)))/2;
+}
+let rng={};
+function X(u){return PE.ml+u*(PE.W-PE.ml-PE.mr);}
+function Y(e){return PE.mt+(rng.max-e)/(rng.max-rng.min)*(PE.H-PE.mt-PE.mb);}
+function stepU(k,s){const w=(PE.x1-PE.x0)/M.steps.length;return PE.x0+w*(k+s);}
+function pathOf(f,u0,u1){let d="";const N=240;for(let i=0;i<=N;i++){const u=u0+(u1-u0)*i/N;d+=(i?"L":"M")+X(u).toFixed(1)+" "+Y(f(u)).toFixed(1);}return d;}
+function renderPE(){
+  const sv=$("peSvg"), cw=sv.clientWidth, chh=sv.clientHeight;
+  if(cw>100&&chh>100){PE.W=cw;PE.H=chh;sv.setAttribute("viewBox",`0 0 ${cw} ${chh}`);}
+  const hi=Math.max(...M.peaks,M.uncat?M.levels[0]+M.uncat:-1e9,...M.levels), lo=Math.min(...M.levels);
+  rng={max:Math.ceil((hi+40)/10)*10,min:Math.floor((lo-50)/10)*10};
+  const letters=quiz, n=M.steps.length;
+  let s="";
+  // axes + hatches
+  s+=`<line x1="${PE.ml}" y1="${PE.mt-8}" x2="${PE.ml}" y2="${PE.H-PE.mb}" stroke="#333" stroke-width="1.5"/>`;
+  s+=`<line x1="${PE.ml}" y1="${PE.H-PE.mb}" x2="${PE.W-PE.mr}" y2="${PE.H-PE.mb}" stroke="#333" stroke-width="1.5"/>`;
+  for(let e=rng.min;e<=rng.max;e+=10){const y=Y(e);const big=e%50===0;
+    s+=`<line x1="${PE.ml-(big?8:5)}" y1="${y}" x2="${PE.ml}" y2="${y}" stroke="#333" stroke-width="${big?1.4:1}"/>`;
+    if(big) s+=`<text x="${PE.ml-11}" y="${y+4}" text-anchor="end" font-size="11" fill="#5b6575">${e}</text>`+`<line x1="${PE.ml}" y1="${y}" x2="${PE.W-PE.mr}" y2="${y}" stroke="#eef1f5"/>`;
+  }
+  s+=`<text transform="translate(14 ${(PE.mt+PE.H-PE.mb)/2}) rotate(-90)" text-anchor="middle" font-size="13" font-weight="600" fill="#33415a">Potential energy (kJ)</text>`;
+  s+=`<text x="${(PE.ml+PE.W-PE.mr)/2}" y="${PE.H-12}" text-anchor="middle" font-size="13" font-weight="600" fill="#33415a">Reaction progress →</text>`;
+  if(M.uncat&&$("uncat").checked){
+    s+=`<path d="${pathOf(Eun,0,1)}" fill="none" stroke="#8a46c4" stroke-width="2.5" stroke-dasharray="7 5"/>`;
+    const up=(PE.x0+PE.x1)/2;
+    s+=`<text x="${X(up)}" y="${Y(M.levels[0]+M.uncat)-8}" text-anchor="middle" font-size="12" font-weight="700" fill="#8a46c4">uncatalyzed: Ea = ${M.uncat} kJ</text>`;
+  }
+  s+=`<path d="${pathOf(E,0,1)}" fill="none" stroke="#c9ced8" stroke-width="3.5"/>`;
+  s+=`<path id="peDone" fill="none" stroke="#c0392b" stroke-width="3.5"/>`;
+  if(!letters){
+    // dashed reference at reactant level for ΔH
+    s+=`<line x1="${X(PE.x0*.2)}" y1="${Y(M.levels[0])}" x2="${X(1)+14}" y2="${Y(M.levels[0])}" stroke="#9aa5b5" stroke-dasharray="4 4"/>`;
+    // Ea arrows
+    M.steps.forEach((st,i)=>{
+      const up=stepU(i,.5), y0=Y(M.levels[i]), y1=Y(M.peaks[i]), col=st.slow?"#c0392b":"#1f5fbf";
+      s+=`<line x1="${X(stepU(i,0))}" y1="${y0}" x2="${X(up)}" y2="${y0}" stroke="${col}" stroke-dasharray="3 3"/>`;
+      s+=arrow(X(up),y0,X(up),y1+2,col);
+      const eaTxt=`Ea${SUB[i+1]} = ${st.Ea} kJ`, longA=(y0-y1)>=95;
+      if(longA){const cx=X(up)-6, cy=(y0+y1)/2;
+        s+=`<text transform="translate(${cx} ${cy}) rotate(-90)" text-anchor="middle" font-size="12" font-weight="700" fill="${col}">${eaTxt}</text>`;}
+      s+=`<text x="${X(up)}" y="${y1-9}" text-anchor="middle" font-size="12" font-weight="700" fill="#33415a">‡ AC${SUB[i+1]}${st.slow?' <tspan fill="#c0392b">(slow: RDS)</tspan>':""}${longA?"":` <tspan fill="${col}">${eaTxt}</tspan>`}</text>`;
+    });
+    // ΔH
+    const xe=X(1)+10, yA=Y(M.levels[0]), yB=Y(M.levels[n]), dH=M.levels[n];
+    s+=`<line x1="${X(1)}" y1="${yB}" x2="${xe+4}" y2="${yB}" stroke="#9aa5b5" stroke-dasharray="4 4"/>`;
+    s+=arrow(xe,yA,xe,yB+(dH<0?-2:2),"#1e8a4c");
+    s+=`<text x="${xe+5}" y="${(yA+yB)/2-2}" font-size="12" font-weight="700" fill="#1e8a4c">ΔH =<tspan x="${xe+5}" dy="14">${dH>0?"+":dH<0?"−":""}${Math.abs(dH)} kJ</tspan></text>`;
+    // species labels
+    s+=`<text x="${X(.01)}" y="${Y(M.levels[0])+16}" font-size="12" font-weight="700" fill="#14325f">${side(M.overall.L)}${M.cat?" + "+U(M.cat):""}</text>`;
+    s+=`<text x="${X(1)-12}" y="${Y(M.levels[n])+18}" text-anchor="end" font-size="12" font-weight="700" fill="#14325f">${side(M.overall.R)}${M.cat?" + "+U(M.cat):""}</text>`;
+    for(let i=1;i<n;i++){
+      const inter=M.order.filter(sp=>M.role[sp]==="intermediate"&&cumAt(sp,i)>0);
+      s+=`<text x="${X(stepU(i,0))}" y="${Y(M.levels[i])+17}" text-anchor="middle" font-size="12" font-weight="700" fill="#e07b00">${inter.map(U).join(", ")||"—"}</text>`;
+      s+=`<text x="${X(stepU(i,0))}" y="${Y(M.levels[i])+30}" text-anchor="middle" font-size="11" fill="#e07b00">(intermediate)</text>`;
+    }
+  } else {
+    for(const p of M.pts){
+      let u,e,dy;
+      if(p.kind==="start"){u=PE.x0*.55;e=M.levels[0];dy=-9;}
+      else if(p.kind==="end"){u=1-(1-PE.x1)*.45;e=M.levels[n];dy=-9;}
+      else if(p.kind==="peak"){u=stepU(p.i,.5);e=M.peaks[p.i];dy=-9;}
+      else {u=stepU(p.i,0);e=M.levels[p.i];dy=20;}
+      s+=`<text x="${X(u)}" y="${Y(e)+dy}" text-anchor="middle" font-size="15" font-weight="700" fill="#14325f">${p.letter}</text>`;
+    }
+  }
+  s+=`<circle id="peDot" r="7" fill="#ffd54a" stroke="#c0392b" stroke-width="2.5"/>`;
+  $("peSvg").innerHTML=s; drawMarker();
+}
+function cumAt(sp,k){let c=M.init[sp];for(let i=0;i<k;i++)c+=(M.steps[i].R[sp]||0)-(M.steps[i].L[sp]||0);return c;}
+function arrow(x1,y1,x2,y2,col){
+  const a=Math.atan2(y2-y1,x2-x1),h=7;
+  return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${col}" stroke-width="2"/><path d="M${x2} ${y2} L${x2-h*Math.cos(a-.45)} ${y2-h*Math.sin(a-.45)} L${x2-h*Math.cos(a+.45)} ${y2-h*Math.sin(a+.45)}Z" fill="${col}"/>`;
+}
+function drawMarker(){
+  const d=$("peDot"); if(!d) return;
+  d.setAttribute("cx",X(markerU)); d.setAttribute("cy",Y(E(markerU)));
+  $("peDone").setAttribute("d",markerU>0.001?pathOf(E,0,markerU):"");
+}
+
+// ---------- animation ----------
+function tween(ms,f,id){return new Promise(res=>{const t0=performance.now();
+  function fr(t){if(id!==runId){res(false);return;}const p=Math.min(1,(t-t0)/ms);f(p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2,p);if(p<1)requestAnimationFrame(fr);else res(true);}
+  requestAnimationFrame(fr);});}
+const wait=(ms,id)=>tween(ms,()=>{},id);
+
+async function runStep(){
+  if(busy||done>=M.steps.length) return false;
+  const id=runId, k=done, st=M.steps[k];
+  busy=true; renderSteps(); updBtns();
+  const R=[];for(const s in st.L) for(let j=0;j<st.L[s];j++){const p=pool.find(q=>q.sp===s&&!q.busy&&!R.includes(q));if(p){p.busy=true;R.push(p);}}
+  const nR=R.length, gap=nR>2?40:46;
+  const tgt=R.map((p,j)=>({x:CH.cx+(j-(nR-1)/2)*gap,y:CH.cy}));
+  const home=R.map(p=>({x:p.x,y:p.y}));
+  const slowTxt=quiz?"":`<b>Step ${k+1} (slow).</b> `;
+  if(st.slow){
+    for(let a=0;a<2;a++){
+      setStatus(`${slowTxt}${side(st.L)} collide… but most collisions don't have enough energy to reach the activated complex. They bounce apart.`);
+      if(!await tween(650,(e)=>{R.forEach((p,j)=>{p.x=home[j].x+(tgt[j].x-home[j].x)*.8*e;p.y=home[j].y+(tgt[j].y-home[j].y)*.8*e;});markerU=stepU(k,.3*e);drawMarker();},id)) return false;
+      fx={type:"bounce",x:CH.cx,y:CH.cy-40};
+      if(!await tween(550,(e)=>{R.forEach((p,j)=>{p.x=tgt[j].x+(home[j].x-tgt[j].x)*(.2+.8*e);p.y=tgt[j].y+(home[j].y-tgt[j].y)*(.2+.8*e);});markerU=stepU(k,.3*(1-e));drawMarker();},id)) return false;
+      fx=null;
+    }
+  }
+  const fast=!st.slow, tA=fast?550:800;
+  setStatus(`${quiz?"":`<b>Step ${k+1} (${st.slow?"slow":"fast"}).</b> `}${side(st.L)} collide with enough energy and the correct orientation…`);
+  if(!await tween(tA,(e)=>{R.forEach((p,j)=>{p.x=home[j].x+(tgt[j].x-home[j].x)*e;p.y=home[j].y+(tgt[j].y-home[j].y)*e;});markerU=stepU(k,.5*e);drawMarker();},id)) return false;
+  fx={type:"complex",x:CH.cx,y:CH.cy,r:Math.max(...R.map(p=>extent(p.sp)))+nR*18};
+  setStatus(`‡ <b>Activated complex ${k+1}</b>: the top of the hump on the energy diagram. Bonds are breaking and forming.`);
+  if(!await wait(fast?450:800,id)) return false;
+  pool=pool.filter(p=>!R.includes(p)); fx=null;
+  const P=[];for(const s in st.R) for(let j=0;j<st.R[s];j++) P.push(s);
+  const born=P.map((s,j)=>{const p=spawn(s,CH.cx+(j-(P.length-1)/2)*44,CH.cy);p.busy=true;return p;});
+  const dest=born.map(p=>freeSpot(extent(p.sp)));
+  const start=born.map(p=>({x:p.x,y:p.y}));
+  if(!await tween(fast?650:850,(e)=>{born.forEach((p,j)=>{p.x=start[j].x+(dest[j].x-start[j].x)*e;p.y=start[j].y+(dest[j].y-start[j].y)*e;});markerU=stepU(k,.5+.5*e);drawMarker();},id)) return false;
+  born.forEach(p=>p.busy=false);
+  done=k+1; busy=false;
+  // narration
+  const msg=[];
+  if(!quiz){
+    for(const s in st.R){ if(M.role[s]==="intermediate"&&!st.L[s]) msg.push(`<span style="color:var(--inter)"><b>${U(s)}</b> produced: an intermediate (it will be used up later).</span>`);
+      if(M.role[s]==="catalyst"&&!st.L[s]) msg.push(`<span style="color:var(--cat)"><b>${U(s)}</b> produced again: it is a catalyst.</span>`);}
+    for(const s in st.L){ if(M.role[s]==="intermediate"&&!st.R[s]) msg.push(`<span style="color:var(--inter)"><b>${U(s)}</b> consumed: the intermediate is used up.</span>`);
+      if(M.role[s]==="catalyst"&&!st.R[s]) msg.push(`<span style="color:var(--cat)"><b>${U(s)}</b> consumed (it will be given back in a later step).</span>`);}
+  }
+  const end=done>=M.steps.length;
+  setStatus(`Step ${k+1} done: ${eqStr(st)}. `+msg.join(" ")+(end?` <b>All steps done.</b> ${quiz?"Answer the questions in <b>Your turn</b>.":"Check the species tracker and <b>Is it plausible?</b>"}`:""));
+  renderSteps(); renderLedger(); updBtns(); if(end) renderPlaus();
+  return true;
+}
+async function playAll(){const id=runId;while(done<M.steps.length&&id===runId){if(!await runStep())break;if(id!==runId)break;await wait(350,id);}}
+
+// chamber render loop
+let last=performance.now();
+function frame(t){
+  const dt=Math.min(.05,(t-last)/1000); last=t;
+  for(const p of pool){ if(p.busy) continue; const r=extent(p.sp);
+    p.vx+=(Math.random()-.5)*20*dt; p.vy+=(Math.random()-.5)*20*dt;
+    const sp=Math.hypot(p.vx,p.vy); if(sp>16){p.vx*=16/sp;p.vy*=16/sp;}
+    p.x+=p.vx*dt; p.y+=p.vy*dt;
+    if(p.x<r+4){p.x=r+4;p.vx=Math.abs(p.vx);} if(p.x>CH.w-r-4){p.x=CH.w-r-4;p.vx=-Math.abs(p.vx);}
+    if(p.y<r+4){p.y=r+4;p.vy=Math.abs(p.vy);} if(p.y>CH.h-r-16){p.y=CH.h-r-16;p.vy=-Math.abs(p.vy);}
+  }
+  let s="";
+  if(fx&&fx.type==="complex") s+=`<circle cx="${fx.x}" cy="${fx.y}" r="${fx.r}" fill="#ffd54a" opacity=".35"/><text x="${fx.x}" y="${fx.y-fx.r-6}" text-anchor="middle" font-size="14" font-weight="700" fill="#8a5a00">‡ activated complex</text>`;
+  for(const p of pool) s+=molSVG(p.sp,p.x,p.y,ringFor(p.sp),true,false);
+  if(fx&&fx.type==="bounce") s+=`<text x="${fx.x}" y="${fx.y}" text-anchor="middle" font-size="14" font-weight="700" fill="#b3261e">not enough energy!</text>`;
+  $("chamberSvg").innerHTML=s;
+  requestAnimationFrame(frame);
+}
+
+// ---------- plausibility pane ----------
+function sumLine(T,other){
+  return Object.keys(T).map(s=>{const c=Math.min(T[s],other[s]||0),rem=T[s]-c;
+    if(!c) return term(T[s],s);
+    if(!rem) return `<s>${term(T[s],s)}</s>`;
+    return `<s>${term(T[s],s)}</s> ${term(rem,s)}`;}).join(" + ");
+}
+function renderPlaus(){
+  const end=done>=M.steps.length, lock=quiz&&!quizChecked;
+  let h="";
+  if(!end){ h+=`<p class="muted">Play all the steps first (▶▶ Play all), then check the two requirements.</p>`; }
+  if(lock){ $("paneP").innerHTML=h+`<p class="note">Quiz mode is on: answer the questions in <b>Your turn</b> and press <b>Check answers</b> to unlock this.</p>`;return; }
+  if(!end){ $("paneP").innerHTML=h;return; }
+  const sm=M.sum;
+  h+=`<div class="chk"><h3>Requirement 1: Do the elementary steps add up to the overall equation?</h3>`;
+  h+=`<div class="eqline">${sumLine(sm.Lt,sm.Rt)} → ${sumLine(sm.Rt,sm.Lt)}</div>`;
+  h+=`<div class="eqline">Steps give: <b>${side(sm.nL)} → ${side(sm.nR)}</b></div>`;
+  h+=sm.ok?`<div class="ok"><b>✓ Yes.</b> This matches the overall equation.</div>`:`<div class="no"><b>✗ No.</b> The overall equation is ${eqStr(M.overall)}.</div>`;
+  h+=`</div>`;
+  const si=M.slowIdx;
+  h+=`<div class="chk"><h3>Requirement 2: Does the slow step's rate law match the experimental rate law?</h3>`;
+  h+=`<div class="eqline">Slow step (step ${si+1}): ${eqStr(M.steps[si])}</div>`;
+  h+=`<div class="eqline">${lawStr(M.raw,"k"+SUB[si+1])}</div>`;
+  M.predNotes.forEach(t=>h+=`<div class="note">${t}</div>`);
+  if(M.predNotes.length) h+=`<div class="eqline">Predicted: <b>${lawStr(M.pred)}</b></div>`;
+  h+=`<div class="eqline">Experimental: <b>${lawStr(M.exp)}</b></div>`;
+  h+=M.lawOk?`<div class="ok"><b>✓ Yes.</b> They match.</div>`:`<div class="no"><b>✗ No.</b> They don't match.</div>`;
+  h+=`</div>`;
+  if(M.tooMany.length) h+=`<div class="note">Step ${M.tooMany.map(i=>i+1).join(", ")} needs ${entities(M.steps[M.tooMany[0]].L)} particles to collide at the same moment. Elementary steps have only one or two reacting entities, so this is extremely unlikely.</div>`;
+  h+=`<div class="verdict ${M.plausible?"ok":"no"}">${M.plausible?"✓ Plausible mechanism: both requirements are met.":"✗ Not plausible: "+(!sm.ok&&!M.lawOk?"neither requirement is met.":!sm.ok?"the steps don't add up to the overall equation.":"the rate laws don't match.")}</div>`;
+  if(M.note) h+=`<div class="note">${M.note}</div>`;
+  $("paneP").innerHTML=h;
+}
+
+// ---------- quiz pane ----------
+let quizChecked=false, Q=[];
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function buildQ(){
+  const peaks=M.pts.filter(p=>p.kind==="peak").map(p=>p.letter), valleys=M.pts.filter(p=>p.kind==="valley").map(p=>p.letter);
+  const letters=M.pts.map(p=>p.letter).concat(["none"]);
+  const zero=M.order.filter(s=>M.role[s]==="intermediate"||M.role[s]==="catalyst");
+  const qs=[];
+  qs.push({t:"Which letter(s) on the diagram represent an activated complex?",type:"checks",opts:letters,ans:peaks});
+  qs.push({t:"Which letter(s) represent a reaction intermediate?",type:"checks",opts:letters,ans:valleys.length?valleys:["none"]});
+  if(zero.length) qs.push({t:"Classify each species that is not in the overall equation.",type:"each",items:zero,opts:["intermediate","catalyst"],ans:zero.map(s=>M.role[s])});
+  qs.push({t:"Which step is the rate-determining step?",type:"radio",opts:M.steps.map((_,i)=>"Step "+(i+1)),ans:"Step "+(M.slowIdx+1)});
+  qs.push({t:"E<sub>a(fwd)</sub> for the rate-determining step (kJ):",type:"num",ans:M.steps[M.slowIdx].Ea});
+  qs.push({t:"ΔH<sub>(fwd)</sub> for the overall reaction (kJ, include the sign):",type:"num",ans:M.levels[M.steps.length]});
+  // rate law options
+  const c=[M.pred,M.raw,...M.steps.map(st=>st.L),{...M.overall.L},M.exp];
+  const seen=new Set(),opts=[];
+  for(const l of c){const k=lawKey(l);if(!seen.has(k)&&!Object.keys(l).some(s=>false)){seen.add(k);opts.push(l);}}
+  const sp=Object.keys(M.pred);
+  for(let t=0;opts.length<4&&t<10;t++){const v={...M.pred};const s=sp[t%sp.length];v[s]=(v[s]%3)+1;const k=lawKey(v);if(!seen.has(k)){seen.add(k);opts.push(v);}}
+  const fin=shuffle(opts.slice(0,4).map(l=>lawStr(l)));
+  qs.push({t:"What rate law does this mechanism predict? (slow step, with any intermediates removed)",type:"radio",opts:fin,ans:lawStr(M.pred)});
+  qs.push({t:"Is this a plausible mechanism?",type:"radio",opts:["Yes","No"],ans:M.plausible?"Yes":"No"});
+  return qs;
+}
+function renderQuiz(){
+  quizChecked=false; Q=buildQ();
+  let h=`<p class="muted" style="margin:0 0 6px">Tip: turn on <b>Quiz mode</b> to hide the labels, slow/fast tags and roles. The diagram then shows letters like your test.</p>`;
+  Q.forEach((q,i)=>{
+    h+=`<div class="q" id="q${i}"><div class="qt">${i+1}. ${q.t}</div>`;
+    if(q.type==="checks") h+=q.opts.map(o=>`<label><input type="checkbox" name="q${i}" value="${o}">${o}</label>`).join("");
+    if(q.type==="radio") h+=q.opts.map(o=>`<label><input type="radio" name="q${i}" value="${o}">${o}</label>`).join("<br>".repeat(q.opts[0].length>12?1:0));
+    if(q.type==="num") h+=`<input type="text" inputmode="decimal" id="q${i}v" placeholder="kJ">`;
+    if(q.type==="each") h+=q.items.map((s,j)=>`<label style="margin-right:12px"><b>${U(s)}</b> <select id="q${i}s${j}"><option value="">choose…</option>${q.opts.map(o=>`<option>${o}</option>`).join("")}</select></label>`).join("");
+    h+=`<div class="ans" id="q${i}a"></div></div>`;
+  });
+  h+=`<button class="btn" id="checkBtn">Check answers</button> <button class="btn ghost" id="showBtn">Show answers</button><div class="score" id="score"></div>`;
+  $("paneQ").innerHTML=h;
+  $("checkBtn").onclick=()=>checkQ(false); $("showBtn").onclick=()=>checkQ(true);
+}
+function checkQ(show){
+  let right=0;
+  Q.forEach((q,i)=>{
+    let ok=false;
+    if(q.type==="checks"){const v=[...document.querySelectorAll(`input[name=q${i}]:checked`)].map(x=>x.value).sort();ok=v.join()===q.ans.slice().sort().join();}
+    if(q.type==="radio"){const v=document.querySelector(`input[name=q${i}]:checked`);ok=!!v&&v.value===q.ans;}
+    if(q.type==="num"){const raw=$(`q${i}v`).value.replace(/[−–]/g,"-").replace(/[^\d.+-]/g,"");const v=parseFloat(raw);ok=isFinite(v)&&Math.abs(v-q.ans)<=5&&(q.ans===0||Math.sign(v)===Math.sign(q.ans));}
+    if(q.type==="each"){ok=q.items.every((s,j)=>$(`q${i}s${j}`).value===q.ans[j]);}
+    if(ok) right++;
+    $(`q${i}`).className="q "+(ok?"right":"wrong");
+    const a=q.type==="each"?q.items.map((s,j)=>U(s)+": "+q.ans[j]).join(", "):q.type==="num"?(q.ans>0?"+":q.ans<0?"−":"")+Math.abs(q.ans)+" kJ":Array.isArray(q.ans)?q.ans.join(", "):q.ans;
+    $(`q${i}a`).textContent=show||ok?(ok?"✓ ":"Answer: ")+a:"";
+  });
+  $("score").textContent=`Score: ${right} / ${Q.length}`;
+  quizChecked=true; renderPlaus();
+}
+
+// ---------- wiring ----------
+$("nextBtn").onclick=()=>runStep();
+$("allBtn").onclick=()=>playAll();
+$("resetBtn").onclick=()=>load(+sel.value);
+sel.onchange=()=>load(+sel.value);
+$("uncat").onchange=renderPE;
+let rT=null;window.addEventListener("resize",()=>{clearTimeout(rT);rT=setTimeout(renderPE,120);});
+$("quizMode").onchange=e=>{quiz=e.target.checked;document.body.classList.toggle("quiz",quiz);renderSteps();renderLedger();renderPE();renderPlaus();};
+$("tabP").onclick=()=>{$("tabP").className="on";$("tabQ").className="";$("paneP").hidden=false;$("paneQ").hidden=true;};
+$("tabQ").onclick=()=>{$("tabQ").className="on";$("tabP").className="";$("paneQ").hidden=false;$("paneP").hidden=true;};
+
+// ---------- full screen ----------
+(function(){
+  const d=document, root=d.documentElement, b=$("fsBtn");
+  const req=root.requestFullscreen||root.webkitRequestFullscreen, exit=d.exitFullscreen||d.webkitExitFullscreen;
+  const cur=()=>d.fullscreenElement||d.webkitFullscreenElement;
+  const enabled=d.fullscreenEnabled||d.webkitFullscreenEnabled;
+  if(!req||!enabled){b.hidden=true;return;}
+  const enter='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 5V1h4M11 1h4v4M15 11v4h-4M5 15H1v-4"/></svg>';
+  const leave='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 1v4H1M15 5h-4V1M11 15v-4h4M1 11h4v4"/></svg>';
+  const paint=()=>{const on=!!cur();b.innerHTML=(on?leave:enter)+(on?"Exit full screen":"Full screen");};
+  b.onclick=()=>{if(cur())exit.call(d);else{const p=req.call(root);if(p&&p.catch)p.catch(()=>{b.hidden=true;});}};
+  d.addEventListener("fullscreenchange",paint);d.addEventListener("webkitfullscreenchange",paint);
+  paint();
+})();
+
+load(0);
+requestAnimationFrame(frame);
+window.__rm={get M(){return M;},MECHS,prep,load,runStep,playAll,get done(){return done;}};
+})();
+</script>
+</body>
+</html>
