@@ -101,6 +101,7 @@ tr.r-intermediate td{background:var(--interbg)} tr.r-catalyst td{background:var(
 .q select{font-size:13px;padding:2px 4px;border-radius:5px;border:1px solid #aab4c3}
 .q .ans{font-size:12px;color:var(--good);margin-top:2px}
 .score{font-weight:700;margin:4px 0}
+.q .why{font-size:13px;margin-top:5px;padding:5px 8px;background:#fff;border:1px dashed var(--line);border-radius:6px;line-height:1.5}
 .muted{color:var(--muted);font-size:12px}
 body.quiz .badge,body.quiz #catNote{display:none}
 @media (max-width:1000px), (orientation:portrait){
@@ -138,6 +139,7 @@ body.quiz .badge,body.quiz #catNote{display:none}
       <span class="legend"><span><i class="ring i"></i>intermediate</span><span><i class="ring c"></i>catalyst</span></span></h2>
     <svg id="chamberSvg" class="fill" viewBox="0 0 260 300" preserveAspectRatio="xMidYMid meet"></svg>
     <div class="status" id="status"></div>
+    <button class="btn ghost small" id="replayBtn" hidden style="margin-top:5px">⟲ Replay in slow motion</button>
   </section>
 
   <section class="card ledger">
@@ -314,14 +316,16 @@ function spawn(sp,x,y){const p={id:nid++,sp,x,y,vx:(Math.random()-.5)*18,vy:(Mat
 function counts(){const c={};M.order.forEach(s=>c[s]=0);pool.forEach(p=>c[p.sp]=(c[p.sp]||0)+1);return c;}
 
 function load(i){
-  runId++; busy=false; M=prep(MECHS[i]); done=0; pool=[]; fx=null; markerU=0; sizeChamber();
+  runId++; busy=false; playing=false; SM=1; lastSnap=null; M=prep(MECHS[i]); done=0; pool=[]; fx=null; markerU=0; sizeChamber();
   for(const s of M.order) for(let k=0;k<M.init[s];k++){const q=freeSpot(extent(s));spawn(s,q.x,q.y);}
   $("uncatWrap").style.display=M.uncat?"":"none"; $("uncat").checked=false;
   setStatus(M.judge?"Play the proposed steps, then decide: is this mechanism plausible?":"Press <b>▶ Next step</b> to watch the first elementary step.");
   renderSteps(); renderLedger(); renderPE(); renderPlaus(); renderQuiz(); updBtns();
 }
 function setStatus(h){$("status").innerHTML=h;}
-function updBtns(){const end=done>=M.steps.length;$("nextBtn").disabled=busy||end;$("allBtn").disabled=busy||end;}
+function updBtns(){const end=done>=M.steps.length;$("nextBtn").disabled=busy||playing||end;$("allBtn").disabled=busy||playing||end;
+  const rb=$("replayBtn"), can=!busy&&!playing&&lastSnap&&done===lastSnap.k+1;
+  rb.hidden=!can; if(can) rb.textContent=`⟲ Replay step ${lastSnap.k+1} in slow motion`;}
 
 function renderSteps(){
   const arr=st=>st.eqm?"⇌":"→";
@@ -446,7 +450,8 @@ function drawMarker(){
 }
 
 // ---------- animation ----------
-function tween(ms,f,id){return new Promise(res=>{const t0=performance.now();
+let SM=1, playing=false, lastSnap=null;
+function tween(ms,f,id){ms*=SM;return new Promise(res=>{const t0=performance.now();
   function fr(t){if(id!==runId){res(false);return;}const p=Math.min(1,(t-t0)/ms);f(p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2,p);if(p<1)requestAnimationFrame(fr);else res(true);}
   requestAnimationFrame(fr);});}
 const wait=(ms,id)=>tween(ms,()=>{},id);
@@ -454,7 +459,9 @@ const wait=(ms,id)=>tween(ms,()=>{},id);
 async function runStep(){
   if(busy||done>=M.steps.length) return false;
   const id=runId, k=done, st=M.steps[k];
+  lastSnap={k,pool:pool.map(p=>({...p})),nid};
   busy=true; renderSteps(); updBtns();
+  const sm=SM>1?"<b>Slow motion.</b> ":"";
   const R=[];for(const s in st.L) for(let j=0;j<st.L[s];j++){const p=pool.find(q=>q.sp===s&&!q.busy&&!R.includes(q));if(p){p.busy=true;R.push(p);}}
   const nR=R.length, gap=nR>2?40:46;
   const tgt=R.map((p,j)=>({x:CH.cx+(j-(nR-1)/2)*gap,y:CH.cy}));
@@ -462,25 +469,27 @@ async function runStep(){
   const slowTxt=quiz?"":`<b>Step ${k+1} (slow).</b> `;
   if(st.slow){
     for(let a=0;a<2;a++){
-      setStatus(`${slowTxt}${side(st.L)} collide… but most collisions don't have enough energy to reach the activated complex. They bounce apart.`);
-      if(!await tween(650,(e)=>{R.forEach((p,j)=>{p.x=home[j].x+(tgt[j].x-home[j].x)*.8*e;p.y=home[j].y+(tgt[j].y-home[j].y)*.8*e;});markerU=stepU(k,.3*e);drawMarker();},id)) return false;
+      setStatus(`${sm}${slowTxt}${side(st.L)} collide… but most collisions don't have enough energy to reach the activated complex. They bounce apart.`);
+      if(!await tween(1100,(e)=>{R.forEach((p,j)=>{p.x=home[j].x+(tgt[j].x-home[j].x)*.8*e;p.y=home[j].y+(tgt[j].y-home[j].y)*.8*e;});markerU=stepU(k,.3*e);drawMarker();},id)) return false;
       fx={type:"bounce",x:CH.cx,y:CH.cy-40};
-      if(!await tween(550,(e)=>{R.forEach((p,j)=>{p.x=tgt[j].x+(home[j].x-tgt[j].x)*(.2+.8*e);p.y=tgt[j].y+(home[j].y-tgt[j].y)*(.2+.8*e);});markerU=stepU(k,.3*(1-e));drawMarker();},id)) return false;
+      if(!await wait(500,id)) return false;
+      if(!await tween(900,(e)=>{R.forEach((p,j)=>{p.x=tgt[j].x+(home[j].x-tgt[j].x)*(.2+.8*e);p.y=tgt[j].y+(home[j].y-tgt[j].y)*(.2+.8*e);});markerU=stepU(k,.3*(1-e));drawMarker();},id)) return false;
       fx=null;
+      if(!await wait(350,id)) return false;
     }
   }
-  const fast=!st.slow, tA=fast?550:800;
-  setStatus(`${quiz?"":`<b>Step ${k+1} (${st.slow?"slow":"fast"}).</b> `}${side(st.L)} collide with enough energy and the correct orientation…`);
+  const fast=!st.slow, tA=fast?550:1300;
+  setStatus(`${sm}${quiz?"":`<b>Step ${k+1} (${st.slow?"slow":"fast"}).</b> `}${side(st.L)} collide with enough energy and the correct orientation…`);
   if(!await tween(tA,(e)=>{R.forEach((p,j)=>{p.x=home[j].x+(tgt[j].x-home[j].x)*e;p.y=home[j].y+(tgt[j].y-home[j].y)*e;});markerU=stepU(k,.5*e);drawMarker();},id)) return false;
   fx={type:"complex",x:CH.cx,y:CH.cy,r:Math.max(...R.map(p=>extent(p.sp)))+nR*18};
-  setStatus(`‡ <b>Activated complex ${k+1}</b>: the top of the hump on the energy diagram. Bonds are breaking and forming.`);
-  if(!await wait(fast?450:800,id)) return false;
+  setStatus(`${sm}‡ <b>Activated complex ${k+1}</b>: the top of the hump on the energy diagram. Bonds are breaking and forming.`);
+  if(!await wait(fast?600:1800,id)) return false;
   pool=pool.filter(p=>!R.includes(p)); fx=null;
   const P=[];for(const s in st.R) for(let j=0;j<st.R[s];j++) P.push(s);
   const born=P.map((s,j)=>{const p=spawn(s,CH.cx+(j-(P.length-1)/2)*44,CH.cy);p.busy=true;return p;});
   const dest=born.map(p=>freeSpot(extent(p.sp)));
   const start=born.map(p=>({x:p.x,y:p.y}));
-  if(!await tween(fast?650:850,(e)=>{born.forEach((p,j)=>{p.x=start[j].x+(dest[j].x-start[j].x)*e;p.y=start[j].y+(dest[j].y-start[j].y)*e;});markerU=stepU(k,.5+.5*e);drawMarker();},id)) return false;
+  if(!await tween(fast?650:1300,(e)=>{born.forEach((p,j)=>{p.x=start[j].x+(dest[j].x-start[j].x)*e;p.y=start[j].y+(dest[j].y-start[j].y)*e;});markerU=stepU(k,.5+.5*e);drawMarker();},id)) return false;
   born.forEach(p=>p.busy=false);
   done=k+1; busy=false;
   // narration
@@ -496,7 +505,15 @@ async function runStep(){
   renderSteps(); renderLedger(); updBtns(); if(end) renderPlaus();
   return true;
 }
-async function playAll(){const id=runId;while(done<M.steps.length&&id===runId){if(!await runStep())break;if(id!==runId)break;await wait(350,id);}}
+async function playAll(){const id=runId;playing=true;updBtns();
+  while(done<M.steps.length&&id===runId){if(!await runStep())break;if(id!==runId)break;if(done<M.steps.length&&!await wait(1000,id))break;}
+  if(id===runId){playing=false;updBtns();}}
+async function replay(){
+  if(busy||playing||!lastSnap) return;
+  const snap=lastSnap; pool=snap.pool.map(p=>({...p,busy:false})); nid=snap.nid; done=snap.k; fx=null;
+  markerU=snap.k?stepU(snap.k,0):0; drawMarker(); renderLedger();
+  SM=2; const ok=await runStep(); SM=1; if(ok) updBtns();
+}
 
 // chamber render loop
 let last=performance.now();
@@ -510,9 +527,9 @@ function frame(t){
     if(p.y<r+4){p.y=r+4;p.vy=Math.abs(p.vy);} if(p.y>CH.h-r-16){p.y=CH.h-r-16;p.vy=-Math.abs(p.vy);}
   }
   let s="";
-  if(fx&&fx.type==="complex") s+=`<circle cx="${fx.x}" cy="${fx.y}" r="${fx.r}" fill="#ffd54a" opacity=".35"/><text x="${fx.x}" y="${fx.y-fx.r-6}" text-anchor="middle" font-size="14" font-weight="700" fill="#8a5a00">‡ activated complex</text>`;
+  if(fx&&fx.type==="complex") s+=`<circle cx="${fx.x}" cy="${fx.y}" r="${fx.r}" fill="#ffd54a" opacity=".35"/><text x="${fx.x}" y="${fx.y-fx.r-6}" text-anchor="middle" font-size="14" font-weight="700" fill="#8a5a00" stroke="#fff" stroke-width="4" paint-order="stroke">‡ activated complex</text>`;
   for(const p of pool) s+=molSVG(p.sp,p.x,p.y,ringFor(p.sp),true,false);
-  if(fx&&fx.type==="bounce") s+=`<text x="${fx.x}" y="${fx.y}" text-anchor="middle" font-size="14" font-weight="700" fill="#b3261e">not enough energy!</text>`;
+  if(fx&&fx.type==="bounce") s+=`<text x="${fx.x}" y="${fx.y}" text-anchor="middle" font-size="14" font-weight="700" fill="#b3261e" stroke="#fff" stroke-width="4" paint-order="stroke">not enough energy!</text>`;
   $("chamberSvg").innerHTML=s;
   requestAnimationFrame(frame);
 }
@@ -573,7 +590,14 @@ function buildQ(){
   for(let t=0;opts.length<4&&t<10;t++){const v={...M.pred};const s=sp[t%sp.length];v[s]=(v[s]%3)+1;const k=lawKey(v);if(!seen.has(k)){seen.add(k);opts.push(v);}}
   const fin=shuffle(opts.slice(0,4).map(l=>lawStr(l)));
   qs.push({t:"What rate law does this mechanism predict? (slow step, with any intermediates removed)",type:"radio",opts:fin,ans:lawStr(M.pred)});
-  qs.push({t:"Is this a plausible mechanism?",type:"radio",opts:["Yes","No"],ans:M.plausible?"Yes":"No"});
+  const why=[];
+  if(M.sum.ok) why.push("✓ The steps add up to the overall equation.");
+  else why.push(`✗ The steps add up to ${side(M.sum.nL)} → ${side(M.sum.nR)}, not the overall equation ${eqStr(M.overall)}.`);
+  if(M.lawOk) why.push(`✓ The slow step gives ${lawStr(M.pred)}${M.predNotes.length?" (after removing the intermediate)":""}, which matches the experimental rate law.`);
+  else why.push(`✗ The slow step gives ${lawStr(M.pred)}${M.predNotes.length?" (after removing the intermediate)":""}, but the experimental rate law is ${lawStr(M.exp)}.`);
+  if(M.tooMany.length) why.push(`✗ Step ${M.tooMany.map(i=>i+1).join(", ")} needs ${entities(M.steps[M.tooMany[0]].L)} particles to collide at the same moment. Elementary steps have only one or two reacting entities.`);
+  qs.push({t:"Is this a plausible mechanism?",type:"radio",opts:["Yes","No"],ans:M.plausible?"Yes":"No",
+    why:`<b>${M.plausible?"Plausible":"Not plausible"}:</b><br>`+why.join("<br>")});
   return qs;
 }
 function renderQuiz(){
@@ -585,7 +609,7 @@ function renderQuiz(){
     if(q.type==="radio") h+=q.opts.map(o=>`<label><input type="radio" name="q${i}" value="${o}">${o}</label>`).join("<br>".repeat(q.opts[0].length>12?1:0));
     if(q.type==="num") h+=`<input type="text" inputmode="decimal" id="q${i}v" placeholder="kJ">`;
     if(q.type==="each") h+=q.items.map((s,j)=>`<label style="margin-right:12px"><b>${U(s)}</b> <select id="q${i}s${j}"><option value="">choose…</option>${q.opts.map(o=>`<option>${o}</option>`).join("")}</select></label>`).join("");
-    h+=`<div class="ans" id="q${i}a"></div></div>`;
+    h+=`<div class="ans" id="q${i}a"></div>${q.why?`<div class="why" id="q${i}w" hidden></div>`:""}</div>`;
   });
   h+=`<button class="btn" id="checkBtn">Check answers</button> <button class="btn ghost" id="showBtn">Show answers</button><div class="score" id="score"></div>`;
   $("paneQ").innerHTML=h;
@@ -603,6 +627,7 @@ function checkQ(show){
     $(`q${i}`).className="q "+(ok?"right":"wrong");
     const a=q.type==="each"?q.items.map((s,j)=>U(s)+": "+q.ans[j]).join(", "):q.type==="num"?(q.ans>0?"+":q.ans<0?"−":"")+Math.abs(q.ans)+" kJ":Array.isArray(q.ans)?q.ans.join(", "):q.ans;
     $(`q${i}a`).textContent=show||ok?(ok?"✓ ":"Answer: ")+a:"";
+    if(q.why){const w=$(`q${i}w`);w.innerHTML=q.why;w.hidden=false;}
   });
   $("score").textContent=`Score: ${right} / ${Q.length}`;
   quizChecked=true; renderPlaus();
@@ -611,6 +636,7 @@ function checkQ(show){
 // ---------- wiring ----------
 $("nextBtn").onclick=()=>runStep();
 $("allBtn").onclick=()=>playAll();
+$("replayBtn").onclick=()=>replay();
 $("resetBtn").onclick=()=>load(+sel.value);
 sel.onchange=()=>load(+sel.value);
 $("uncat").onchange=renderPE;
