@@ -101,6 +101,7 @@ tr.r-intermediate td{background:var(--interbg)} tr.r-catalyst td{background:var(
 .q select{font-size:13px;padding:2px 4px;border-radius:5px;border:1px solid #aab4c3}
 .q .ans{font-size:12px;color:var(--good);margin-top:2px}
 .score{font-weight:700;margin:4px 0}
+.q .why{font-size:13px;margin-top:5px;padding:5px 8px;background:#fff;border:1px dashed var(--line);border-radius:6px;line-height:1.5}
 .muted{color:var(--muted);font-size:12px}
 body.quiz .badge,body.quiz #catNote{display:none}
 @media (max-width:1000px), (orientation:portrait){
@@ -573,7 +574,14 @@ function buildQ(){
   for(let t=0;opts.length<4&&t<10;t++){const v={...M.pred};const s=sp[t%sp.length];v[s]=(v[s]%3)+1;const k=lawKey(v);if(!seen.has(k)){seen.add(k);opts.push(v);}}
   const fin=shuffle(opts.slice(0,4).map(l=>lawStr(l)));
   qs.push({t:"What rate law does this mechanism predict? (slow step, with any intermediates removed)",type:"radio",opts:fin,ans:lawStr(M.pred)});
-  qs.push({t:"Is this a plausible mechanism?",type:"radio",opts:["Yes","No"],ans:M.plausible?"Yes":"No"});
+  const why=[];
+  if(M.sum.ok) why.push("✓ The steps add up to the overall equation.");
+  else why.push(`✗ The steps add up to ${side(M.sum.nL)} → ${side(M.sum.nR)}, not the overall equation ${eqStr(M.overall)}.`);
+  if(M.lawOk) why.push(`✓ The slow step gives ${lawStr(M.pred)}${M.predNotes.length?" (after removing the intermediate)":""}, which matches the experimental rate law.`);
+  else why.push(`✗ The slow step gives ${lawStr(M.pred)}${M.predNotes.length?" (after removing the intermediate)":""}, but the experimental rate law is ${lawStr(M.exp)}.`);
+  if(M.tooMany.length) why.push(`✗ Step ${M.tooMany.map(i=>i+1).join(", ")} needs ${entities(M.steps[M.tooMany[0]].L)} particles to collide at the same moment. Elementary steps have only one or two reacting entities.`);
+  qs.push({t:"Is this a plausible mechanism?",type:"radio",opts:["Yes","No"],ans:M.plausible?"Yes":"No",
+    why:`<b>${M.plausible?"Plausible":"Not plausible"}:</b><br>`+why.join("<br>")});
   return qs;
 }
 function renderQuiz(){
@@ -585,7 +593,7 @@ function renderQuiz(){
     if(q.type==="radio") h+=q.opts.map(o=>`<label><input type="radio" name="q${i}" value="${o}">${o}</label>`).join("<br>".repeat(q.opts[0].length>12?1:0));
     if(q.type==="num") h+=`<input type="text" inputmode="decimal" id="q${i}v" placeholder="kJ">`;
     if(q.type==="each") h+=q.items.map((s,j)=>`<label style="margin-right:12px"><b>${U(s)}</b> <select id="q${i}s${j}"><option value="">choose…</option>${q.opts.map(o=>`<option>${o}</option>`).join("")}</select></label>`).join("");
-    h+=`<div class="ans" id="q${i}a"></div></div>`;
+    h+=`<div class="ans" id="q${i}a"></div>${q.why?`<div class="why" id="q${i}w" hidden></div>`:""}</div>`;
   });
   h+=`<button class="btn" id="checkBtn">Check answers</button> <button class="btn ghost" id="showBtn">Show answers</button><div class="score" id="score"></div>`;
   $("paneQ").innerHTML=h;
@@ -603,6 +611,7 @@ function checkQ(show){
     $(`q${i}`).className="q "+(ok?"right":"wrong");
     const a=q.type==="each"?q.items.map((s,j)=>U(s)+": "+q.ans[j]).join(", "):q.type==="num"?(q.ans>0?"+":q.ans<0?"−":"")+Math.abs(q.ans)+" kJ":Array.isArray(q.ans)?q.ans.join(", "):q.ans;
     $(`q${i}a`).textContent=show||ok?(ok?"✓ ":"Answer: ")+a:"";
+    if(q.why){const w=$(`q${i}w`);w.innerHTML=q.why;w.hidden=false;}
   });
   $("score").textContent=`Score: ${right} / ${Q.length}`;
   quizChecked=true; renderPlaus();
