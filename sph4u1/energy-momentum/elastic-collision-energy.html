@@ -18,6 +18,7 @@
     --c-v: #d61fd0;
     --c-dx: #1f6fe0;
     --c-F: #149a3a;
+    --c-pT: #064e4e;
     --blue: #2a52d6;
     --red: #d8262b;
     --c-EkT: #3d39b8;
@@ -149,7 +150,8 @@
     .main { min-height: 0; }
     .lower { flex: 1; min-height: 0; }
     .tabbody { flex: 1; min-height: 0; overflow: auto; }
-    aside { min-height: 0; overflow: auto; }
+    aside { min-height: 0; overflow: auto; gap: 6px; }
+    .chk { padding: 0; }
     aside .card { padding: 5px 10px; }
     aside .card h2 { margin-bottom: 3px; }
     .ebar { margin: 2px 0; }
@@ -279,6 +281,7 @@
       <div class="card">
         <h2>Display</h2>
         <label class="chk"><input type="checkbox" id="pauseMax" checked>Pause at max compression</label>
+        <label class="chk"><input type="checkbox" id="showPT" checked><i class="sw" style="border-color:var(--c-pT);border-top-width:5px"></i><span>Total momentum (p<sub>T</sub>)</span></label>
         <label class="chk"><input type="checkbox" id="showV" checked><i class="sw" style="border-color:var(--c-v)"></i>Velocity arrows</label>
         <label class="chk"><input type="checkbox" id="showF"><i class="sw" style="border-color:var(--c-F)"></i><span>Spring force arrows (F<sub>x</sub>)</span></label>
         <label class="chk"><input type="checkbox" id="showParts" checked><span>E<sub>k1</sub> and E<sub>k2</sub> on the graph</span></label>
@@ -306,7 +309,7 @@
   };
 
   const cfg = { m1: 1.2, v1: 5.0, m2: 2.0, v2: -3.0, k: 6.0, tgt: -2.1, pace: 1,
-                pauseMax: true, showV: true, showF: false, showParts: true };
+                pauseMax: true, showPT: true, showV: true, showF: false, showParts: true };
   let M = null;              // model of the current run
   let t = 0, playing = false, real = 0, pausedAtMax = false;
 
@@ -416,7 +419,7 @@
     pairs.forEach(id => { $(id + 'r').value = cfg[id]; $(id).value = id === 'k' ? cfg[id].toFixed(1) : cfg[id].toFixed(1); });
     $('tgt').value = cfg.tgt;
     $('pace').value = String(cfg.pace);
-    ['pauseMax', 'showV', 'showF', 'showParts'].forEach(id => $(id).checked = cfg[id]);
+    ['pauseMax', 'showPT', 'showV', 'showF', 'showParts'].forEach(id => $(id).checked = cfg[id]);
   }
   function changed(keepTarget) {
     build();
@@ -448,7 +451,7 @@
     changed(true);
   }));
   $('pace').addEventListener('change', e => { cfg.pace = Number(e.target.value); real = realOf(t); });
-  ['pauseMax', 'showV', 'showF', 'showParts'].forEach(id => $(id).addEventListener('change', e => { cfg[id] = e.target.checked; refresh(); }));
+  ['pauseMax', 'showPT', 'showV', 'showF', 'showParts'].forEach(id => $(id).addEventListener('change', e => { cfg[id] = e.target.checked; refresh(); }));
 
   $('play').addEventListener('click', () => {
     if (!M.ok) return;
@@ -508,7 +511,7 @@
     W = cv.clientWidth || 800;
     const pad = Math.max(14, W * 0.02), ppm = (W - 2 * pad) / TRACK;
     H = Math.round(Math.max(190, Math.min(250, W * 0.24)));
-    if (landscape()) H = Math.round(Math.max(180, Math.min(300, window.innerHeight * 0.33, W * 0.3)));
+    if (landscape()) H = Math.round(Math.max(200, Math.min(310, window.innerHeight * 0.35, W * 0.3)));
     cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); cv.style.height = H + 'px';
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     G = { pad, ppm, cl: LC * ppm, railTop: H - 44, X: m => pad + m * ppm };
@@ -651,15 +654,44 @@
     if (cfg.showV) {
       const vm = Math.max(Math.abs(m.v1), Math.abs(m.v2), Math.abs(m.vf1), Math.abs(m.vf2), 1);
       const sv = Math.min(G.cl * 0.9, W * 0.12) / vm;
-      const yv = Math.max(36, Math.min(c1.top, c2.top) - 64);
+      const yv = Math.max(cfg.showPT ? 78 : 36, Math.min(c1.top, c2.top) - 64);
       const r1 = arrow(c1.cx, yv, s.v1 * sv, getCss('--c-v'), 'v₁ = ' + sgn(s.v1, 2) + ' m/s');
       arrow(c2.cx, yv, s.v2 * sv, getCss('--c-v'), 'v₂ = ' + sgn(s.v2, 2) + ' m/s', 3, r1);
     }
     // phase label
     let ph = t < m.tc || !m.ok ? 'BEFORE' : t <= m.tc + m.T ? 'DURING' : 'AFTER';
     if (m.ok && Math.abs(t - m.tMax) < m.T * 0.004) ph = 'MAX COMPRESSION';
-    ctx.font = '700 12px system-ui, sans-serif'; ctx.textAlign = 'left'; ctx.fillStyle = 'rgba(75,71,201,.85)';
-    ctx.fillText(ph + (ph === 'MAX COMPRESSION' ? '   v₁ = v₂' : ''), 10, 16);
+    ctx.font = '700 12px system-ui, sans-serif'; ctx.textAlign = 'right'; ctx.fillStyle = 'rgba(75,71,201,.85)';
+    ctx.fillText(ph + (ph === 'MAX COMPRESSION' ? '   v₁ = v₂' : ''), W - 10, cfg.showPT ? 62 : 16);
+    if (cfg.showPT) drawTotal(s);
+  }
+  // bold total momentum vector from the centre of mass: the same before, during and after
+  function drawTotal(s) {
+    const m = M, y = 30, col = getCss('--c-pT');
+    const xc = G.X((m.m1 * s.x1 + m.m2 * s.x2) / m.Mt);
+    const pmax = Math.max(Math.abs(m.m1 * m.v1), Math.abs(m.m2 * m.v2), Math.abs(m.pT), 1);
+    const dx = m.pT * (W * 0.22) / pmax;
+    ctx.fillStyle = 'rgba(6,78,78,.07)'; rr(ctx, 8, y - 24, W - 16, 46, 8); ctx.fill();
+    ctx.fillStyle = 'rgba(6,78,78,.8)'; ctx.font = '700 11px system-ui, sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText('SYSTEM', 18, y - 8);
+    ctx.font = '11px system-ui, sans-serif'; ctx.fillText('same before, during and after', 18, y + 8);
+    ctx.save(); ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineWidth = 7;
+    if (Math.abs(dx) < 3) { ctx.beginPath(); ctx.arc(xc, y, 6, 0, Math.PI * 2); ctx.fill(); }
+    else {
+      const d = Math.sign(dx), hl = Math.min(18, Math.abs(dx) * 0.6);
+      ctx.beginPath(); ctx.moveTo(xc, y); ctx.lineTo(xc + dx - d * hl * 0.9, y); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(xc + dx, y); ctx.lineTo(xc + dx - d * hl, y - 12); ctx.lineTo(xc + dx - d * hl, y + 12); ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+    const txt = Math.abs(m.pT) < 1e-9 ? ' = 0' : ' = ' + nice(Math.abs(m.pT)) + ' kg·m/s ' + dir(m.pT);
+    ctx.fillStyle = col; ctx.font = '700 14px system-ui, sans-serif';
+    const pw = ctx.measureText('p').width; ctx.font = '700 10px system-ui, sans-serif'; const sw = ctx.measureText('T').width;
+    ctx.font = '700 14px system-ui, sans-serif'; const tw = pw + sw + 1 + ctx.measureText(txt).width;
+    let lx = Math.abs(dx) < 3 ? xc + 12 : dx > 0 ? xc + dx + 8 : xc + dx - 8 - tw;
+    lx = Math.max(130, Math.min(W - 14 - tw, lx));
+    ctx.textAlign = 'left'; ctx.fillText('p', lx, y + 5);
+    ctx.font = '700 10px system-ui, sans-serif'; ctx.fillText('T', lx + pw, y + 9);
+    ctx.font = '700 14px system-ui, sans-serif'; ctx.fillText(txt, lx + pw + sw + 1, y + 5);
   }
   const cssCache = {};
   function getCss(v) { return cssCache[v] || (cssCache[v] = getComputedStyle(document.documentElement).getPropertyValue(v).trim()); }
