@@ -135,13 +135,16 @@
   .logbar { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
   .logbar h2 { margin: 0 auto 0 0; }
   sub { font-size: 75%; }
+  .tabs { display: inline-flex; background: #f0eff7; border-radius: 9px; padding: 3px; gap: 3px; }
+  .tabs button { border: 0; background: transparent; padding: 3px 12px; border-radius: 7px; font: inherit; font-size: 13.5px; font-weight: 700; color: var(--muted); cursor: pointer; }
+  .tabs button.on { background: var(--accent); color: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.15); }
 </style>
 </head>
 <body>
 <div class="wrap">
   <!-- Lab guide (compact, full width) -->
   <div class="card guide">
-    <div class="ghead"><h1>Cart Collision Lab</h1><span class="ghint">Right is positive (+).</span><span class="trials" id="trials"></span></div>
+    <div class="ghead"><h1>Cart Collision Lab</h1><span class="tabs" id="tabs"><button data-tab="collide" class="on">Collisions</button><button data-tab="explode">Explosions</button></span><span class="ghint">Right is positive (+).</span><span class="trials" id="trials"></span></div>
     <div class="tinstr" id="tinstr"></div>
   </div>
 
@@ -199,7 +202,7 @@
       </div>
 
       <details class="card logcard">
-        <summary>Trial log (every collision you run)</summary>
+        <summary>Trial log (every run)</summary>
         <div class="logbar">
           <h2></h2>
           <button class="btn small" id="copy">Copy for spreadsheet</button>
@@ -207,7 +210,7 @@
         </div>
         <div class="scroll">
           <table class="log">
-            <thead><tr><th>#</th><th>Collision</th><th>m<sub>1</sub> (kg)</th><th>m<sub>2</sub> (kg)</th><th>v<sub>i1</sub></th><th>v<sub>i2</sub></th><th>v<sub>f1</sub></th><th>v<sub>f2</sub></th></tr></thead>
+            <thead><tr><th>#</th><th>Type</th><th>m<sub>1</sub> (kg)</th><th>m<sub>2</sub> (kg)</th><th>v<sub>i1</sub></th><th>v<sub>i2</sub></th><th>v<sub>f1</sub></th><th>v<sub>f2</sub></th></tr></thead>
             <tbody id="logbody"><tr><td colspan="8" style="text-align:left;color:var(--muted)">Each collision you run is added here.</td></tr></tbody>
           </table>
         </div>
@@ -219,28 +222,38 @@
       <div class="card" id="card0">
         <h2><span class="dot" style="background:var(--blue)"></span>Cart 1 (blue)</h2>
         <div class="massrow"><span>Bars</span><button class="btn small" data-c="0" data-d="-1">−</button><span class="n" id="bars0"></span><button class="btn small" data-c="0" data-d="1">+</button><span class="mtot">m<sub>1</sub> = <b id="m0"></b></span></div>
-        <div class="slider"><label><span>Initial velocity v<sub>i1</sub></span><output id="vo0"></output></label><input type="range" id="v0" min="-1" max="1" step="0.05"></div>
+        <div class="slider vslider"><label><span>Initial velocity v<sub>i1</sub></span><output id="vo0"></output></label><input type="range" id="v0" min="-1" max="1" step="0.05"></div>
       </div>
       <div class="card" id="card1">
         <h2><span class="dot" style="background:var(--red)"></span>Cart 2 (red)</h2>
         <div class="massrow"><span>Bars</span><button class="btn small" data-c="1" data-d="-1">−</button><span class="n" id="bars1"></span><button class="btn small" data-c="1" data-d="1">+</button><span class="mtot">m<sub>2</sub> = <b id="m1"></b></span></div>
-        <div class="slider"><label><span>Initial velocity v<sub>i2</sub></span><output id="vo1"></output></label><input type="range" id="v1" min="-1" max="1" step="0.05"></div>
+        <div class="slider vslider"><label><span>Initial velocity v<sub>i2</sub></span><output id="vo1"></output></label><input type="range" id="v1" min="-1" max="1" step="0.05"></div>
       </div>
-      <div class="card">
+      <div class="card" id="collCard">
         <h2>Collision type</h2>
-        <div class="seg" role="tablist">
+        <div class="seg" id="modeseg" role="tablist">
           <button data-mode="elastic">Magnets</button>
           <button data-mode="partial">Bumper</button>
           <button data-mode="sticky">Velcro</button>
         </div>
         <div class="slider" id="ewrap"><label><span id="elab">Elasticity (bounciness)</span><output id="eo"></output></label><input type="range" id="e" min="0" max="1" step="0.05"></div>
       </div>
+      <div class="card hidden" id="expCard">
+        <h2>Spring plunger</h2>
+        <div class="seg" id="plseg">
+          <button data-pl="1">Setting 1</button>
+          <button data-pl="2">Setting 2</button>
+          <button data-pl="3">Setting 3</button>
+        </div>
+        <p class="desc" id="pldesc"></p>
+        <div class="slider"><label><span>Starting velocity (both carts)</span><output id="vco"></output></label><input type="range" id="vc" min="-0.3" max="0.3" step="0.05"></div>
+      </div>
       <div class="card">
         <h2>Display</h2>
         <div class="chkgrid">
         <label class="chk"><input type="checkbox" id="showV" checked><span class="sw" style="border-color:var(--c-v)"></span>Velocity arrows</label>
         <label class="chk"><input type="checkbox" id="showCalc"><span>Show p and E<sub>k</sub> values</span></label>
-        <label class="chk"><input type="checkbox" id="pauseHit">Pause after hit</label>
+        <label class="chk"><input type="checkbox" id="pauseHit"><span id="pauseLbl">Pause after hit</span></label>
         </div>
       </div>
     </aside>
@@ -271,13 +284,32 @@
     { t: 'Sticking, unequal masses', s: 'Inelastic · unequal masses', why: 'Velcro again, with a heavy cart and a light cart.', bars: [2, 0], v: [0.40, -0.40], mode: 'sticky', e: 0 }
   ];
 
+  // Explosions: a spring-loaded plunger on cart 1 pushes the carts apart
+  const K_SP = 200;                        // N/m, plunger spring constant
+  const E_SET = [0, 0.020, 0.045, 0.080];  // J stored in the spring for settings 1-3
+  const S_PL = E_SET.map(E => Math.sqrt(2 * E / K_SP)); // m, how far the plunger is pushed in
+  const E_PL = n => E_SET[n];
+  const RELEASE_T = 0.4;                   // s after Play when the plunger is released
+  const EXP_TRIALS = [
+    { t: 'Equal masses', bars: [1, 1], pl: 2, vc: 0 },
+    { t: 'Cart 1 heavier', bars: [2, 0], pl: 2, vc: 0 },
+    { t: 'Cart 2 much heavier', bars: [0, 3], pl: 2, vc: 0 },
+    { t: 'Moving together', bars: [1, 1], pl: 2, vc: 0.20 }
+  ];
+
   const cfg = {
+    tab: 'collide',
     bars: [0, 0], v0: [0.20, -0.20], x0: [0.25, 0.95],
-    mode: 'elastic', e: 0.5, speed: 0.5,
+    mode: 'elastic', e: 0.5, speed: 0.5, pl: 2, vc: 0,
     showV: true, showP: true, showPT: true, showCalc: false, pauseHit: false,
     trial: -1
   };
-  const doneTrials = new Set();
+  const explode = () => cfg.tab === 'explode';
+  const trialList = () => explode() ? EXP_TRIALS : TRIALS;
+  const doneSets = { collide: new Set(), explode: new Set() };
+  const doneTrials = { has: k => doneSets[cfg.tab].has(k), add: k => doneSets[cfg.tab].add(k) };
+  const saved = { explode: { bars: [0, 0], trial: -1, pl: 1, vc: 0 } };
+  const initV = () => explode() ? [cfg.vc, cfg.vc] : cfg.v0;
   const log = [];
   let sim;
 
@@ -292,8 +324,11 @@
 
   // ---------- simulation ----------
   function resetSim() {
-    sim = { x: [...cfg.x0], v: [...cfg.v0], t: 0, phase: 'ready', stuck: false, inter: false, preV: null, after: null, flash: 0, contactX: 0, msg: '', msgKind: '' };
-    if (gapNow() < minGap()) {
+    sim = { x: [...cfg.x0], v: [...initV()], t: 0, phase: 'ready', stuck: false, inter: false, preV: null, after: null, flash: 0, contactX: 0, msg: '', msgKind: '', released: false };
+    if (explode()) {
+      const c = cfg.vc > 0 ? 0.42 : cfg.vc < 0 ? 0.78 : 0.60;
+      sim.x = [c - L / 2, c + L / 2];
+    } else if (gapNow() < minGap()) {
       sim.x[1] = Math.min(TRACK - L / 2, sim.x[0] + L + minGap());
       sim.x[0] = Math.min(sim.x[0], sim.x[1] - L - minGap());
       cfg.x0 = [...sim.x];
@@ -312,7 +347,7 @@
   // ---- magnetic (elastic) interaction: repulsion across a gap, the carts never touch ----
   const MAG_R = 0.06;      // m, gap at which the magnets start to push
   const MAG_K = 0.0016;    // N·m², strength of the repulsion
-  const magnetic = () => cfg.mode === 'elastic';
+  const magnetic = () => cfg.mode === 'elastic' && !explode();
   const gapNow = () => sim.x[1] - sim.x[0] - L;
   const magForce = g => g < MAG_R ? MAG_K * (1 / (g * g) - 1 / (MAG_R * MAG_R)) : 0;
   const minGap = () => magnetic() ? MAG_R + 0.002 : 0.01;
@@ -361,11 +396,12 @@
 
   function endRun(i) {
     sim.phase = 'done';
-    if (sim.after) setMsg('Run finished: cart ' + (i + 1) + ' reached the end stop. Press Reset to run it again.', 'ok');
+    if (sim.after || explode()) setMsg('Run finished: cart ' + (i + 1) + ' reached the end stop. Press Reset to run it again.', 'ok');
     else setMsg('The carts never collided: cart ' + (i + 1) + ' reached the end of the track first. Change the velocities so the carts move toward each other.', 'warn');
   }
 
   function step(dt) {
+    if (explode()) return stepExplode(dt);
     let rem = dt, guard = 0;
     while (rem > 1e-12 && sim.phase === 'running' && guard++ < 50000) {
       const [x1, x2] = sim.x, [v1, v2] = sim.v;
@@ -394,23 +430,74 @@
     }
   }
 
+  // ---- explosion: the plunger spring pushes the carts apart until it is fully extended ----
+  function springStep(h) {
+    const s0 = S_PL[cfg.pl], m1 = mass(0), m2 = mass(1);
+    const force = () => { const g = gapNow(); return g < s0 ? K_SP * (s0 - g) : 0; };
+    let F = force();
+    sim.v[0] -= F / m1 * h / 2; sim.v[1] += F / m2 * h / 2;
+    advance(h);
+    F = force();
+    sim.v[0] -= F / m1 * h / 2; sim.v[1] += F / m2 * h / 2;
+  }
+  function finishRelease() {
+    const m1 = mass(0), m2 = mass(1), M = m1 + m2, E = E_PL(cfg.pl);
+    const v1 = cfg.vc - Math.sqrt(2 * E * m2 / (m1 * M)), v2 = cfg.vc + Math.sqrt(2 * E * m1 / (m2 * M));
+    sim.v = [v1, v2]; sim.inter = false; sim.after = { v: [v1, v2] };
+    log.push({ mode: 'Explosion (setting ' + cfg.pl + ')', m: [m1, m2], vi: [cfg.vc, cfg.vc], vf: [v1, v2] });
+    if (cfg.trial >= 0 && sameAsTrial(cfg.trial)) doneTrials.add(cfg.trial);
+    renderLog(); renderTrials();
+    setMsg('The spring plunger pushed the carts apart. The "after" velocities are now in the results table.', 'ok');
+    if (cfg.pauseHit) { sim.phase = 'paused'; setMsg('Paused right after the release. Press Play to continue.', 'ok'); }
+  }
+  function stepExplode(dt) {
+    let rem = dt, guard = 0;
+    while (rem > 1e-12 && sim.phase === 'running' && guard++ < 50000) {
+      if (!sim.released) {
+        const tr = RELEASE_T - sim.t;
+        if (tr <= rem) { advance(Math.max(0, tr)); rem -= Math.max(0, tr); sim.released = true; sim.inter = true; sim.preV = [...sim.v]; setMsg('Plunger released!', 'ok'); }
+        else { advance(rem); rem = 0; }
+        continue;
+      }
+      if (sim.inter) {
+        const h = Math.min(rem, 0.0002); springStep(h); rem -= h;
+        if (gapNow() >= S_PL[cfg.pl]) finishRelease();
+        continue;
+      }
+      let te = Infinity, who = -1;
+      for (let i = 0; i < 2; i++) {
+        const v = sim.v[i]; let t = Infinity;
+        if (v < 0) t = (sim.x[i] - L / 2) / -v;
+        else if (v > 0) t = (TRACK - L / 2 - sim.x[i]) / v;
+        if (t < te) { te = t; who = i; }
+      }
+      if (te <= rem) { advance(Math.max(0, te)); rem -= te; endRun(who); }
+      else { advance(rem); rem = 0; }
+    }
+  }
+
   function play() {
     if (sim.phase === 'running') { sim.phase = 'paused'; refresh(); return; }
     if (sim.phase === 'done') resetSim();
-    if (sim.v[0] === 0 && sim.v[1] === 0) { setMsg('Both carts are at rest. Give at least one cart an initial velocity.', 'warn'); refresh(); return; }
+    if (!explode() && sim.v[0] === 0 && sim.v[1] === 0) { setMsg('Both carts are at rest. Give at least one cart an initial velocity.', 'warn'); refresh(); return; }
     sim.phase = 'running';
-    if (!sim.after) setMsg(cfg.trial >= 0 && !sameAsTrial(cfg.trial) ? 'Your settings do not match Trial ' + (cfg.trial + 1) + ' yet, so this run will not count for it.' : '', 'warn');
+    if (!sim.after) setMsg(cfg.trial >= 0 && !sameAsTrial(cfg.trial) ? 'Your settings do not match ' + (explode() ? 'Explosion ' : 'Trial ') + (cfg.trial + 1) + ' yet, so this run will not count for it.' : '', 'warn');
     refresh();
   }
 
   // ---------- trials ----------
   function sameAsTrial(k) {
+    if (explode()) { const c = trialChecks(k); return c.m1 && c.m2 && c.mode && c.v; }
     const T = TRIALS[k];
     return T.bars[0] === cfg.bars[0] && T.bars[1] === cfg.bars[1] && T.v[0] === cfg.v0[0] && T.v[1] === cfg.v0[1]
       && T.mode === cfg.mode && (T.mode !== 'partial' || Math.abs(T.e - cfg.e) < 1e-9);
   }
   // Selecting a trial only shows its instructions; students change the settings themselves.
   function trialChecks(k) {
+    if (explode()) {
+      const T = EXP_TRIALS[k];
+      return { m1: cfg.bars[0] === T.bars[0], m2: cfg.bars[1] === T.bars[1], mode: cfg.pl === T.pl, v: cfg.vc === T.vc };
+    }
     const T = TRIALS[k];
     return {
       m1: cfg.bars[0] === T.bars[0], m2: cfg.bars[1] === T.bars[1],
@@ -419,17 +506,34 @@
     };
   }
   function loadTrial(k) {
-    const T = TRIALS[k];
     cfg.trial = k;
-    cfg.x0 = T.v[1] === 0 ? [0.25, 0.62] : [0.25, 0.95];
+    if (!explode()) cfg.x0 = TRIALS[k].v[1] === 0 ? [0.25, 0.62] : [0.25, 0.95];
     resetSim();
-    setMsg('Set up Trial ' + (k + 1) + ' from your handout, then press Play.', ''); refresh();
+    setMsg(explode() ? 'Set up Explosion ' + (k + 1) + ' as shown above, then press Play.' : 'Set up Trial ' + (k + 1) + ' from your handout, then press Play.', ''); refresh();
   }
   function renderInstr() {
     const box = $('tinstr'), k = cfg.trial;
     const start = (j, label) => '<button class="startbtn" data-start="' + j + '">' + label + '</button>';
     let html;
-    if (k < 0) {
+    const kg = n => (M_CART + n * M_BAR).toFixed(3) + ' kg';
+    const bars = n => n + (n === 1 ? ' bar' : ' bars');
+    if (explode()) {
+      if (k < 0) {
+        html = '<div class="row">' + start(0, '▶ Start Explosion 1') + '<span class="then">The carts start pushed together. A spring plunger on cart 1 pushes them apart.</span></div>';
+      } else {
+        const T = EXP_TRIALS[k], c = trialChecks(k), ready = c.m1 && c.m2 && c.mode && c.v, ran = doneTrials.has(k);
+        const chip = (ok, t) => '<span class="chip' + (ok ? ' ok' : '') + '"><span class="ck">' + (ok ? '✓' : '') + '</span><span>' + t + '</span></span>';
+        if (ran && ready) {
+          html = '<div class="row"><span class="ttl">Explosion ' + (k + 1) + ' complete ✓</span><span class="then">Record v<sub>f1</sub> and v<sub>f2</sub> from the Results table.</span>'
+            + (k < EXP_TRIALS.length - 1 ? start(k + 1, '▶ Start Explosion ' + (k + 2)) : '<span class="state go">All four explosions are done.</span>') + '</div>';
+        } else {
+          html = '<div class="row"><span class="ttl">Explosion ' + (k + 1) + ': ' + T.t + '</span><span class="then">Set up:</span>'
+            + chip(c.m1, 'Cart 1: ' + bars(T.bars[0]) + ' (' + kg(T.bars[0]) + ')') + chip(c.m2, 'Cart 2: ' + bars(T.bars[1]) + ' (' + kg(T.bars[1]) + ')')
+            + chip(c.mode, 'Plunger setting ' + T.pl) + chip(c.v, T.vc === 0 ? 'Both carts at rest' : 'Both carts moving at ' + sgn(T.vc, 2) + ' m/s')
+            + '<span class="state ' + (ready ? 'go' : 'wait') + '">' + (ready ? 'Ready: press Play!' : 'Not set up yet') + '</span></div>';
+        }
+      }
+    } else if (k < 0) {
       html = '<div class="row">' + start(0, '▶ Start Trial 1') + '<span class="then">Each trial’s setup is on your handout.</span></div>';
     } else {
       const c = trialChecks(k), ready = c.m1 && c.m2 && c.mode && c.v, ran = doneTrials.has(k);
@@ -447,11 +551,11 @@
     box.querySelectorAll('[data-start]').forEach(b => b.onclick = () => loadTrial(+b.dataset.start));
   }
   function renderTrials() {
-    const box = $('trials'); box.innerHTML = 'Trials ';
-    TRIALS.forEach((T, k) => {
+    const box = $('trials'); box.innerHTML = explode() ? 'Explosions ' : 'Trials ';
+    trialList().forEach((T, k) => {
       const b = document.createElement('button');
       b.className = 'trial' + (doneTrials.has(k) ? ' done' : '') + (cfg.trial === k ? ' on' : '');
-      b.textContent = k + 1; b.title = 'Go to Trial ' + (k + 1);
+      b.textContent = k + 1; b.title = 'Go to ' + (explode() ? 'Explosion ' : 'Trial ') + (k + 1);
       b.onclick = () => loadTrial(k);
       box.appendChild(b);
     });
@@ -466,12 +570,20 @@
       $('v' + i).value = cfg.v0[i];
       $('vo' + i).textContent = sgn(cfg.v0[i], 2) + ' m/s';
     }
-    document.querySelectorAll('.seg button').forEach(b => b.classList.toggle('on', b.dataset.mode === cfg.mode));
+    document.querySelectorAll('#modeseg button').forEach(b => b.classList.toggle('on', b.dataset.mode === cfg.mode));
+    const ex = explode();
+    $('collCard').classList.toggle('hidden', ex); $('expCard').classList.toggle('hidden', !ex);
+    document.querySelectorAll('.vslider').forEach(el => el.classList.toggle('hidden', ex));
+    document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === cfg.tab));
+    document.querySelectorAll('#plseg button').forEach(b => b.classList.toggle('on', +b.dataset.pl === cfg.pl));
+    $('pldesc').textContent = 'Plunger pushed in ' + (S_PL[cfg.pl] * 100).toFixed(1) + ' cm. A higher setting stores more energy in the spring.';
+    $('vc').value = cfg.vc; $('vco').textContent = cfg.vc === 0 ? '0 (at rest)' : sgn(cfg.vc, 2) + ' m/s';
+    $('pauseLbl').textContent = ex ? 'Pause after release' : 'Pause after hit';
     const ev = elasticity();
     $('e').value = ev; $('e').disabled = cfg.mode !== 'partial';
     $('eo').textContent = ev.toFixed(2);
     $('elab').textContent = cfg.mode === 'partial' ? 'Elasticity (bounciness)' : 'Elasticity (fixed for ' + (cfg.mode === 'elastic' ? 'Magnets' : 'Velcro') + ')';
-    document.querySelectorAll('.seg button').forEach(b => b.title = MODES[b.dataset.mode].desc);
+    document.querySelectorAll('#modeseg button').forEach(b => b.title = MODES[b.dataset.mode].desc);
   }
   function changed() { syncControls(); resetSim(); renderTrials(); }
 
@@ -480,7 +592,19 @@
     cfg.bars[c] = Math.max(0, Math.min(MAXB, cfg.bars[c] + d)); changed();
   }));
   for (let i = 0; i < 2; i++) $('v' + i).addEventListener('input', e => { cfg.v0[i] = Math.round(+e.target.value * 100) / 100; changed(); });
-  document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => { cfg.mode = b.dataset.mode; changed(); }));
+  document.querySelectorAll('#modeseg button').forEach(b => b.addEventListener('click', () => { cfg.mode = b.dataset.mode; changed(); }));
+  document.querySelectorAll('#plseg button').forEach(b => b.addEventListener('click', () => { cfg.pl = +b.dataset.pl; changed(); }));
+  $('vc').addEventListener('input', e => { cfg.vc = Math.round(+e.target.value * 100) / 100; changed(); });
+  function switchTab(t) {
+    if (t === cfg.tab) return;
+    saved[cfg.tab] = { bars: [...cfg.bars], trial: cfg.trial, pl: cfg.pl, vc: cfg.vc };
+    cfg.tab = t;
+    const st = saved[t];
+    if (st) { cfg.bars = [...st.bars]; cfg.trial = st.trial; cfg.pl = st.pl; cfg.vc = st.vc; }
+    changed();
+    setMsg('', ''); refresh();
+  }
+  document.querySelectorAll('#tabs button').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
   $('e').addEventListener('input', e => { cfg.e = Math.round(+e.target.value * 100) / 100; changed(); });
   $('play').addEventListener('click', play);
   $('reset').addEventListener('click', () => { resetSim(); });
@@ -490,7 +614,7 @@
 
   // ---------- results ----------
   function refresh() {
-    const m = [mass(0), mass(1)], vi = cfg.v0, vf = sim.after ? sim.after.v : null, show = cfg.showCalc;
+    const m = [mass(0), mass(1)], vi = initV(), vf = sim.after ? sim.after.v : null, show = cfg.showCalc;
     const pi = [m[0] * vi[0], m[1] * vi[1]], Ei = [0.5 * m[0] * vi[0] ** 2, 0.5 * m[1] * vi[1] ** 2];
     const pf = vf ? [m[0] * vf[0], m[1] * vf[1]] : null, Ef = vf ? [0.5 * m[0] * vf[0] ** 2, 0.5 * m[1] * vf[1] ** 2] : null;
     const set = (id, txt, hid) => { const el = $(id); el.textContent = txt; el.classList.toggle('hid', !!hid); };
@@ -517,10 +641,11 @@
       const dp = Math.abs(piT) < 1e-12 ? null : (pfT - piT) / Math.abs(piT) * 100;
       const dE = EiT < 1e-12 ? 0 : (EiT - EfT) / EiT * 100;
       sum.innerHTML = '<span>% difference in total momentum: <b>' + (dp === null ? (Math.abs(pfT) < 1e-9 ? '0 (total p is zero before and after)' : 'n/a') : Math.abs(dp).toFixed(1) + ' %') + '</b></span>'
-        + '<span>% of kinetic energy lost: <b>' + (Math.abs(dE) < 0.05 ? '0.0' : dE.toFixed(1)) + ' %</b></span>';
+        + (explode() ? '<span>Kinetic energy gained from the spring: <b>' + fE(EfT - EiT) + ' J</b></span>'
+                     : '<span>% of kinetic energy lost: <b>' + (Math.abs(dE) < 0.05 ? '0.0' : dE.toFixed(1)) + ' %</b></span>');
     } else if (!show) {
       sum.innerHTML = '<span style="color:var(--muted)">p and E<sub>k</sub> are hidden so you can calculate them yourself. Tick “Show p and E<sub>k</sub> values” to check.</span>';
-    } else sum.innerHTML = '<span style="color:var(--muted)">Run the collision to see the “after” values.</span>';
+    } else sum.innerHTML = '<span style="color:var(--muted)">Run the ' + (explode() ? 'explosion' : 'collision') + ' to see the “after” values.</span>';
 
     $('charts').classList.toggle('hidden', !show);
     if (show) {
@@ -552,7 +677,7 @@
   }
   $('clear').addEventListener('click', () => { log.length = 0; renderLog(); });
   $('copy').addEventListener('click', () => {
-    const rows = [['Trial', 'Collision', 'm1 (kg)', 'm2 (kg)', 'vi1 (m/s)', 'vi2 (m/s)', 'vf1 (m/s)', 'vf2 (m/s)']]
+    const rows = [['Run', 'Type', 'm1 (kg)', 'm2 (kg)', 'vi1 (m/s)', 'vi2 (m/s)', 'vf1 (m/s)', 'vf2 (m/s)']]
       .concat(log.map((r, k) => [k + 1, r.mode, f3(r.m[0]), f3(r.m[1]), r.vi[0].toFixed(3), r.vi[1].toFixed(3), r.vf[0].toFixed(3), r.vf[1].toFixed(3)]));
     const text = rows.map(r => r.join('\t')).join('\n');
     const done = () => { $('copy').textContent = 'Copied ✓'; setTimeout(() => $('copy').textContent = 'Copy for spreadsheet', 1500); };
@@ -661,8 +786,8 @@
     const blue = i === 0;
     const base = blue ? ['#5d82f0', '#2a52d6', '#1a3596'] : ['#f0585c', '#d8262b', '#951216'];
     const wy = railTop - wr, bodyBot = wy + wr * 0.15, bodyTop = bodyBot - bodyH;
-    // plunger on the rear of cart 1
-    if (blue) {
+    // plunger on the rear of cart 1 (collisions only; in explosions it faces cart 2)
+    if (blue && !explode()) {
       const py = bodyTop + bodyH * 0.45, pl = cl * 0.13, ph = bodyH * 0.22;
       ctx.fillStyle = 'rgba(225,238,248,.85)'; ctx.strokeStyle = 'rgba(120,140,160,.8)'; ctx.lineWidth = 1;
       rr(xl - pl, py, pl + 2, ph, ph / 2); ctx.fill(); ctx.stroke();
@@ -691,7 +816,9 @@
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(String(i + 1), cx, bodyTop + bodyH * 0.52); ctx.textBaseline = 'alphabetic';
     // bumper on the face that points at the other cart
     const faceX = blue ? xl + cl : xl;
-    bumper(faceX, bodyTop + bodyH * 0.18, bodyH * 0.62, blue ? 1 : -1, cfg.mode);
+    if (!explode()) bumper(faceX, bodyTop + bodyH * 0.18, bodyH * 0.62, blue ? 1 : -1, cfg.mode);
+    else if (blue) plunger(faceX, bodyTop, bodyH);
+    else { ctx.fillStyle = '#4c535b'; rr(faceX - 2, bodyTop + bodyH * 0.25, 4, bodyH * 0.5, 2); ctx.fill(); }
     // stacked bar masses: first bar sits in the cart's tray
     const barLen = cl * 0.78;
     let yb = bodyTop + barH * 0.3;
@@ -703,6 +830,24 @@
     return { cx, top: bodyTop - 3 * barH };
   }
 
+  // spring plunger on the front of cart 1: the cap sits against cart 2 until the spring is fully extended
+  function plunger(faceX, bodyTop, bodyH) {
+    const ext = Math.max(0, Math.min(S_PL[cfg.pl], sim.released ? gapNow() : 0)) * G.ppm;
+    const py = bodyTop + bodyH * 0.5, rh = Math.max(3, bodyH * 0.14), capH = bodyH * 0.55, capW = Math.max(4, G.cl * 0.035);
+    if (ext > 0.5) {
+      // spring coil around the rod
+      ctx.strokeStyle = '#7c838b'; ctx.lineWidth = 1.5; ctx.beginPath();
+      const turns = 6;
+      for (let k = 0; k <= turns * 8; k++) { const f = k / (turns * 8), x = faceX + f * ext, y = py + Math.sin(f * turns * Math.PI * 2) * rh * 1.3; k ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+      ctx.stroke();
+      ctx.fillStyle = '#c9ced4'; ctx.fillRect(faceX, py - rh / 2, ext, rh);
+    }
+    ctx.fillStyle = '#3b3f45'; rr(faceX + ext - capW + 1, py - capH / 2, capW, capH, 2); ctx.fill();
+    // release trigger on top of cart 1
+    ctx.fillStyle = sim.released ? '#8a9198' : '#e0a100';
+    rr(faceX - G.cl * 0.16, bodyTop - 5, G.cl * 0.1, 6, 2); ctx.fill();
+  }
+
   function arrow(x, y, dx, color, label) {
     ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = 3;
     if (Math.abs(dx) < 2) { ctx.beginPath(); ctx.arc(x, y, 3.5, 0, Math.PI * 2); ctx.fill(); }
@@ -712,7 +857,10 @@
       ctx.beginPath(); ctx.moveTo(x + dx, y); ctx.lineTo(x + dx - d * hl, y - 6); ctx.lineTo(x + dx - d * hl, y + 6); ctx.closePath(); ctx.fill();
     }
     ctx.font = '600 12px system-ui, sans-serif'; ctx.textAlign = dx >= 0 ? 'left' : 'right';
-    ctx.fillText(label, x + (dx >= 0 ? -2 : 2) + (Math.abs(dx) < 2 ? (dx >= 0 ? 8 : -8) : 0), y - 8);
+    let lx = x + (dx >= 0 ? -2 : 2) + (Math.abs(dx) < 2 ? (dx >= 0 ? 8 : -8) : 0);
+    const lw = ctx.measureText(label).width; // keep labels inside the canvas near the end stops
+    if (dx >= 0) lx = Math.min(lx, W - 4 - lw); else lx = Math.max(lx, 4 + lw);
+    ctx.fillText(label, lx, y - 8);
   }
 
   // Bold total-momentum arrow drawn from the centre of mass of the two carts
@@ -737,7 +885,7 @@
   function drawTotal(y, sp) {
     const m1 = mass(0), m2 = mass(1), M = m1 + m2;
     const xc = G.X((m1 * sim.x[0] + m2 * sim.x[1]) / M);
-    const pi = m1 * cfg.v0[0] + m2 * cfg.v0[1];
+    const pi = m1 * initV()[0] + m2 * initV()[1];
     const pNow = m1 * sim.v[0] + m2 * sim.v[1];
     const col = getCss('--c-pT');
     // highlighted band so the system's total momentum stands out
@@ -785,7 +933,7 @@
       // cart labels when arrows are off
       if (!cfg.showV && !cfg.showP) { ctx.fillStyle = '#61617a'; ctx.font = '600 12px system-ui'; ctx.textAlign = 'center'; ctx.fillText('Cart ' + n, c[i].cx, yP); }
     }
-    if (sim.phase === 'ready') {
+    if (sim.phase === 'ready' && !explode()) {
       ctx.fillStyle = 'rgba(97,97,122,.85)'; ctx.font = '12px system-ui, sans-serif'; ctx.textAlign = 'right';
       ctx.fillText('Drag a cart to move its starting spot', W - 10, H - 8);
     }
@@ -806,13 +954,13 @@
   function ptr(e) { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; }
   cv.addEventListener('pointerdown', e => {
     const [px, py] = ptr(e), i = hitCart(px, py);
-    if (i < 0) return;
+    if (i < 0 || explode()) return;
     if (sim.phase !== 'ready') { resetSim(); }
     drag = { i, off: px - G.X(sim.x[i]) }; cv.setPointerCapture(e.pointerId);
   });
   cv.addEventListener('pointermove', e => {
     const [px, py] = ptr(e);
-    if (!drag) { cv.style.cursor = hitCart(px, py) >= 0 && sim.phase === 'ready' ? 'grab' : 'default'; return; }
+    if (!drag) { cv.style.cursor = !explode() && hitCart(px, py) >= 0 && sim.phase === 'ready' ? 'grab' : 'default'; return; }
     cv.style.cursor = 'grabbing';
     let xm = (px - drag.off - G.pad) / G.ppm;
     const gap = minGap();
@@ -844,7 +992,7 @@
   requestAnimationFrame(frame);
 
   // expose for testing
-  window.__lab = { cfg, get sim() { return sim; }, step, play, loadTrial, collide };
+  window.__lab = { cfg, get sim() { return sim; }, step, play, loadTrial, collide, switchTab };
 })();
 </script>
 <script src="../../assets/fullscreen.js?v=202611181200" defer></script>
