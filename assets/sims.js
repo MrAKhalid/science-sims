@@ -2,7 +2,7 @@
 // 1. Put the .html file in the right course/unit folder.
 // 2. Add one line to that unit's "sims" list below: { title, file, blurb }.
 // Bump this number whenever a simulation file changes, so browsers load the new copy.
-window.SIMS_VERSION = "202611231600";
+window.SIMS_VERSION = "202611231700";
 
 window.COURSES = {
   sph4u1: {
@@ -15,7 +15,8 @@ window.COURSES = {
         { title: "Spring Simple Harmonic Motion", file: "spring-shm.html", blurb: "Horizontal and vertical springs plus the circular-motion link, with vectors, energy bars, and graphs." },
         { title: "Impulse", file: "impulse.html", blurb: "Push an ocean liner sideways to steer it past an iceberg, and drop eggs on different surfaces to see how stopping time changes the force." },
         { title: "Cart Collision Lab", file: "cart-collision-lab.html", blurb: "Set the masses, velocities, and collision type (magnets, bumper, or velcro) for two dynamics carts and work through six guided trials on momentum and kinetic energy. An Explosions tab shows spring-loaded carts pushing apart." },
-        { title: "Spring Energy Challenge", file: "spring-energy-challenge.html", blurb: "Random spring, friction and hill problems at four levels. Solve for the unknown with correct sig digs and units, with hints and worked solutions." }
+        { title: "Spring Energy Challenge", file: "spring-energy-challenge.html", blurb: "Random spring, friction and hill problems at four levels. Solve for the unknown with correct sig digs and units, with hints and worked solutions." },
+        { title: "Conservation of Energy in Elastic Collisions", file: "elastic-collision-energy.html", blurb: "A cart hits a cart carrying a spring. Watch kinetic energy turn into elastic potential energy and back, with energy and velocity graphs, max compression, and a worked problem." }
       ]},
       { id: "fields", name: "Gravitational, Electric, and Magnetic Fields", sims: [] },
       { id: "light", name: "The Wave Nature of Light", sims: [] },
