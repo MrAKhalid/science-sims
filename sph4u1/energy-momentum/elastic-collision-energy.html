@@ -220,10 +220,10 @@
       </div>
 
         <div id="tab-steps" class="stepsbox" hidden><ol class="st">
-          <li>Press <b>Worked example</b>, or set your own masses, velocities and <i>k</i>. A velocity to the left is negative.</li>
+          <li>The sim starts with p<sub>Ti</sub> = 0: the carts have equal and opposite momentum. A velocity to the left is negative.</li>
           <li>Press <b>▶ Play</b>. The sim slows down while the spring is squeezed. Watch E<sub>e</sub> (green) rise as E<sub>kT</sub> falls. Does E<sub>T</sub> change?</li>
           <li>It pauses at <b>max compression</b>. Compare v<sub>1</sub> and v<sub>2</sub>. Why must they be equal?</li>
-          <li>Press <b>p<sub>T</sub> = 0</b> and run it. Why does E<sub>kT</sub> drop to zero this time but not in the worked example?</li>
+          <li>Where did all the kinetic energy go at max compression? Now press <b>Worked example</b> (p<sub>T</sub> ≠ 0) and run it. Why doesn't E<sub>kT</sub> drop to zero this time?</li>
           <li>Open the <b>Problem</b> tab, then check your Δ<i>x</i> with the <b>Jump to</b> buttons.</li>
         </ol></div>
       <div class="prob" id="tab-prob" hidden>
@@ -305,7 +305,7 @@
     chase: { m1: 1.2, v1: 9.0,  m2: 2.0, v2: 3.0,  k: 6.0 }
   };
 
-  const cfg = { m1: 1.2, v1: 12.0, m2: 2.0, v2: -3.0, k: 6.0, tgt: -1.2, pace: 1,
+  const cfg = { m1: 1.2, v1: 5.0, m2: 2.0, v2: -3.0, k: 6.0, tgt: -2.1, pace: 1,
                 pauseMax: true, showV: true, showF: false, showParts: true };
   let M = null;              // model of the current run
   let t = 0, playing = false, real = 0, pausedAtMax = false;
@@ -879,7 +879,7 @@
     d.addEventListener('fullscreenchange', draw); d.addEventListener('webkitfullscreenchange', draw);
   })();
 
-  build(); syncInputs(); layout(); renderProblem(); refresh();
+  build(); cfg.tgt = autoTarget(); syncInputs(); layout(); renderProblem(); refresh();
   requestAnimationFrame(frame);
   window.__sim = { cfg, get M() { return M; }, stateAt, timeForV2, jump, get t() { return t; } };
 })();
