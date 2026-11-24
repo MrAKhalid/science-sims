@@ -226,7 +226,7 @@ footer{margin-top:26px;font-size:13px;color:var(--muted)}
       <div class="card">
         <div class="label-up">Both processes are happening</div>
         <div class="dir" id="sysDir"></div>
-        <p class="small" style="margin:10px 0 0">Watch the molecular view: a molecule that just crossed over <b class="k fwd">glows orange</b> (forward) or <b class="k rev">glows purple</b> (reverse). Both keep happening, so the macro view never changes.</p>
+        <p class="small" style="margin:10px 0 0">Watch the molecular view: molecules <b>trade places</b>. A dashed circle marks the next ones to cross. At the same moment that one crosses forward (<b class="k fwd">orange</b>), another crosses back (<b class="k rev">purple</b>), so the amounts on each side never change.</p>
         <div class="verdict neq" id="verdict" hidden></div>
       </div>
   <div class="card">
@@ -352,7 +352,7 @@ const G = {
     ctx.strokeStyle = T.atomline; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x - bx, y - by); ctx.lineTo(x + bx, y + by); ctx.stroke();
     G.no2(ctx, x + bx, y + by, a); G.no2(ctx, x - bx, y - by, a + Math.PI); }
 };
-const GS = 1.6, GLOW = 2.2;
+const GS = 1.6, GLOW = 2.4, PERIOD = 2.2;
 const RADIUS = { co2: 9 * GS, h2o: 8 * GS, ca: 7 * GS, co3: 9 * GS, i2: 9 * GS, na: 5 * GS, cl: 6.5 * GS, no2: 9 * GS, n2o4: 15 * GS };
 function drawG(ctx, sp, x, y, a, alpha){ ctx.save(); ctx.translate(x, y); ctx.scale(GS, GS); G[sp](ctx, 0, 0, a, alpha); ctx.restore(); }
 
@@ -383,7 +383,7 @@ function walls(p, x0, y0, x1, y1){
 }
 
 class BaseScene {
-  warm(){ this.reset(); for (let i = 0; i < 150 * 30; i++) this.update(1 / 30); this.flashes = []; (this.ps || []).forEach(p => p.glow = null); this.siteGlow = []; this.applyTag(); }
+  warm(){ this.reset(); for (let i = 0; i < 150 * 30; i++) this.update(1 / 30); this.endTrade && this.endTrade(); this.flashes = []; (this.ps || []).forEach(p => p.glow = null); this.siteGlow = []; this.applyTag(); }
   resetStats(){ this.t = 0; this.fwdT = []; this.revT = []; this.fwdTotal = 0; this.revTotal = 0; this.hist = []; this.nextSample = 0; this.flashes = []; }
   event(kind, x, y){ (kind === 'fwd' ? this.fwdT : this.revT).push(this.t); kind === 'fwd' ? this.fwdTotal++ : this.revTotal++; this.flashes.push({ x, y, age: 0, kind }); }
   rates(){ const W = 20, t0 = this.t - W; this.fwdT = this.fwdT.filter(t => t > t0); this.revT = this.revT.filter(t => t > t0); const span = Math.max(1, Math.min(W, this.t)); return { f: this.fwdT.length / span, r: this.revT.length / span }; }
@@ -395,11 +395,16 @@ class BaseScene {
     const k = gw.age / GLOW, col = gw.kind === 'fwd' ? T.fwd : T.rev;
     ctx.save(); ctx.globalAlpha = 0.28 * (1 - k); ctx.beginPath(); ctx.arc(x, y, r + 12, 0, TAU); ctx.fillStyle = col; ctx.fill();
     ctx.globalAlpha = 1 - k * 0.8; ctx.lineWidth = 3.5; ctx.strokeStyle = col; ctx.beginPath(); ctx.arc(x, y, r + 12, 0, TAU); ctx.stroke();
-    if (this.names && gw.age < GLOW * 0.75){ ctx.font = '700 19px ' + getComputedStyle(document.body).fontFamily; ctx.lineWidth = 4; ctx.strokeStyle = T.surface; const t = (gw.kind === 'fwd' ? '→ ' + this.names[0] : '← ' + this.names[1]).toLowerCase(); const right = x < MW - 190; ctx.textAlign = right ? 'left' : 'right'; const tx = right ? x + r + 18 : x - r - 18, ty = clamp(y + 6, 50, MH - 30); ctx.strokeText(t, tx, ty); ctx.fillStyle = col; ctx.fillText(t, tx, ty); }
+    if (this.names && !gw.quiet && gw.age < GLOW * 0.75){ ctx.font = '700 19px ' + getComputedStyle(document.body).fontFamily; ctx.lineWidth = 4; ctx.strokeStyle = T.surface; const t = (gw.kind === 'fwd' ? '→ ' + this.names[0] : '← ' + this.names[1]).toLowerCase(); const right = x < MW - 190; ctx.textAlign = right ? 'left' : 'right'; const tx = right ? x + r + 18 : x - r - 18, ty = clamp(y + 6, 50, MH - 30); ctx.strokeText(t, tx, ty); ctx.fillStyle = col; ctx.fillText(t, tx, ty); }
     ctx.restore();
   }
-  drawGlows(ctx){ (this.ps || []).forEach(p => { if (p.glow) this.glowAt(ctx, p.x, p.y, RADIUS[p.sp], p.glow); }); (this.siteGlow || []).forEach(gw => { const q = this.sitePos(gw.c, gw.r); this.glowAt(ctx, q.x, q.y, RADIUS[this.siteType(gw.c, gw.r)], gw); }); }
-  drawFlashes(ctx){ this.flashes.forEach(f => { const k = f.age / 0.7; ctx.beginPath(); ctx.arc(f.x, f.y, 8 + k * 18, 0, TAU); ctx.strokeStyle = f.kind === 'fwd' ? T.fwd : T.rev; ctx.globalAlpha = 1 - k; ctx.lineWidth = 3; ctx.stroke(); ctx.globalAlpha = 1; }); }
+  tradeN(){ return Math.random() < 0.6 ? 1 : 2; }
+  tick(dt){ if (this.trade){ this.trade.t += dt; return; } this.cycle = (this.cycle ?? 1) - dt; if (this.cycle <= 0){ this.startTrade(); if (!this.trade) this.cycle = PERIOD; } }
+  endTrade(){ this.trade = null; this.cycle = PERIOD; (this.ps || []).forEach(p => { p.want = null; p.hold = false; }); }
+  steer(p, tx, ty, sp, dt){ const dx = tx - p.x, dy = ty - p.y, d = Math.hypot(dx, dy); if (d < 4){ p.x = tx; p.y = ty; p.vx = 0; p.vy = 0; p.hold = true; return; } const v = Math.min(sp, d / dt); p.vx = dx / d * v; p.vy = dy / d * v; }
+  drawWants(ctx){ (this.ps || []).forEach(p => { if (p.want){ ctx.save(); ctx.setLineDash([5, 5]); ctx.lineWidth = 2.5; ctx.strokeStyle = T.muted; ctx.beginPath(); ctx.arc(p.x, p.y, RADIUS[p.sp] + 9, 0, TAU); ctx.stroke(); ctx.restore(); } }); }
+  drawGlows(ctx){ this.drawWants(ctx); (this.ps || []).forEach(p => { if (p.glow) this.glowAt(ctx, p.x, p.y, RADIUS[p.sp], p.glow); }); (this.siteGlow || []).forEach(gw => { const q = this.sitePos(gw.c, gw.r); this.glowAt(ctx, q.x, q.y, RADIUS[this.siteType(gw.c, gw.r)], gw); }); }
+  drawFlashes(ctx){ return; this.flashes.forEach(f => { const k = f.age / 0.7; ctx.beginPath(); ctx.arc(f.x, f.y, 8 + k * 18, 0, TAU); ctx.strokeStyle = f.kind === 'fwd' ? T.fwd : T.rev; ctx.globalAlpha = 1 - k; ctx.lineWidth = 3; ctx.stroke(); ctx.globalAlpha = 1; }); }
   drawTagged(ctx, p){
     if (!p) return;
     if (p.trail.length > 4){ ctx.beginPath(); ctx.moveTo(p.trail[0], p.trail[1]); for (let i = 2; i < p.trail.length; i += 2) ctx.lineTo(p.trail[i], p.trail[i + 1]); ctx.strokeStyle = T.accent; ctx.globalAlpha = .55; ctx.lineWidth = 2; ctx.setLineDash([4, 4]); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1; }
@@ -410,9 +415,9 @@ class BaseScene {
 
 /* Club soda: CO2(aq) <-> CO2(g) across a liquid surface */
 class SodaScene extends BaseScene {
-  constructor(){ super(); this.level = 190; this.N = 16; this.pEsc = 0.9; this.pDis = 0.6; this.reset(); }
+  constructor(){ super(); this.level = 190; this.N = 16; this.target = 5; this.reset(); }
   reset(){
-    this.resetStats(); this.cap = false; this.escaped = 0;
+    this.resetStats(); this.cap = false; this.escaped = 0; this.trade = null; this.cycle = 1;
     this.ps = []; for (let i = 0; i < this.N; i++) this.ps.push(newP('co2', rnd(20, MW - 20), rnd(this.level + 20, MH - 20), 'liq', 80));
     this.water = []; for (let i = 0; i < 0; i++) this.water.push(newP('h2o', rnd(20, MW - 20), rnd(this.level + 15, MH - 15), 'liq', 40));
     this.ps.forEach(p => p.ph = 'aq');
@@ -420,21 +425,36 @@ class SodaScene extends BaseScene {
   }
   applyTag(){ this.ps.forEach((p, i) => { p.tag = this.tracking && i === this.tagIdx; p.trail = []; }); }
   counts(){ let a = 0, b = 0; this.ps.forEach(p => p.ph === 'aq' ? a++ : b++); return { a, b }; }
+  startTrade(){
+    const L = this.level, aq = this.ps.filter(p => p.ph === 'aq').sort((a, b) => a.y - b.y), g = this.ps.filter(p => p.ph === 'g').sort((a, b) => b.y - a.y);
+    const paired = !this.cap && g.length >= this.target;
+    let n = Math.min(this.tradeN(), aq.length, paired ? g.length : 99); if (n < 1) return;
+    const fwd = aq.slice(0, n), rev = paired ? g.slice(0, n) : [];
+    fwd.forEach(p => p.want = 'fwd'); rev.forEach(p => p.want = 'rev');
+    this.trade = { fwd, rev, t: 0 };
+  }
   update(dt){
-    this.t += dt; const L = this.level;
-    this.water.forEach(w => { moveP(w, dt); walls(w, 0, L, MW, MH); });
+    this.t += dt; const L = this.level, r = RADIUS.co2; this.tick(dt);
     for (const p of this.ps){
-      moveP(p, dt); const r = RADIUS.co2;
-      if (p.ph === 'aq'){
-        if (p.y < L + r){ if (Math.random() < this.pEsc){ p.ph = 'g'; p.mode = 'gas'; p.speed = 115; p.y = L - r; const ang = rnd(-2.6, -0.5); p.vx = Math.cos(ang) * 115; p.vy = Math.sin(ang) * 115; p.glow = { age: 0, kind: 'fwd' }; this.event('fwd', p.x, L); } else { p.y = L + r; p.vy = Math.abs(p.vy); } }
-        walls(p, 0, L - 50, MW, MH);
-      } else {
-        if (p.y > L - r && p.vy > 0){ if (Math.random() < this.pDis){ p.ph = 'aq'; p.mode = 'liq'; p.speed = 80; p.y = L + r; p.vx *= .2; p.vy = 30; p.glow = { age: 0, kind: 'rev' }; this.event('rev', p.x, L); } else { p.y = L - r; p.vy = -Math.abs(p.vy); } }
+      if (p.want){ const tx = clamp(p.x, 30, MW - 30); this.steer(p, tx, p.ph === 'aq' ? L + r + 2 : L - r - 2, 120, dt); p.x += p.vx * dt; p.y += p.vy * dt; if (p.tag){ p.trail.push(p.x, p.y); if (p.trail.length > 80) p.trail.splice(0, 2); } continue; }
+      moveP(p, dt);
+      if (p.ph === 'aq'){ if (p.y < L + r){ p.y = L + r; p.vy = Math.abs(p.vy); } walls(p, 0, L - 50, MW, MH); }
+      else {
+        if (p.y > L - r && p.vy > 0){ p.y = L - r; p.vy = -Math.abs(p.vy); }
         if (this.cap && p.y < 4 + r){ p.gone = true; this.escaped++; continue; }
         walls(p, 0, 0, MW, L + 50);
       }
     }
-    if (this.cap){ const before = this.ps.length; this.ps = this.ps.filter(p => !p.gone); if (this.ps.length !== before && this.tracking && !this.ps.some(p => p.tag)) this.lostTag = true; }
+    if (this.cap) this.ps = this.ps.filter(p => !p.gone);
+    const tr = this.trade;
+    if (tr){
+      const all = tr.fwd.concat(tr.rev).filter(p => this.ps.includes(p));
+      if (all.every(p => p.hold) || tr.t > 6){
+        tr.fwd.forEach(p => { p.ph = 'g'; p.mode = 'gas'; p.speed = 115; p.y = L - r - 2; const ang = rnd(-2.4, -0.7); p.vx = Math.cos(ang) * 115; p.vy = Math.sin(ang) * 115; p.glow = { age: 0, kind: 'fwd' }; this.event('fwd', p.x, L); });
+        tr.rev.forEach(p => { p.ph = 'aq'; p.mode = 'liq'; p.speed = 80; p.y = L + r + 2; p.vx = rnd(-20, 20); p.vy = 60; p.glow = { age: 0, kind: 'rev' }; this.event('rev', p.x, L); });
+        this.endTrade();
+      }
+    }
     this.stepFlashes(dt); this.sample();
   }
   tagged(){ return this.ps.find(p => p.tag); }
@@ -484,7 +504,7 @@ class SodaScene extends BaseScene {
 class LatticeScene extends BaseScene {
   constructor(cfg){ super(); Object.assign(this, cfg); this.reset(); }
   reset(){
-    this.resetStats();
+    this.resetStats(); this.trade = null; this.cycle = 1;
     this.h = Array.from({ length: this.cols }, () => this.h0);
     this.ps = []; this.extras = [];
     const fy0 = this.anchor === 'bottom' ? 14 : this.base + this.h0 * this.rh + 14;
@@ -504,29 +524,62 @@ class LatticeScene extends BaseScene {
   surf(c){ return this.anchor === 'bottom' ? this.base - this.h[c] * this.rh : this.base + this.h[c] * this.rh; }
   sitePos(c, r){ const x = (c + 0.5) * this.cw() + ((r % 2) ? 2.5 : -2.5); const y = this.anchor === 'bottom' ? this.base - (r + 0.5) * this.rh : this.base + (r + 0.5) * this.rh; return { x, y }; }
   counts(){ let solid = 0; this.h.forEach(v => solid += v); return { a: solid, b: this.ps.length }; }
-  dissolveOne(){
+  dissolveOne(sp, avoid){
     // exposed particles (on peaks) leave more easily than ones in hollows
     const cand = [], wts = []; let tot = 0;
-    for (let c = 0; c < this.cols; c++) if (this.h[c] > this.minH){ const w = 1 + 3 * this.exposed(c); cand.push(c); wts.push(w); tot += w; }
+    const far = c => !avoid || avoid.every(a => Math.abs(a - c) >= 3);
+    for (const strict of [true, false]){
+      for (let c = 0; c < this.cols; c++) if (this.h[c] > this.minH && (strict ? far(c) : !avoid || !avoid.includes(c)) && (!sp || this.siteType(c, this.h[c] - 1) === sp)){ const w = 1 + 3 * this.exposed(c); cand.push(c); wts.push(w); tot += w; }
+      if (cand.length) break;
+    }
     if (!cand.length) return;
     let pick = Math.random() * tot, k = 0; while (k < cand.length - 1 && (pick -= wts[k]) > 0) k++;
-    const c = cand[k], r = this.h[c] - 1, sp = this.siteType(c, r), pos = this.sitePos(c, r);
-    this.h[c]--;
-    const p = newP(sp, pos.x, pos.y, this.mode, this.speed);
+    const c = cand[k], r = this.h[c] - 1, spc = this.siteType(c, r), pos = this.sitePos(c, r);
+    this.h[c]--; this.lastCol = c;
+    const p = newP(spc, pos.x, pos.y, this.mode, this.speed);
     const dirY = this.anchor === 'bottom' ? -1 : 1;
-    p.vy = dirY * Math.abs(p.vy || this.speed * .5) ; if (this.mode === 'gas'){ const ang = rnd(0.5, 2.6); p.vx = Math.cos(ang) * this.speed; p.vy = dirY * Math.sin(ang) * this.speed; }
+    const ang = rnd(0.6, 2.5); p.vx = Math.cos(ang) * this.speed * .9; p.vy = dirY * Math.sin(ang) * this.speed * .9;
     if (this.tagSite && this.tagSite.c === c && this.tagSite.r === r){ p.tag = true; this.tagSite = null; }
     p.glow = { age: 0, kind: 'fwd' }; this.ps.push(p); this.event('fwd', pos.x, this.surf(c));
+  }
+  startTrade(){
+    const bottom = this.anchor === 'bottom';
+    if (this.ps.length < this.target){ const n = this.tradeN(); for (let i = 0; i < n; i++) this.dissolveOne(); return; }
+    const n = this.tradeN(), used = new Set(), rev = [];
+    const free = this.ps.slice().sort((a, b) => bottom ? b.y - a.y : a.y - b.y);
+    for (const p of free){
+      if (rev.length >= n) break;
+      let best = -1, bd = 1e9;
+      for (let c = 0; c < this.cols; c++){ if (used.has(c) || this.h[c] >= this.maxH || this.siteType(c, this.h[c]) !== p.sp) continue; if (!this.cols || ![...Array(this.cols).keys()].some(k => k !== c && this.h[k] > this.minH && this.siteType(k, this.h[k] - 1) === p.sp)) continue; const d = Math.abs((c + .5) * this.cw() - p.x); if (d < bd){ bd = d; best = c; } }
+      if (best < 0) continue; used.add(best); p.want = { c: best }; rev.push(p);
+    }
+    if (rev.length) this.trade = { rev, t: 0 };
   }
   exposed(c){ const h = this.h[c], l = c > 0 ? this.h[c - 1] : h, r = c < this.cols - 1 ? this.h[c + 1] : h; return (l < h ? 1 : 0) + (r < h ? 1 : 0); }
   hollow(c){ const h = this.h[c], l = c > 0 ? this.h[c - 1] : h, r = c < this.cols - 1 ? this.h[c + 1] : h; return (l > h ? 1 : 0) + (r > h ? 1 : 0); }
   update(dt){
-    this.t += dt;
-    let n = this.kd * dt; while (n > 0){ if (Math.random() < Math.min(1, n)) this.dissolveOne(); n -= 1; }
-    const keep = [];
-    for (const p of this.ps){ moveP(p, dt); walls(p, 0, 0, MW, MH); if (!this.contact(p, true)) keep.push(p); }
-    this.ps = keep;
-    for (const p of this.extras){ moveP(p, dt); walls(p, 0, 0, MW, MH); this.contact(p, false); }
+    this.t += dt; this.tick(dt); const bottom = this.anchor === 'bottom';
+    for (const p of this.ps){
+      if (p.want){
+        const c = p.want.c, r = RADIUS[p.sp], tx = (c + .5) * this.cw(), ty = bottom ? this.surf(c) - r - 2 : this.surf(c) + r + 2;
+        let lo = Math.min(p.x, tx), hi = Math.max(p.x, tx), safe = bottom ? MH : 0;
+        for (let k = this.colOf(lo); k <= this.colOf(hi); k++) safe = bottom ? Math.min(safe, this.surf(k) - r - 6) : Math.max(safe, this.surf(k) + r + 6);
+        if (Math.abs(tx - p.x) > 4 && (bottom ? p.y > safe : p.y < safe)) this.steer(p, p.x, safe, 120, dt), p.hold = false;
+        else if (Math.abs(tx - p.x) > 4) this.steer(p, tx, p.y, 120, dt), p.hold = false;
+        else this.steer(p, tx, ty, 120, dt);
+        p.x += p.vx * dt; p.y += p.vy * dt; if (p.tag){ p.trail.push(p.x, p.y); if (p.trail.length > 80) p.trail.splice(0, 2); }
+        continue;
+      }
+      moveP(p, dt); walls(p, 0, 0, MW, MH); this.contact(p, false);
+    }
+    const tr = this.trade;
+    if (tr && (tr.rev.every(p => p.hold) || tr.t > 7)){
+      const stuck = [];
+      tr.rev.forEach(p => { const c = p.want.c; if (this.h[c] >= this.maxH || this.siteType(c, this.h[c]) !== p.sp) return; if (p.tag) this.tagSite = { c, r: this.h[c] }; (this.siteGlow = this.siteGlow || []).push({ c, r: this.h[c], age: 0, kind: 'rev' }); this.h[c]++; this.event('rev', p.x, this.surf(c)); stuck.push(p); });
+      this.ps = this.ps.filter(p => !stuck.includes(p));
+      const cols = stuck.map(p => p.want.c); stuck.forEach(p => { this.dissolveOne(p.sp, cols); cols.push(this.lastCol); });
+      this.endTrade();
+    }
     this.stepFlashes(dt); this.sample();
   }
   contact(p, canStick){
@@ -569,7 +622,7 @@ function label(ctx, text, x, y, align){ ctx.font = '700 16px ' + getComputedStyl
 function macroLabel(ctx, text, x, y){ ctx.font = '700 14px ' + getComputedStyle(document.body).fontFamily; ctx.textAlign = 'center'; ctx.fillStyle = T.muted; ctx.fillText(text, x, y + 14); }
 
 function makeCaCO3(){
-  const s = new LatticeScene({ cols: 12, rh: 34, h0: 3, minH: 1, maxH: 6, base: MH, anchor: 'bottom', mode: 'liq', speed: 140, kd: 0.28, pStick: 1,
+  const s = new LatticeScene({ cols: 12, rh: 34, h0: 3, minH: 1, maxH: 6, base: MH, anchor: 'bottom', mode: 'liq', speed: 140, target: 6,
     startFree: 0, freeSpecies: ['ca', 'co3'], siteType: (c, r) => ((c + r) % 2 ? 'co3' : 'ca'), siteAngle: -Math.PI / 2, solidFill: 'solid', solidLine: 'solid-line',
     freeName: 'dissolved ion (aq)', solidName: 'solid crystal (s)' });
   s.drawBackground = function(ctx){ ctx.fillStyle = T.surface; ctx.fillRect(0, 0, MW, MH); ctx.fillStyle = T.liquid; ctx.fillRect(0, 0, MW, MH); };
@@ -590,7 +643,7 @@ function makeCaCO3(){
   return s;
 }
 function makeIce(){
-  const s = new LatticeScene({ cols: 12, rh: 30, h0: 3, minH: 2, maxH: 5, base: 0, anchor: 'top', mode: 'liq', speed: 85, kd: 1.1, pStick: 0.8,
+  const s = new LatticeScene({ cols: 12, rh: 30, h0: 3, minH: 2, maxH: 5, base: 0, anchor: 'top', mode: 'liq', speed: 85, target: 1,
     startFree: 12, freeSpecies: ['h2o'], siteType: () => 'h2o', siteAngle: Math.PI / 2, solidFill: 'ice', solidLine: 'ice-line',
     freeName: 'liquid water molecule (l)', solidName: 'ice (s)' });
   s.drawBackground = function(ctx){ ctx.fillStyle = T.surface; ctx.fillRect(0, 0, MW, MH); ctx.fillStyle = T.liquid; ctx.fillRect(0, 0, MW, MH); };
@@ -610,7 +663,7 @@ function makeIce(){
   return s;
 }
 function makeIodine(){
-  const s = new LatticeScene({ cols: 12, rh: 30, h0: 3, minH: 1, maxH: 6, base: MH, anchor: 'bottom', mode: 'gas', speed: 115, kd: 0.7, pStick: 1,
+  const s = new LatticeScene({ cols: 12, rh: 30, h0: 3, minH: 1, maxH: 6, base: MH, anchor: 'bottom', mode: 'gas', speed: 115, target: 7,
     startFree: 0, freeSpecies: ['i2'], siteType: () => 'i2', siteAngle: 0.5, solidFill: 'iodine-solid', solidLine: 'i2',
     freeName: 'I₂ vapour (g)', solidName: 'solid iodine crystal (s)' });
   s.drawBackground = function(ctx){ ctx.fillStyle = T.surface; ctx.fillRect(0, 0, MW, MH); ctx.fillStyle = T['i2-gas']; ctx.globalAlpha = clamp(this.ps.length / 12, 0, 1); ctx.fillRect(0, 0, MW, MH); ctx.globalAlpha = 1; };
@@ -632,30 +685,46 @@ function makeIodine(){
 
 /* N2O4(g) <-> 2NO2(g): a chemical equilibrium */
 class N2O4Scene extends BaseScene {
-  constructor(){ super(); this.N0 = 8; this.kd = 0.1; this.pComb = 1; this.reset(); }
-  reset(){ this.resetStats(); this.ps = []; for (let i = 0; i < this.N0; i++) this.ps.push(newP('n2o4', rnd(30, MW - 30), rnd(30, MH - 30), 'gas', 90)); this.applyTag(); }
+  constructor(){ super(); this.N0 = 8; this.target = 6; this.reset(); }
+  reset(){ this.resetStats(); this.trade = null; this.cycle = 1; this.ps = []; for (let i = 0; i < this.N0; i++) this.ps.push(newP('n2o4', rnd(30, MW - 30), rnd(30, MH - 30), 'gas', 90)); this.applyTag(); }
   applyTag(){ this.ps.forEach((p, i) => { p.tag = this.tracking && i === 0; p.trail = []; }); }
   counts(){ let a = 0, b = 0; this.ps.forEach(p => p.sp === 'n2o4' ? a++ : b++); return { a, b }; }
-  update(dt){
-    this.t += dt; const add = [], dead = new Set();
-    for (const p of this.ps){
-      moveP(p, dt); walls(p, 0, 0, MW, MH);
-      if (p.sp === 'n2o4' && Math.random() < this.kd * dt){
-        dead.add(p); const ux = Math.cos(p.a), uy = Math.sin(p.a);
-        const q1 = newP('no2', p.x + ux * 12, p.y + uy * 12, 'gas', 110), q2 = newP('no2', p.x - ux * 12, p.y - uy * 12, 'gas', 110);
-        q1.vx = p.vx + ux * 90; q1.vy = p.vy + uy * 90; q2.vx = p.vx - ux * 90; q2.vy = p.vy - uy * 90; q1.a = p.a; q2.a = p.a + Math.PI;
-        if (p.tag){ q1.tag = true; q1.trail = p.trail; }
-        q1.glow = { age: 0, kind: 'fwd' }; q2.glow = { age: 0, kind: 'fwd' }; add.push(q1, q2); this.event('fwd', p.x, p.y);
-      }
+  split(p){
+    const ux = Math.cos(p.a), uy = Math.sin(p.a);
+    const q1 = newP('no2', p.x + ux * 14, p.y + uy * 14, 'gas', 100), q2 = newP('no2', p.x - ux * 14, p.y - uy * 14, 'gas', 100);
+    q1.vx = p.vx * .3 + ux * 100; q1.vy = p.vy * .3 + uy * 100; q2.vx = p.vx * .3 - ux * 100; q2.vy = p.vy * .3 - uy * 100; q1.a = p.a; q2.a = p.a + Math.PI;
+    if (p.tag){ q1.tag = true; q1.trail = p.trail; }
+    q1.glow = { age: 0, kind: 'fwd' }; q2.glow = { age: 0, kind: 'fwd', quiet: true }; this.event('fwd', p.x, p.y);
+    return [q1, q2];
+  }
+  startTrade(){
+    const n2o4 = this.ps.filter(p => p.sp === 'n2o4'), no2 = this.ps.filter(p => p.sp === 'no2');
+    let n = Math.min(this.tradeN(), n2o4.length); if (n < 1) return;
+    if (no2.length < this.target){ const dead = n2o4.sort(() => Math.random() - .5).slice(0, n); let add = []; dead.forEach(p => add = add.concat(this.split(p))); this.ps = this.ps.filter(p => !dead.includes(p)).concat(add); return; }
+    const pairs = [], pool = no2.slice();
+    while (pairs.length < n && pool.length >= 2){
+      let bi = 0, bj = 1, bd = 1e9; for (let i = 0; i < pool.length; i++) for (let j = i + 1; j < pool.length; j++){ const d = Math.hypot(pool[i].x - pool[j].x, pool[i].y - pool[j].y); if (d < bd){ bd = d; bi = i; bj = j; } }
+      const a = pool[bi], b = pool[bj]; pool.splice(bj, 1); pool.splice(bi, 1);
+      const mx = clamp((a.x + b.x) / 2, 50, MW - 50), my = clamp((a.y + b.y) / 2, 60, MH - 50);
+      a.want = { x: mx - 13, y: my }; b.want = { x: mx + 13, y: my }; pairs.push([a, b]);
     }
-    const no2 = this.ps.filter(p => p.sp === 'no2' && !dead.has(p));
-    for (let i = 0; i < no2.length; i++){ const a = no2[i]; if (dead.has(a)) continue;
-      for (let j = i + 1; j < no2.length; j++){ const b = no2[j]; if (dead.has(b)) continue;
-        const dx = b.x - a.x, dy = b.y - a.y; if (dx * dx + dy * dy < 26 * 26){
-          if (Math.random() < this.pComb){ dead.add(a); dead.add(b); const m = newP('n2o4', (a.x + b.x) / 2, (a.y + b.y) / 2, 'gas', 90); m.vx = (a.vx + b.vx) / 2; m.vy = (a.vy + b.vy) / 2; m.a = Math.atan2(dy, dx); m.glow = { age: 0, kind: 'rev' }; if (a.tag || b.tag){ m.tag = true; m.trail = (a.tag ? a : b).trail; } add.push(m); this.event('rev', m.x, m.y); }
-          else { const d = Math.sqrt(dx * dx + dy * dy) || 1, nx = dx / d, ny = dy / d, rv = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny; if (rv < 0){ a.vx += rv * nx; a.vy += rv * ny; b.vx -= rv * nx; b.vy -= rv * ny; } }
-          break; } } }
-    this.ps = this.ps.filter(p => !dead.has(p)).concat(add);
+    if (pairs.length) this.trade = { pairs, t: 0 };
+  }
+  update(dt){
+    this.t += dt; this.tick(dt);
+    for (const p of this.ps){
+      if (p.want){ this.steer(p, p.want.x, p.want.y, 110, dt); p.x += p.vx * dt; p.y += p.vy * dt; p.a += p.va * dt; if (p.tag){ p.trail.push(p.x, p.y); if (p.trail.length > 80) p.trail.splice(0, 2); } continue; }
+      moveP(p, dt); walls(p, 0, 0, MW, MH);
+    }
+    const tr = this.trade;
+    if (tr && (tr.pairs.every(([a, b]) => a.hold && b.hold) || tr.t > 7)){
+      const dead = new Set(), add = [];
+      tr.pairs.forEach(([a, b]) => { dead.add(a); dead.add(b); const m = newP('n2o4', (a.x + b.x) / 2, (a.y + b.y) / 2, 'gas', 90); m.a = 0; m.glow = { age: 0, kind: 'rev' }; if (a.tag || b.tag){ m.tag = true; m.trail = (a.tag ? a : b).trail; } add.push(m); this.event('rev', m.x, m.y); });
+      const n2o4 = this.ps.filter(p => p.sp === 'n2o4').sort(() => Math.random() - .5).slice(0, tr.pairs.length);
+      n2o4.forEach(p => { dead.add(p); this.split(p).forEach(q => add.push(q)); });
+      this.ps = this.ps.filter(p => !dead.has(p)).concat(add);
+      this.endTrade();
+    }
     this.stepFlashes(dt); this.sample();
   }
   tagged(){ return this.ps.find(p => p.tag); }
