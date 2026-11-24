@@ -19,6 +19,7 @@
     --c-dx: #1f6fe0;
     --c-F: #149a3a;
     --c-pT: #064e4e;
+    --c-th: #c27700;
     --blue: #2a52d6;
     --red: #d8262b;
     --c-EkT: #3d39b8;
@@ -84,9 +85,9 @@
   .sw.thin { border-top-width: 2px; border-top-style: dashed; }
 
   /* settings */
-  .presets { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 4px; }
-  .presets .btn { font-size: 12.5px; padding: 3px 6px; }
-  .presets .btn.star { grid-column: 1 / -1; background: #f3f2ff; border-color: #c9c7f0; }
+  .presets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-bottom: 4px; }
+  .presets .btn { font-size: 12px; padding: 3px 3px; white-space: nowrap; }
+  .presets .btn.star { grid-column: span 2; background: #f3f2ff; border-color: #c9c7f0; }
   .grp { border-top: 1px solid var(--line); padding-top: 5px; margin-top: 5px; }
   .grp .gt { font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
   .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
@@ -201,17 +202,18 @@
         <div class="tabbody" id="tabbody">
       <div class="graphs" id="tab-graphs">
         <div class="gcard">
-          <h2>Energy vs time <span style="text-transform:none;letter-spacing:0;font-weight:400">(zoomed in on the collision)</span></h2>
+          <h2>Energy vs time <span class="zoomNote" style="text-transform:none;letter-spacing:0;font-weight:400">(zoomed in on the collision)</span></h2>
           <canvas id="gE" aria-label="Energy versus time graph"></canvas>
           <div class="gleg">
             <span><i class="sw" style="border-color:var(--c-EkT)"></i>E<sub>kT</sub> (total kinetic)</span>
             <span><i class="sw" style="border-color:var(--c-Ee)"></i>E<sub>e</sub> (spring)</span>
             <span><i class="sw" style="border-color:var(--c-ET);border-top-style:dotted"></i>E<sub>T</sub></span>
+            <span id="legTh" hidden><i class="sw" style="border-color:var(--c-th)"></i>E<sub>th</sub> (thermal, from friction)</span>
             <span id="legParts"><i class="sw thin" style="border-color:var(--blue)"></i>E<sub>k1</sub> <i class="sw thin" style="border-color:var(--red)"></i>E<sub>k2</sub></span>
           </div>
         </div>
         <div class="gcard">
-          <h2>Velocity vs time <span style="text-transform:none;letter-spacing:0;font-weight:400">(zoomed in on the collision)</span></h2>
+          <h2>Velocity vs time <span class="zoomNote" style="text-transform:none;letter-spacing:0;font-weight:400">(zoomed in on the collision)</span></h2>
           <canvas id="gV" aria-label="Velocity versus time graph"></canvas>
           <div class="gleg">
             <span><i class="sw" style="border-color:var(--blue)"></i>v<sub>1</sub> (cart 1)</span>
@@ -226,10 +228,12 @@
           <li>Press <b>▶ Play</b>. The sim slows down while the spring is squeezed. Watch E<sub>e</sub> (green) rise as E<sub>kT</sub> falls. Does E<sub>T</sub> change?</li>
           <li>It pauses at <b>max compression</b>. Compare v<sub>1</sub> and v<sub>2</sub>. Why must they be equal?</li>
           <li>Where did all the kinetic energy go at max compression? Now press <b>Worked example</b> (p<sub>T</sub> ≠ 0) and run it. Why doesn't E<sub>kT</sub> drop to zero this time?</li>
-          <li>Open the <b>Problem</b> tab, then check your Δ<i>x</i> with the <b>Jump to</b> buttons.</li>
+          <li>Open the <b>Problem</b> tab for a random problem, then check your Δ<i>x</i> with the <b>Jump to</b> buttons.</li>
+          <li>Tick <b>Friction</b> and run it again. Where does the missing energy go? Does p<sub>T</sub> stay the same? Why not?</li>
         </ol></div>
       <div class="prob" id="tab-prob" hidden>
-        <div class="pnote">Uses the values you set.</div>
+        <div class="pnote">A new random problem every time you open this tab (no friction). The sim loads the same values so you can check your answers. <button class="btn small" id="newProb">New problem</button></div>
+          <div class="msg warn" id="fricWarn" hidden style="margin:0 0 4px">Friction is on in the sim. Problems assume no friction, so turn friction off before you check an answer.</div>
         <p id="ptext"></p>
         <div class="q"><b>a)</b><span>Find Δ<i>x</i> when cart 2 is moving at</span>
           <input type="number" id="tgt" step="0.1" aria-label="Cart 2 velocity for part a"><span>m/s</span><span id="tgtDir" style="color:var(--muted)"></span>
@@ -266,6 +270,10 @@
           <div class="ctl"><span><i>v</i><sub>i2</sub> (m/s)</span><input type="range" id="v2r" min="-15" max="15" step="0.1"><input type="number" id="v2" min="-15" max="15" step="0.1"></div>
           <div class="ctl"><span><i>k</i> (×10<sup>4</sup> N/m)</span><input type="range" id="kr" min="0.5" max="10" step="0.1"><input type="number" id="k" min="0.5" max="10" step="0.1"></div>
         </div>
+        <div class="grp">
+          <label class="chk"><input type="checkbox" id="fric"><span><b>Friction</b> between the carts and the track</span></label>
+          <div class="ctl" id="muRow" hidden><span>μ<sub>k</sub></span><input type="range" id="mur" min="0.05" max="1" step="0.05"><input type="number" id="mu" min="0.05" max="1" step="0.05"></div>
+        </div>
       </div>
 
       <div class="card">
@@ -274,6 +282,7 @@
         <div class="ebar"><span>E<sub>k2</sub></span><div class="tr"><div class="fill" id="bk2" style="background:var(--red)"></div></div><span id="nk2"></span></div>
         <div class="ebar"><span>E<sub>kT</sub></span><div class="tr"><div class="fill" id="bkT" style="background:var(--c-EkT)"></div></div><span id="nkT"></span></div>
         <div class="ebar"><span>E<sub>e</sub></span><div class="tr"><div class="fill" id="be" style="background:var(--c-Ee)"></div></div><span id="ne"></span></div>
+        <div class="ebar" id="thRow" hidden><span>E<sub>th</sub></span><div class="tr"><div class="fill" id="bth" style="background:var(--c-th)"></div></div><span id="nth"></span></div>
         <div class="ebar sum"><span>E<sub>T</sub></span><div class="tr"><div class="fill" id="bT" style="background:var(--c-ET)"></div></div><span id="nT"></span></div>
         <div class="pline" id="pline"></div>
       </div>
@@ -309,8 +318,9 @@
   };
 
   const cfg = { m1: 1.2, v1: 5.0, m2: 2.0, v2: -3.0, k: 6.0, tgt: -2.1, pace: 1,
-                pauseMax: true, showPT: true, showV: true, showF: false, showParts: true };
-  let M = null;              // model of the current run
+                fric: false, mu: 0.3, pauseMax: true, showPT: true, showV: true, showF: false, showParts: true };
+  let M = null;              // model of the current run (with friction if it is on)
+  let M0 = null;             // the same run with no friction (used by the problem)
   let t = 0, playing = false, real = 0, pausedAtMax = false;
 
   const $ = id => document.getElementById(id);
@@ -332,7 +342,7 @@
   const par = s => '(' + s + ')';
 
   // ---------- physics (exact, so any moment can be shown) ----------
-  function build() {
+  function buildIdeal() {
     const { m1, m2, v1, v2 } = cfg, k = kSI();
     const Mt = m1 + m2, mu = m1 * m2 / Mt;
     const vr = v1 - v2;               // closing speed
@@ -350,15 +360,73 @@
     const x1c = XC - LC / 2, x2c = XC + L0 + LC / 2;           // centres when the spring first touches
     const x10 = x1c - v1 * tc, x20 = x2c - v2 * tc;
     const ET = 0.5 * m1 * v1 * v1 + 0.5 * m2 * v2 * v2;
-    M = { m1, m2, v1, v2, k, Mt, mu, vr, vcm, w, A, T, vf1, vf2, ok, tc, ta,
+    const R = { m1, m2, v1, v2, k, Mt, mu, vr, vcm, w, A, T, vf1, vf2, ok, tc, ta, fric: false,
           tEnd: ok ? tc + T + ta : tc, tMax: tc + T / 2, x1c, x2c, x10, x20, ET, pT: m1 * v1 + m2 * v2 };
     // playback: approach and after at one pace, the squeeze slowed down to about 3 s
-    M.Ra = 1.6; M.Rc = 3.0; M.Rb = Math.min(4, 1.6 * ta / tc);
+    R.Ra = 1.6; R.Rc = 3.0; R.Rb = Math.min(4, 1.6 * ta / tc);
+    R.tMaxV = vcm; R.why = vr <= 1e-6 ? 'apart' : A > MAXC ? 'flat' : '';
+    return R;
+  }
+  function build() { M0 = buildIdeal(); M = cfg.fric ? buildFric(M0) : M0; }
+
+  // With friction there is no neat formula, so step the motion forward in small time steps and store it.
+  const G_ = 9.8;
+  function buildFric(I) {
+    const { m1, m2, k, x10, x20, ET } = I, mu = cfg.mu;
+    const R = Object.assign({}, I, { fric: true });
+    if (I.why) return R;                            // never meet or spring squeezed flat: same message as without friction
+    const dt = Math.min(1e-4, I.T / 300), nMax = Math.min(200000, Math.ceil(4 / dt));
+    const T = [], X1 = [], X2 = [], V1 = [], V2 = [], C = [], TH = [];
+    let x1 = x10, x2 = x20, v1 = I.v1, v2 = I.v2, th = 0, t = 0, tc = -1, tce = -1, cmax = 0, tMax = 0, why = '';
+    const comp = () => Math.max(0, (x1 + LC / 2) - (x2 - LC / 2 - L0));
+    const step1 = (v, Fa, m) => {                 // new velocity of one cart with kinetic/static friction
+      const fr = mu * m * G_;
+      if (Math.abs(v) > 1e-9) {
+        const vn = v + (Fa - Math.sign(v) * fr) / m * dt;
+        return Math.sign(vn) !== Math.sign(v) ? 0 : vn;  // friction stops it; it does not push it backwards
+      }
+      return Math.abs(Fa) > fr ? (Fa - Math.sign(Fa) * fr) / m * dt : 0;
+    };
+    for (let n = 0; n <= nMax; n++) {
+      const c = comp();
+      T.push(t); X1.push(x1); X2.push(x2); V1.push(v1); V2.push(v2); C.push(c); TH.push(th);
+      if (c > 0 && tc < 0) tc = t;
+      if (c > cmax) { cmax = c; tMax = t; }
+      if (tc >= 0 && tce < 0 && c === 0 && t > tc) tce = t;
+      const stopped = v1 === 0 && v2 === 0 && Math.abs(k * c) <= mu * Math.min(m1, m2) * G_;
+      if (stopped && n > 0) { why = tc < 0 ? 'stop' : ''; break; }
+      if (x1 - LC / 2 < 0 || x2 + LC / 2 > TRACK) break;
+      const F = k * c;
+      v1 = step1(v1, -F, m1); v2 = step1(v2, F, m2);
+      x1 += v1 * dt; x2 += v2 * dt; th += mu * G_ * (m1 * Math.abs(v1) + m2 * Math.abs(v2)) * dt;
+      t += dt;
+    }
+    if (tc < 0) { R.ok = false; R.why = 'stop'; R.tc = Math.max(t, 1e-3); R.tEnd = R.tc; R.tab = { dt, T, X1, X2, V1, V2, C, TH }; return R; }
+    const tEnd = t, tce2 = tce < 0 ? tEnd : tce;
+    Object.assign(R, { ok: true, tc, T: Math.max(tce2 - tc, dt), tEnd, tMax, A: cmax, tab: { dt, T, X1, X2, V1, V2, C, TH } });
+    R.ta = Math.max(tEnd - tc - R.T, 0);
+    const iE = Math.min(Math.round(tce2 / dt), V1.length - 1);
+    R.vf1 = V1[iE]; R.vf2 = V2[iE];
+    // max compression is where v1 - v2 changes sign: find it between steps
+    R.tMaxV = V1[Math.round(tMax / dt)];
+    for (let i = Math.round(tc / dt); i < iE; i++) {
+      const d0 = V1[i] - V2[i], d1 = V1[i + 1] - V2[i + 1];
+      if (d0 > 0 && d1 <= 0) { const u = d0 / (d0 - d1); R.tMax = T[i] + u * dt; R.tMaxV = V1[i] + (V1[i + 1] - V1[i]) * u; break; }
+    }
+    R.Ra = 1.6; R.Rc = 3.0; R.Rb = R.ta > 0 ? Math.min(4, Math.max(0.8, 1.6 * R.ta / tc)) : 1;
+    return R;
   }
 
   function stateAt(tt) {
     const m = M;
     let x1, x2, v1, v2, c = 0;
+    if (m.fric && m.tab) {
+      const b = m.tab, n = b.T.length - 1, f = Math.max(0, Math.min(n, tt / b.dt)), i = Math.min(n - 1, Math.floor(f)), u = n > 0 ? f - i : 0;
+      const L = (a) => n > 0 ? a[i] + (a[i + 1] - a[i]) * u : a[0];
+      x1 = L(b.X1); x2 = L(b.X2); v1 = L(b.V1); v2 = L(b.V2); c = L(b.C);
+      const Ek1 = 0.5 * m.m1 * v1 * v1, Ek2 = 0.5 * m.m2 * v2 * v2, Ee = 0.5 * m.k * c * c, Eth = L(b.TH);
+      return { x1, x2, v1, v2, c, Ek1, Ek2, EkT: Ek1 + Ek2, Ee, Eth, ET: Ek1 + Ek2 + Ee + Eth };
+    }
     if (!m.ok || tt <= m.tc) {
       x1 = m.x10 + m.v1 * tt; x2 = m.x20 + m.v2 * tt; v1 = m.v1; v2 = m.v2;
     } else if (tt <= m.tc + m.T) {
@@ -373,18 +441,23 @@
       v1 = m.vf1; v2 = m.vf2;
     }
     const Ek1 = 0.5 * m.m1 * v1 * v1, Ek2 = 0.5 * m.m2 * v2 * v2, Ee = 0.5 * m.k * c * c;
-    return { x1, x2, v1, v2, c, Ek1, Ek2, EkT: Ek1 + Ek2, Ee, ET: Ek1 + Ek2 + Ee };
+    return { x1, x2, v1, v2, c, Ek1, Ek2, EkT: Ek1 + Ek2, Ee, Eth: 0, ET: Ek1 + Ek2 + Ee };
   }
 
   // time when cart 2 has velocity vt (null if it never does)
   function timeForV2(vt) {
     const m = M; if (!m.ok) return null;
+    if (m.fric) {
+      const b = m.tab, i0 = Math.round(m.tc / b.dt), i1 = Math.min(b.V2.length - 1, Math.round((m.tc + m.T) / b.dt));
+      for (let i = i0; i < i1; i++) if ((b.V2[i] - vt) * (b.V2[i + 1] - vt) <= 0) { const d = b.V2[i + 1] - b.V2[i]; return b.T[i] + (d ? (vt - b.V2[i]) / d : 0) * b.dt; }
+      return null;
+    }
     const co = (m.vcm - vt) * m.Mt / (m.m1 * m.vr);
     if (co > 1 + 1e-9 || co < -1 - 1e-9) return null;
     return m.tc + Math.acos(Math.max(-1, Math.min(1, co))) / m.w;
   }
   function autoTarget() {
-    const m = M; if (!m.ok) return 0;
+    const m = M0; if (!m.ok) return 0;
     const lo = Math.min(m.v2, m.vf2), hi = Math.max(m.v2, m.vf2);
     let v = m.vcm - m.m1 / m.Mt * m.vr * Math.cos(0.8);
     let r = Math.round(v * 10) / 10;
@@ -409,7 +482,7 @@
   function slowFactor(tt) {
     const m = M, p = cfg.pace;
     if (m.ok && tt > m.tc && tt < m.tc + m.T) return m.Rc * p / m.T;
-    if (m.ok && tt >= m.tc + m.T) return m.Rb * p / m.ta;
+    if (m.ok && tt >= m.tc + m.T && m.ta > 0) return m.Rb * p / m.ta;
     return m.Ra * p / m.tc;
   }
 
@@ -419,6 +492,7 @@
     pairs.forEach(id => { $(id + 'r').value = cfg[id]; $(id).value = id === 'k' ? cfg[id].toFixed(1) : cfg[id].toFixed(1); });
     $('tgt').value = cfg.tgt;
     $('pace').value = String(cfg.pace);
+    $('fric').checked = cfg.fric; $('mur').value = cfg.mu; $('mu').value = cfg.mu.toFixed(2);
     ['pauseMax', 'showPT', 'showV', 'showF', 'showParts'].forEach(id => $(id).checked = cfg[id]);
   }
   function changed(keepTarget) {
@@ -440,6 +514,10 @@
     $(id + 'r').addEventListener('input', e => set(e.target.value, e.target));
     $(id).addEventListener('change', e => set(e.target.value, e.target));
   });
+  $('fric').addEventListener('change', e => { cfg.fric = e.target.checked; changed(true); });
+  const setMu = (val) => { let v = parseFloat(val); if (!isFinite(v)) return; v = Math.max(0.05, Math.min(1, Math.round(v * 20) / 20)); if (v === cfg.mu) return; cfg.mu = v; changed(true); };
+  $('mur').addEventListener('input', e => setMu(e.target.value));
+  $('mu').addEventListener('change', e => setMu(e.target.value));
   $('tgt').addEventListener('change', e => {
     const v = parseFloat(e.target.value); if (!isFinite(v)) return;
     cfg.tgt = Math.round(v * 100) / 100; hideSolutions(); renderProblem(); refresh();
@@ -485,20 +563,24 @@
     $('status').textContent = 't = ' + t.toFixed(4) + ' s · slow motion ×1/' + sig(slowFactor(t), 2);
     // message
     const msg = $('msg'); msg.className = 'msg';
-    if (m.vr <= 1e-6) { msg.className = 'msg warn'; msg.innerHTML = 'These carts never meet. Cart 1 must be moving to the right faster than cart 2 (v₁ greater than v₂). Change a velocity.'; }
+    if (m.why === 'stop') { msg.className = 'msg warn'; msg.innerHTML = 'With this much friction the carts stop before they reach each other. Use faster carts or a smaller μ<sub>k</sub>.'; }
+    else if (m.vr <= 1e-6) { msg.className = 'msg warn'; msg.innerHTML = 'These carts never meet. Cart 1 must be moving to the right faster than cart 2 (v₁ greater than v₂). Change a velocity.'; }
     else if (m.A > MAXC) { msg.className = 'msg warn'; msg.innerHTML = 'The spring would be squeezed flat (Δx max = ' + m.A.toFixed(3) + ' m but the spring is only ' + L0.toFixed(2) + ' m long). Use a stiffer spring or slower carts.'; }
-    else if (Math.abs(t - m.tMax) < m.T * 0.004) { msg.className = 'msg ok'; msg.innerHTML = '<b>Max compression:</b> v<sub>1</sub> = v<sub>2</sub> = ' + sgn(s.v1, 3) + ' m/s. The carts are moving neither toward nor away from each other. ' + (Math.abs(m.pT) < 1e-6 ? 'p<sub>T</sub> = 0, so all the kinetic energy is now stored in the spring.' : 'p<sub>T</sub> ≠ 0, so there is still kinetic energy: E<sub>kT</sub> = ' + s.EkT.toFixed(1) + ' J.'); }
-    else if (t >= m.tEnd - 1e-9) { msg.className = 'msg ok'; msg.innerHTML = '<b>After:</b> E<sub>kT</sub> is back to ' + s.EkT.toFixed(1) + ' J, the same as before. The spring gave back all its energy (elastic collision).'; }
+    else if (Math.abs(t - m.tMax) < m.T * 0.004) { msg.className = 'msg ok'; msg.innerHTML = '<b>Max compression:</b> v<sub>1</sub> = v<sub>2</sub> = ' + sgn(s.v1, 3) + ' m/s. The carts are moving neither toward nor away from each other. ' + (m.fric ? 'E<sub>kT</sub> = ' + s.EkT.toFixed(1) + ' J and ' + s.Eth.toFixed(1) + ' J has become thermal energy so far.' : Math.abs(m.pT) < 1e-6 ? 'p<sub>T</sub> = 0, so all the kinetic energy is now stored in the spring.' : 'p<sub>T</sub> ≠ 0, so there is still kinetic energy: E<sub>kT</sub> = ' + s.EkT.toFixed(1) + ' J.'); }
+    else if (t >= m.tEnd - 1e-9) { msg.className = 'msg ok'; msg.innerHTML = m.fric ? '<b>After:</b> ' + s.Eth.toFixed(1) + ' J of the ' + m.ET.toFixed(1) + ' J has become thermal energy (E<sub>th</sub>) because of friction with the track. E<sub>T</sub> = E<sub>k</sub> + E<sub>e</sub> + E<sub>th</sub> is still ' + s.ET.toFixed(1) + ' J.' : '<b>After:</b> E<sub>kT</sub> is back to ' + s.EkT.toFixed(1) + ' J, the same as before. The spring gave back all its energy (elastic collision).'; }
     else if (s.c > 0) msg.innerHTML = '<b>During:</b> the spring is compressed by Δx = ' + s.c.toFixed(3) + ' m and stores E<sub>e</sub> = ' + s.Ee.toFixed(1) + ' J.';
     else if (t < m.tc) msg.innerHTML = t > 0 ? '<b>Before:</b> the carts move toward each other.' : 'Press Play, or drag the time slider.';
     else msg.innerHTML = '';
     // energy bars
     const top = Math.max(m.ET, 1e-9);
-    [['k1', s.Ek1], ['k2', s.Ek2], ['kT', s.EkT], ['e', s.Ee], ['T', s.ET]].forEach(([id, E]) => {
+    [['k1', s.Ek1], ['k2', s.Ek2], ['kT', s.EkT], ['e', s.Ee], ['th', s.Eth], ['T', s.ET]].forEach(([id, E]) => {
       $('b' + id).style.width = Math.min(100, E / top * 100) + '%';
       $('n' + id).textContent = E.toFixed(1) + ' J';
     });
-    $('pline').innerHTML = 'p<sub>T</sub> = ' + (Math.abs(m.pT) < 1e-9 ? '0' : nice(Math.abs(m.pT)) + ' kg·m/s ' + dir(m.pT)) + ' <span style="color:var(--muted)">(never changes)</span>';
+    const pNow = m.fric ? m.m1 * s.v1 + m.m2 * s.v2 : m.pT;
+    $('pline').innerHTML = 'p<sub>T</sub> = ' + (Math.abs(pNow) < 1e-6 ? '0' : (m.fric ? sig(Math.abs(pNow), 3) : nice(Math.abs(pNow))) + ' kg·m/s ' + dir(pNow)) + ' <span style="color:var(--muted)">' + (m.fric ? '(friction is an outside force, so p<sub>T</sub> changes)' : '(never changes)') + '</span>';
+    document.querySelectorAll('.zoomNote').forEach(e => e.textContent = m.fric ? '(whole run)' : '(zoomed in on the collision)');
+    $('thRow').hidden = !m.fric; $('legTh').hidden = !m.fric; $('muRow').hidden = !cfg.fric;
     $('legParts').style.display = cfg.showParts ? '' : 'none';
     drawScene(s); drawGraphs();
   }
@@ -670,11 +752,12 @@
     const m = M, y = 30, col = getCss('--c-pT');
     const xc = G.X((m.m1 * s.x1 + m.m2 * s.x2) / m.Mt);
     const pmax = Math.max(Math.abs(m.m1 * m.v1), Math.abs(m.m2 * m.v2), Math.abs(m.pT), 1);
-    const dx = m.pT * (W * 0.22) / pmax;
+    const pNow = m.fric ? m.m1 * s.v1 + m.m2 * s.v2 : m.pT;
+    const dx = pNow * (W * 0.22) / pmax;
     ctx.fillStyle = 'rgba(6,78,78,.07)'; rr(ctx, 8, y - 24, W - 16, 46, 8); ctx.fill();
     ctx.fillStyle = 'rgba(6,78,78,.8)'; ctx.font = '700 11px system-ui, sans-serif'; ctx.textAlign = 'left';
     ctx.fillText('SYSTEM', 18, y - 8);
-    ctx.font = '11px system-ui, sans-serif'; ctx.fillText('same before, during and after', 18, y + 8);
+    ctx.font = '11px system-ui, sans-serif'; ctx.fillText(m.fric ? 'friction changes it' : 'same before, during and after', 18, y + 8);
     ctx.save(); ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineWidth = 7;
     if (Math.abs(dx) < 3) { ctx.beginPath(); ctx.arc(xc, y, 6, 0, Math.PI * 2); ctx.fill(); }
     else {
@@ -683,7 +766,7 @@
       ctx.beginPath(); ctx.moveTo(xc + dx, y); ctx.lineTo(xc + dx - d * hl, y - 12); ctx.lineTo(xc + dx - d * hl, y + 12); ctx.closePath(); ctx.fill();
     }
     ctx.restore();
-    const txt = Math.abs(m.pT) < 1e-9 ? ' = 0' : ' = ' + nice(Math.abs(m.pT)) + ' kg·m/s ' + dir(m.pT);
+    const txt = Math.abs(pNow) < 1e-6 ? ' = 0' : ' = ' + sig(Math.abs(pNow), 3) + ' kg·m/s ' + dir(pNow);
     ctx.fillStyle = col; ctx.font = '700 14px system-ui, sans-serif';
     const pw = ctx.measureText('p').width; ctx.font = '700 10px system-ui, sans-serif'; const sw = ctx.measureText('T').width;
     ctx.font = '700 14px system-ui, sans-serif'; const tw = pw + sw + 1 + ctx.measureText(txt).width;
@@ -755,7 +838,7 @@
     for (const tt of ts) { if (tt < g0) continue; if (tt > t1) break; const x = sc.X(tt), y = sc.Y(f(stateAt(tt))); first ? c.moveTo(x, y) : c.lineTo(x, y); first = false; }
     c.stroke(); c.setLineDash([]);
   }
-  function gWin() { return M.ok ? [Math.max(0, M.tc - 0.7 * M.T), Math.min(M.tEnd, M.tc + 1.7 * M.T)] : [0, M.tEnd]; }
+  function gWin() { if (M.fric) return [0, M.tEnd]; return M.ok ? [Math.max(0, M.tc - 0.7 * M.T), Math.min(M.tEnd, M.tc + 1.7 * M.T)] : [0, M.tEnd]; }
   function cursor(c, sc, w) {
     const [g0, g1] = gWin(); if (t < g0 || t > g1) return;
     const x = sc.X(t);
@@ -772,6 +855,7 @@
     }
     curve(cE, sE, s => s.EkT, getCss('--c-EkT'), 3, null, t);
     curve(cE, sE, s => s.Ee, getCss('--c-Ee'), 3, null, t);
+    if (M.fric) curve(cE, sE, s => s.Eth, getCss('--c-th'), 3, null, t);
     curve(cE, sE, s => s.ET, getCss('--c-ET'), 2, [2, 4], t);
     if (M.ok && t >= M.tMax) {
       const s = stateAt(M.tMax), x = sE.X(M.tMax);
@@ -788,10 +872,10 @@
     curve(cV, sV, s => s.v1, getCss('--blue'), 3, null, t);
     curve(cV, sV, s => s.v2, getCss('--red'), 3, null, t);
     if (M.ok && t >= M.tMax) {
-      const x = sV.X(M.tMax), y = sV.Y(M.vcm);
+      const x = sV.X(M.tMax), y = sV.Y(M.tMaxV);
       cV.fillStyle = getCss('--ink'); cV.beginPath(); cV.arc(x, y, 4, 0, Math.PI * 2); cV.fill();
       cV.font = '600 11.5px system-ui, sans-serif'; cV.textAlign = 'left';
-      cV.fillText('v₁ = v₂ = ' + sgn(M.vcm, 3) + ' m/s', x + 7, y + (M.vcm > (lo + hi) / 2 ? 15 : -7));
+      cV.fillText('v₁ = v₂ = ' + sgn(M.tMaxV, 3) + ' m/s', x + 7, y + (M.tMaxV > (lo + hi) / 2 ? 15 : -7));
     }
     cursor(cV, sV, wV);
   }
@@ -804,10 +888,12 @@
     $('ptext').innerHTML = 'A ' + m.m1.toFixed(1) + ' kg cart (cart 1) ' + mv(m.v1).replace('moving at', 'moving at') +
       ' has an elastic head-on collision with a ' + m.m2.toFixed(1) + ' kg cart (cart 2) ' + mv(m.v2) + '. Cart 2 has a spring (<i>k</i> = ' + kTxt() + ').';
     $('tgtDir').textContent = dir(cfg.tgt) || '(at rest)';
-    const ok = M.ok && timeForV2(cfg.tgt) !== null;
-    $('tgtWarn').textContent = M.ok && !ok ? 'Cart 2 never moves at this velocity. Pick a value between ' + f1(Math.min(M.v2, M.vf2)) + ' and ' + f1(Math.max(M.v2, M.vf2)) + '.' : '';
+    const I = M0, lo = Math.min(I.v2, I.vf2), hi = Math.max(I.v2, I.vf2);
+    const ok = I.ok && cfg.tgt >= lo - 1e-9 && cfg.tgt <= hi + 1e-9;
+    $('tgtWarn').textContent = I.ok && !ok ? 'Cart 2 never moves at this velocity. Pick a value between ' + f1(lo) + ' and ' + f1(hi) + '.' : '';
     ['hA', 'sA'].forEach(id => $(id).disabled = !ok);
-    ['hB', 'sB'].forEach(id => $(id).disabled = !M.ok);
+    ['hB', 'sB'].forEach(id => $(id).disabled = !I.ok);
+    $('fricWarn').hidden = !cfg.fric;
   }
   function hideSolutions() { ['hintA', 'solA', 'hintB', 'solB'].forEach(id => $(id).classList.add('hidden')); setSolBtns(); }
   function setSolBtns() {
@@ -829,7 +915,7 @@
   });
   $('hB').addEventListener('click', () => {
     $('hintB').innerHTML = 'At max compression the carts are moving neither toward nor away from each other, so <i>v</i><sub>f1</sub> = <i>v</i><sub>f2</sub> = <i>v</i><sub>f</sub>. Treat them as one mass, <i>m</i><sub>T</sub>, and use <b>p<sub>Ti</sub> = p<sub>Tf</sub></b> to find <i>v</i><sub>f</sub>. ' +
-      (Math.abs(M.pT) < 1e-9 ? 'Here p<sub>T</sub> = 0, so <i>v</i><sub>f</sub> = 0 and all of the kinetic energy goes into the spring.' : 'p<sub>T</sub> ≠ 0, so the carts still have E<sub>k</sub> at max compression.');
+      (Math.abs(M0.pT) < 1e-9 ? 'Here p<sub>T</sub> = 0, so <i>v</i><sub>f</sub> = 0 and all of the kinetic energy goes into the spring.' : 'p<sub>T</sub> ≠ 0, so the carts still have E<sub>k</sub> at max compression.');
     toggle('hintB');
   });
   $('sA').addEventListener('click', () => {
@@ -858,7 +944,7 @@
     const m = cfg, mT = m.m1 + m.m2, vf = (m.m1 * m.v1 + m.m2 * m.v2) / mT;
     const dx = Math.sqrt((m.m1 * m.v1 ** 2 + m.m2 * m.v2 ** 2 - mT * vf ** 2) / kSI());
     $('solB').innerHTML = '<div class="sols"><div class="m">' +
-      '<div class="lbl">at max compression ' + (Math.abs(M.pT) < 1e-9 ? 'p<sub>T</sub> = 0' : 'p<sub>T</sub> ≠ 0, so still have E<sub>k</sub>') + '; <i>v</i><sub>f1</sub> = <i>v</i><sub>f2</sub> = <i>v</i><sub>f</sub>, treat as one mass</div>' +
+      '<div class="lbl">at max compression ' + (Math.abs(M0.pT) < 1e-9 ? 'p<sub>T</sub> = 0' : 'p<sub>T</sub> ≠ 0, so still have E<sub>k</sub>') + '; <i>v</i><sub>f1</sub> = <i>v</i><sub>f2</sub> = <i>v</i><sub>f</sub>, treat as one mass</div>' +
       ln('E<sub>Ti</sub> = E<sub>Tf</sub>') +
       ln('½' + v_('m', 1) + v_('v', 'i1') + '<sup>2</sup> + ½' + v_('m', 2) + v_('v', 'i2') + '<sup>2</sup> = ½' + v_('m', 'T') + v_('v', 'f') + '<sup>2</sup> + ½<i>k</i>Δ<i>x</i><sup>2</sup>') +
       ln('Δ<i>x</i> =', sq(fr(v_('m', 1) + v_('v', 'i1') + '<sup>2</sup> + ' + v_('m', 2) + v_('v', 'i2') + '<sup>2</sup> − ' + v_('m', 'T') + v_('v', 'f') + '<sup>2</sup>', '<i>k</i>'))) +
@@ -892,7 +978,26 @@
   }
   window.addEventListener('resize', () => { layout(); refresh(); });
   document.querySelectorAll('.ltabs button').forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
+  // random frictionless problem within the sim's ranges
+  const rnd = (lo, hi) => Math.round((lo + Math.random() * (hi - lo)) * 10) / 10;
+  function newProblem() {
+    for (let tries = 0; tries < 400; tries++) {
+      const m1 = rnd(0.5, 5), m2 = rnd(0.5, 5), r = Math.random();
+      let v1, v2;
+      if (r < 0.65) { v1 = rnd(1, 12); v2 = -rnd(1, 10); }        // head on
+      else if (r < 0.85) { v1 = rnd(2, 12); v2 = 0; }             // cart 2 at rest
+      else { v2 = rnd(1, 7); v1 = Math.min(15, Math.round((v2 + rnd(2, 8)) * 10) / 10); } // catching up
+      const k = rnd(1, 10);
+      const mu = m1 * m2 / (m1 + m2), A = (v1 - v2) / Math.sqrt(k * 1e4 / mu);
+      if (A < 0.015 || A > 0.8 * MAXC || Math.abs(m1 - m2) < 0.15) continue;
+      Object.assign(cfg, { m1, m2, v1, v2, k, fric: false });
+      changed(false);
+      return;
+    }
+  }
+  $('newProb').addEventListener('click', newProblem);
   function showTab(name) {
+    if (name === 'prob') newProblem();
     document.querySelectorAll('.ltabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === name));
     ['graphs', 'steps', 'prob'].forEach(n => $('tab-' + n).hidden = n !== name);
     if (name === 'graphs') { layout(); refresh(); }
