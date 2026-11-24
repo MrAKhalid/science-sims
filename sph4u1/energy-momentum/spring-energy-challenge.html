@@ -18,7 +18,7 @@
   header { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin-bottom: 8px; }
   h1 { font-size: 17px; margin: 0; }
   header p { margin: 0; color: var(--muted); font-size: 14px; }
-  .badge { background: var(--accent); color: #fff; border-radius: 999px; padding: 2px 10px; font-size: 13px; font-weight: 700; }
+  .badge { background: #fff1ec; border: 1px solid #f3c7b8; color: #111; border-radius: 999px; padding: 2px 10px; font-size: 13px; font-weight: 700; }
   header .sp { flex: 1; }
   .layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; align-items: start; }
   .stuck { border-top: 1px solid var(--line); padding-top: 8px; margin-top: 8px; }
@@ -81,6 +81,9 @@
   .lvl { border: 2px solid var(--line); background: #fafaff; border-radius: 12px; padding: 12px; text-align: left; cursor: pointer; font: inherit; color: var(--ink); }
   .lvl:hover { border-color: var(--accent); }
   .lvl b { display: block; font-size: 22px; color: var(--accent); }
+  .lvl { display: flex; flex-direction: column; justify-content: flex-start; gap: 4px; }
+  .badge:empty { display: none; }
+  .lvl b.chili { font-size: 24px; letter-spacing: 2px; line-height: 1.3; min-height: 1.3em; }
   .lvl span { font-size: 13px; color: var(--muted); }
   sub, sup { line-height: 0; }
 </style>
@@ -89,7 +92,7 @@
 <div class="wrap">
   <header>
     <h1>Spring Energy Challenge</h1>
-    <span id="lvlBadge" class="badge">Level –</span>
+    <span id="lvlBadge" class="badge" aria-label="Question difficulty"></span>
     <p>Springs, friction and hills: solve for the missing value</p>
     <span class="sp"></span>
     <button id="fsBtn" class="btn" title="Full screen">⛶ Full screen</button>
@@ -134,13 +137,13 @@
 
 <div id="chooser" class="modal">
   <div class="box">
-    <h2>Choose a difficulty level</h2>
+    <h2>Choose question difficulty</h2>
     <p>A new random problem is made each time. Every value can change: surfaces, lengths, angle, spring, mass, start point and even g.</p>
     <div class="lvls">
-      <button class="lvl" data-l="1"><b>Level 1</b><span>Warm-up. Two kinds of energy, with at most one rough surface.</span></button>
-      <button class="lvl" data-l="2"><b>Level 2</b><span>Quiz level. Friction on the flat and on the hill, forwards or backwards.</span></button>
-      <button class="lvl" data-l="3"><b>Level 3</b><span>Challenge. A head start on the hill, a spring caught mid-compression, quadratics.</span></button>
-      <button class="lvl" data-l="4"><b>Level 4</b><span>Round trips. The block comes back: find the second compression, the return speed, or how far it gets.</span></button>
+      <button class="lvl" data-l="1"><b class="chili" aria-label="1 chili">🌶️</b><span>Warm-up. Two kinds of energy, with at most one rough surface.</span></button>
+      <button class="lvl" data-l="2"><b class="chili" aria-label="2 chilies">🌶️🌶️</b><span>Like the quiz. Friction on the flat and on the hill, forwards or backwards.</span></button>
+      <button class="lvl" data-l="3"><b class="chili" aria-label="3 chilies">🌶️🌶️🌶️</b><span>Challenge. A head start on the hill, a spring caught mid-compression, quadratics.</span></button>
+      <button class="lvl" data-l="4"><b class="chili" aria-label="4 chilies">🌶️🌶️🌶️🌶️</b><span>Round trips. The block comes back: find the second compression, the return speed, or how far it gets.</span></button>
     </div>
   </div>
 </div>
@@ -1327,7 +1330,7 @@ function resetSim() {
 function startProblem(level) {
   S = newScenario(level);
   state.revealed = false; state.hints = 0; state.tries = 0;
-  $('lvlBadge').textContent = 'Level ' + level;
+  $('lvlBadge').textContent = '🌶️'.repeat(level); $('lvlBadge').title = 'Question difficulty';
   $('probText').innerHTML = S.text();
   $('question').innerHTML = S.q();
   const g = S.vars.g;
