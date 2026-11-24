@@ -2,7 +2,7 @@
 // 1. Put the .html file in the right course/unit folder.
 // 2. Add one line to that unit's "sims" list below: { title, file, blurb }.
 // Bump this number whenever a simulation file changes, so browsers load the new copy.
-window.SIMS_VERSION = "202611241600";
+window.SIMS_VERSION = "202611241800";
 
 window.COURSES = {
   sph4u1: {
@@ -37,7 +37,9 @@ window.COURSES = {
         { title: "Method of Initial Rates", file: "rate-law-initial-rates.html", blurb: "Pick concentrations, mix the beakers, and run trials changing one concentration at a time, measure initial rates from tangents, then find the orders, k and the rate law. Includes a spectrophotometer pop-up." },
         { title: "Reaction Mechanisms", file: "reaction-mechanisms.html", blurb: "Watch elementary steps happen one at a time beside a linked potential energy diagram. Track intermediates and catalysts, find the rate-determining step, and judge whether a mechanism is plausible." }
       ]},
-      { id: "equilibrium", name: "Chemical Systems and Equilibrium", sims: [] },
+      { id: "equilibrium", name: "Chemical Systems and Equilibrium", sims: [
+        { title: "Equilibrium Systems Lab", file: "equilibrium-systems-lab.html", blurb: "Five real systems at equilibrium (club soda, CaCO₃, sea ice, iodine, N₂O₄/NO₂) at macro and molecular scale, with each molecular swap highlighted. A second tab builds concentration and rate graphs, has students predict K, and compares K for the reverse reaction." }
+      ]},
       { id: "electrochemistry", name: "Electrochemistry", sims: [] }
     ]
   },
