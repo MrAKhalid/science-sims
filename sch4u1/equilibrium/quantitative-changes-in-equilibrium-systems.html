@@ -284,7 +284,7 @@ tr.eqhidden td{color:var(--muted)}
         <div id="cFeedback" aria-live="polite"></div>
         <div id="cSolution"></div>
       </div>
-      <div class="card" id="approxCard">
+      <div class="card" id="approxCard" hidden>
         <h2>Can we use the approximation rule?</h2>
         <div id="apxBox" aria-live="polite"></div>
       </div>
@@ -726,7 +726,7 @@ function buildRxOptions(){
 function setMode(m){
   g.mode = m; const C = m === 'C';
   $('#tab-K').setAttribute('aria-selected', !C); $('#tab-C').setAttribute('aria-selected', C);
-  $('#predictCard').hidden = C; $('#concCard').hidden = !C;
+  $('#predictCard').hidden = C; $('#approxCard').hidden = !C; $('#concCard').hidden = !C;
   $('#runBtn').hidden = C; $('#showKLabel').hidden = C; $('#kGiven').hidden = !C;
   setReaction(buildRxOptions());
   try { history.replaceState(null, '', C ? '#concentrations' : '#constants'); } catch (e) {}
