@@ -168,6 +168,18 @@ footer{margin-top:26px;font-size:13px;color:var(--muted)}
 :fullscreen body, body:fullscreen{overflow-y:auto}
 @media (prefers-reduced-motion: reduce){ .meter .bar i{transition:none} }
 /* sim 2 layout */
+.bigtabs{margin:0 0 12px;display:inline-flex}
+.bigtabs button{font-size:18px;padding:10px 22px}
+.kgiven{font-family:var(--font-mono);font-size:clamp(18px,2vw,24px);font-weight:600;padding:6px 14px;border-radius:8px;background:var(--accent-soft);border:1.5px solid var(--accent)}
+.cinputs{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px 10px;align-items:center;margin-top:12px}
+.cinputs .nm{font-family:var(--font-mono);font-weight:600;font-size:16px}
+.cinputs input{font:inherit;font-family:var(--font-mono);font-size:17px;width:100%;padding:6px 10px;border:1.5px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
+.cinputs input.ok{border-color:var(--ok);background:var(--ok-soft)} .cinputs input.bad{border-color:var(--bad);background:var(--bad-soft)}
+.cinputs .mk{font-weight:700;font-size:18px;min-width:1.2em;text-align:center}
+.cinputs .mk.ok{color:var(--ok)} .cinputs .mk.bad{color:var(--bad)}
+.ice td,.ice th{text-align:center} .ice td:first-child,.ice th:first-child{text-align:left;font-weight:700}
+.ice td.num{white-space:nowrap}
+.steps{margin:8px 0 0;padding-left:20px;font-size:15px} .steps li{margin-top:6px}
 main{display:block}
 .capright{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
 .axissel{display:inline-flex;gap:6px;align-items:center;font-size:13px;font-weight:700;color:var(--muted)}
@@ -176,10 +188,11 @@ tr.eqhidden td{color:var(--muted)}
 #approxCard .btnrow .btn{font-size:14px}
 @media (orientation: landscape) and (min-width:1200px){
   .g-grid{grid-template-columns:minmax(0,270px) minmax(0,1fr) minmax(380px,28vw)}
-  .g-side{grid-column:auto;max-height:calc(100vh - 170px);overflow-y:auto;padding-right:4px}
+  .g-side{grid-column:auto;max-height:calc(100vh - 225px);overflow-y:auto;padding-right:4px}
   .g-side .card{padding:12px 14px}
-  #concChart{height:max(260px,calc(100vh - 470px))}
+  #concChart{height:max(240px,calc(100vh - 530px))}
   #rateChart{height:150px}
+  .bigtabs{margin-bottom:8px} .bigtabs button{padding:8px 20px}
   .g-head{margin-bottom:10px}
 }
 </style>
@@ -191,12 +204,16 @@ tr.eqhidden td{color:var(--muted)}
     <h1>Quantitative Changes in Equilibrium Systems</h1>
   </div>
   <div class="headright">
-    <label class="check"><input type="checkbox" id="showK"> Show K values (teacher)</label>
+    <label class="check" id="showKLabel"><input type="checkbox" id="showK"> Show K values (teacher)</label>
     <button class="btn" id="fsBtn" title="Full screen (F)">⛶ Full screen</button>
   </div>
 </header>
 
 <main id="panel-graphs">
+  <nav class="tabs bigtabs" role="tablist" aria-label="Activity">
+    <button role="tab" id="tab-K" aria-selected="true">1 · Determining Equilibrium Constants</button>
+    <button role="tab" id="tab-C" aria-selected="false">2 · Determining Equilibrium Concentrations</button>
+  </nav>
   <div class="g-head">
     <label class="field" for="rxSelect">Reaction
       <select id="rxSelect"></select>
@@ -206,6 +223,7 @@ tr.eqhidden td{color:var(--muted)}
       <div class="eqn" id="rxEq"></div>
     </div>
     <button class="btn" id="flipBtn" aria-pressed="false">⇄ Write it in reverse</button>
+    <div class="kgiven" id="kGiven" hidden></div>
   </div>
 
   <div class="g-grid">
@@ -244,17 +262,21 @@ tr.eqhidden td{color:var(--muted)}
         <div id="feedback" aria-live="polite"></div>
         <div id="solution"></div>
       </div>
-      <div class="card" id="approxCard">
-        <h2>Approximation rule</h2>
-        <p class="small" style="margin:4px 0 0">When [i] ≥ 1000 × K<sub>eq</sub>, we can approximate that [i] = [e]: so little reactant is used up that its concentration barely changes.</p>
-        <div id="apxBox" aria-live="polite"></div>
+      <div class="card" id="concCard" hidden>
+        <h2>Find the equilibrium concentrations</h2>
+        <p class="small" style="margin:4px 0 0">K is given above. Use an ICE table to calculate each equilibrium concentration, type your answers, then press <b>Check</b> to run the reaction and compare.</p>
+        <div class="tablewrap"><table class="eqtable" id="cInit"></table></div>
+        <div class="cinputs" id="cInputs"></div>
+        <div class="predict">
+          <button class="btn primary" id="cCheck">Check ▶ run the reaction</button>
+          <button class="btn" id="cSolve">Show solution</button>
+        </div>
+        <div id="cFeedback" aria-live="polite"></div>
+        <div id="cSolution"></div>
       </div>
-      <div class="card" id="reverseCard">
-        <h2>Forward vs reverse</h2>
-        <p class="small" style="margin:4px 0 0">Same flask, same equilibrium concentrations. Only the way we write the equation changes.</p>
-        <div id="revBox"></div>
-        <canvas id="kLine" aria-label="Number line of K on a logarithmic scale"></canvas>
-        <p class="note">Log scale. K &gt; 1: products favoured (lies to the right). K &lt; 1: reactants favoured (lies to the left).</p>
+      <div class="card" id="approxCard">
+        <h2>Can we use the approximation rule?</h2>
+        <div id="apxBox" aria-live="polite"></div>
       </div>
     </div>
   </div>
@@ -333,18 +355,18 @@ const RXNS = [
     P: [sp('ICl', 'ICl', 'ICl', 2, 1, 'sp1')],
     presets: [['Only reactants', { I2: 0.100, Cl2: 0.100, ICl: 0 }], ['Only product', { I2: 0, Cl2: 0, ICl: 0.200 }], ['Mixture', { I2: 0.100, Cl2: 0.0500, ICl: 0.0500 }]],
     def: { I2: 0.100, Cl2: 0.100, ICl: 0 }, note: 'Iodine vapour and chlorine gas combining to form iodine monochloride.' },
-  { id: 'so3', name: '2SO₂ + O₂ ⇌ 2SO₃   (1000 K)', K: 280,
+  { id: 'so3', hard: true, name: '2SO₂ + O₂ ⇌ 2SO₃   (1000 K)', K: 280,
     R: [sp('SO2', 'SO<sub>2</sub>', 'SO₂', 2, 0.5, 'sp5'), sp('O2', 'O<sub>2</sub>', 'O₂', 1, 0.5, 'sp1')],
     P: [sp('SO3', 'SO<sub>3</sub>', 'SO₃', 2, 0.5, 'sp2')],
     presets: [['Only reactants', { SO2: 0.100, O2: 0.0500, SO3: 0 }], ['Only product', { SO2: 0, O2: 0, SO3: 0.100 }], ['Mixture', { SO2: 0.100, O2: 0.100, SO3: 0.0500 }]],
     def: { SO2: 0.100, O2: 0.0500, SO3: 0 }, note: 'A key step in making sulfuric acid (the contact process).' },
-  { id: 'nh3', name: 'N₂ + 3H₂ ⇌ 2NH₃   (472 °C)', K: 0.105,
+  { id: 'nh3', hard: true, name: 'N₂ + 3H₂ ⇌ 2NH₃   (472 °C)', K: 0.105,
     R: [sp('N2', 'N<sub>2</sub>', 'N₂', 1, 2, 'sp2'), sp('H2', 'H<sub>2</sub>', 'H₂', 3, 6, 'sp3')],
     P: [sp('NH3', 'NH<sub>3</sub>', 'NH₃', 2, 2, 'sp4')],
     presets: [['Only reactants', { N2: 1.00, H2: 3.00, NH3: 0 }], ['Only product', { N2: 0, H2: 0, NH3: 2.00 }], ['Mixture', { N2: 1.00, H2: 1.00, NH3: 0.500 }]],
     def: { N2: 1.00, H2: 3.00, NH3: 0 }, note: 'The Haber process, which makes ammonia for fertilizers.' }
 ];
-const g = { rx: RXNS[0], dir: 1, c0: {}, c0Run: null, traj: null, prog: 0, running: false, paused: false, unlock: {}, attempts: 0, apx: null };
+const g = { rx: RXNS[0], dir: 1, c0: {}, c0Run: null, traj: null, prog: 0, running: false, paused: false, unlock: {}, attempts: 0, apx: null, mode: 'K', guess: null };
 
 const allSp = rx => rx.R.concat(rx.P);
 const leftSp = () => g.dir > 0 ? g.rx.R : g.rx.P;
@@ -405,7 +427,12 @@ function buildSliders(){
 }
 function buildPresets(){
   const box = $('#presets'); box.innerHTML = '';
-  g.rx.presets.forEach(([lab, vals]) => { const b = document.createElement('button'); b.className = 'btn'; b.textContent = lab; b.onclick = () => { Object.assign(g.c0, vals); buildSliders(); staleRun(); }; box.appendChild(b); });
+  const L = leftSp(), R = rightSp(), pl = (n, w) => w + (n > 1 ? 's' : '');
+  const items = g.rx.presets.map(([, vals]) => {
+    const lab = R.every(s => !vals[s.id]) ? 'Only ' + pl(L.length, 'reactant') : L.every(s => !vals[s.id]) ? 'Only ' + pl(R.length, 'product') : 'Mixture';
+    return { lab, vals, ord: lab === 'Mixture' ? 2 : lab.includes('reactant') ? 0 : 1 };
+  }).sort((a, b) => a.ord - b.ord);
+  items.forEach(({ lab, vals }) => { const b = document.createElement('button'); b.className = 'btn'; b.textContent = lab; b.onclick = () => { Object.assign(g.c0, vals); buildSliders(); staleRun(); }; box.appendChild(b); });
 }
 function renderEq(){
   $('#rxEq').innerHTML = eqHTML(leftSp(), rightSp());
@@ -413,11 +440,17 @@ function renderEq(){
   $('#flipBtn').setAttribute('aria-pressed', g.dir < 0);
   $('#kExpr').innerHTML = fracHTML(rightSp(), leftSp());
   $('#rxNote').textContent = g.rx.note;
+  $('#kGiven').innerHTML = `K<sub>eq</sub> = ${fmt(Kgiven())} <span class="small">at ${tempOf(g.rx)}</span>`;
 }
-function staleRun(){ g.running = false; g.paused = false; g.traj = null; g.prog = 0; g.apx = null; $('#runBtn').textContent = '▶ Play'; drawGraphs(); renderEqTable(); }
+function staleRun(){ g.running = false; g.paused = false; g.traj = null; g.prog = 0; g.apx = null; g.guess = null; if (g.mode === 'C') buildConc(); $('#runBtn').textContent = '▶ Play'; drawGraphs(); renderEqTable(); }
 function run(){ g.c0Run = { ...g.c0 }; g.traj = simulate(g.rx, g.c0Run); g.prog = 0; g.running = true; g.paused = false; $('#runBtn').textContent = '❚❚ Pause'; renderEqTable(); }
 function atEq(){ return !!g.traj && g.prog * g.traj.tmax >= g.traj.teq - 1e-12; }
 function eqConc(){ return concAt(g.rx, g.c0Run, g.traj.xe); }
+const r3 = v => v === 0 ? 0 : +v.toPrecision(3);
+/* the equilibrium concentrations exactly as shown on screen (3 sig figs); every K a student is marked against uses these */
+function eqShown(){ const ce = eqConc(), o = {}; for (const k in ce) o[k] = r3(ce[k]); return o; }
+const Kgiven = () => r3(Kdisp());
+const tempOf = rx => (rx.name.match(/\(([^)]+)\)/) || ['', ''])[1];
 
 function renderEqTable(){
   const tb = $('#eqTable'), list = leftSp().concat(rightSp());
@@ -429,36 +462,8 @@ function renderEqTable(){
     <tr class="${reveal ? '' : 'eqhidden'}"><td>Equilibrium (mol/L)</td>${list.map(s => `<td class="num">${eqCell(s)}</td>`).join('')}</tr>`;
   renderReverse(); renderApprox();
 }
-function renderReverse(){
-  const box = $('#revBox'), rx = g.rx, show = atEq(), ce = show ? eqConc() : null;
-  const uf = unlocked(1), ur = unlocked(-1);
-  const val = (dir, ok) => !show ? '<span class="placeholder">press Play</span>' : ok ? `<span class="big">${fmt(dir > 0 ? prodQ(rx.P, rx.R, ce) : prodQ(rx.R, rx.P, ce))}</span>` : '<span class="big">?</span>';
-  box.innerHTML = `
-    <div class="krow"><span class="label-up">Forward</span><span class="eqn">${eqHTML(rx.R, rx.P)}</span>
-      <span></span><span class="kexpr" style="font-size:16px"><span>K<sub>f</sub> =</span> ${fracHTML(rx.P, rx.R)} <span>=</span> ${val(1, uf)}</span></div>
-    <div class="krow"><span class="label-up">Reverse</span><span class="eqn">${eqHTML(rx.P, rx.R)}</span>
-      <span></span><span class="kexpr" style="font-size:16px"><span>K<sub>r</sub> =</span> ${fracHTML(rx.R, rx.P)} <span>=</span> ${val(-1, ur)}</span></div>
-    <div class="feedback ${uf && ur && show ? 'ok' : 'info'}" style="margin-top:12px">${uf && ur && show
-      ? `The reverse expression is the forward one turned upside down, so <b>K<sub>r</sub> = 1 / K<sub>f</sub></b>.<br>1 / ${fmt(rx.K)} = ${fmt(1 / rx.K)}, and K<sub>f</sub> × K<sub>r</sub> = 1.${Math.abs(Math.log10(rx.K)) < 0.01 ? ' When K = 1, the reverse K is also 1: neither side is favoured.' : ''}`
-      : uf || ur ? 'You found one K. Press <b>⇄ Write it in reverse</b> and predict the other one before you calculate it. How are the two expressions related?'
-      : 'Find K for the reaction as written first.'}</div>`;
-  drawKLine();
-}
-function drawKLine(){
-  const c = $('#kLine'), ctx = c.getContext('2d'); const { w, h } = fit(c); const dpr = c.width / w; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, h);
-  const lo = -10, hi = 10, m = 22, X = v => m + (v - lo) / (hi - lo) * (w - 2 * m), y = 52;
-  ctx.fillStyle = T['accent-soft']; ctx.fillRect(X(0), y - 10, X(hi) - X(0), 20);
-  ctx.fillStyle = T['surface-2']; ctx.fillRect(X(lo), y - 10, X(0) - X(lo), 20);
-  const F = getComputedStyle(document.body).fontFamily;
-  ctx.font = '700 12px ' + F; ctx.fillStyle = T.muted; ctx.textAlign = 'center';
-  for (let e = lo; e <= hi; e++){ ctx.fillRect(X(e) - .5, y + 10, 1, e % 2 ? 3 : 6); if (e % 4 === 0 || (w > 380 && e % 2 === 0)) ctx.fillText(e === 0 ? '1' : '10' + supTxt(e), X(e), y + 28); }
-  ctx.textAlign = 'left'; ctx.fillText('reactants favoured', X(lo), y - 16); ctx.textAlign = 'right'; ctx.fillText('products favoured', X(hi), y - 16);
-  if (!atEq()) return;
-  const mark = (K, col, name) => { const lv = clamp(Math.log10(K), lo, hi); ctx.beginPath(); ctx.arc(X(lv), y, 8, 0, TAU); ctx.fillStyle = col; ctx.fill(); ctx.font = '700 13px ' + F; ctx.textAlign = 'center'; ctx.fillStyle = col; ctx.fillText(name, clamp(X(lv), m + 24, w - m - 24), y - 16); };
-  const same = Math.abs(Math.log10(g.rx.K)) < 0.05;
-  if (unlocked(1)) mark(g.rx.K, T.fwd, same && unlocked(-1) ? 'Kf = Kr' : 'Kf');
-  if (unlocked(-1) && !(same && unlocked(1))) mark(1 / g.rx.K, T.rev, 'Kr');
-}
+function renderReverse(){}
+function drawKLine(){}
 
 /* ---------- approximation rule ---------- */
 function apxInfo(){
@@ -469,19 +474,11 @@ function apxInfo(){
 }
 function renderApprox(){
   const box = $('#apxBox'), a = apxInfo();
-  if (!a){ box.innerHTML = `<div class="feedback info" style="margin-top:10px">The rule is used when a reaction starts with <b>only reactants</b>. Set every product to 0 (or press <b>Only reactant${leftSp().length > 1 ? 's' : ''}</b>) to try it.</div>`; return; }
-  const nm = `[${a.s.html}]<sub>i</sub>`;
-  let html = `<p style="margin:10px 0 0;font-size:15px">Here ${nm} = <b>${fmt(a.ci)} mol/L</b>${leftSp().length > 1 ? ' (the smaller starting reactant)' : ''}. Use your K from <b>Predict K</b>. Can we use the approximation?</p>
-    <div class="btnrow"><button class="btn" data-apx="1" aria-pressed="${g.apx === true}">Yes, [i] ≥ 1000 × K</button><button class="btn" data-apx="0" aria-pressed="${g.apx === false}">No, [i] &lt; 1000 × K</button></div>`;
+  if (!a){ box.innerHTML = `<p class="small" style="margin:8px 0 0">Start with only reactant${leftSp().length > 1 ? 's' : ''} to use the rule.</p>`; return; }
+  let html = `<div class="btnrow"><button class="btn" data-apx="1" aria-pressed="${g.apx === true}">Yes, [i] ≥ 1000 × K</button><button class="btn" data-apx="0" aria-pressed="${g.apx === false}">No, [i] &lt; 1000 × K</button></div>`;
   if (g.apx !== null){
     const right = g.apx === a.yes;
-    html += `<div class="feedback ${right ? 'ok' : 'bad'}"><b>${right ? 'Correct.' : 'Not this time.'}</b> K = ${fmt(a.K)}, so 1000 × K = <b>${fmt(a.lim)}</b>. ${nm} = ${fmt(a.ci)} is ${a.yes ? '<b>at least</b>' : '<b>less than</b>'} 1000 × K, so ${a.yes ? 'we <b>can</b> use the approximation [i] − x ≈ [i].' : 'we <b>cannot</b> use the approximation. We must keep the “− x” and solve the full equation.'}`;
-    if (atEq()){
-      const ce = eqConc();
-      html += `<br>Check with the graph: [${a.s.html}] went from ${fmt(a.ci)} to ${fmt(ce[a.s.id])} mol/L, a change of <b>${pct((a.ci - ce[a.s.id]) / a.ci)}</b>.`;
-      html += a.yes ? ' That is small enough to ignore.' : ' That is too big to ignore.';
-    } else html += '<br>Press ▶ Play to see how much it really changes.';
-    html += '</div>';
+    html += `<div class="feedback ${right ? 'ok' : 'bad'}"><b>${right ? 'Correct.' : 'Not this time.'}</b> [${a.s.html}]<sub>i</sub> = ${fmt(a.ci)} ${a.yes ? '≥' : '&lt;'} 1000 × K = ${fmt(r3(a.lim))}${atEq() ? `, and it changed by ${pct((a.ci - eqConc()[a.s.id]) / a.ci)}` : ''}.</div>`;
   }
   box.innerHTML = html;
   box.querySelectorAll('[data-apx]').forEach(b => b.onclick = () => { g.apx = b.dataset.apx === '1'; renderApprox(); });
@@ -515,14 +512,14 @@ function chart(canvas, opts){
   ctx.font = '12px ' + F; ctx.fillStyle = T.muted; ctx.strokeStyle = T.line; ctx.lineWidth = 1; ctx.textAlign = 'right';
   if (lg){
     const span = lg.hi - lg.lo, every = span > 8 ? 2 : 1;
-    for (let e = lg.lo; e <= lg.hi; e++){ const y = Y(Math.pow(10, e)) - (e === lg.lo ? 0 : 0); const yy = e === lg.lo ? m.t + ph : y; ctx.beginPath(); ctx.moveTo(m.l, yy); ctx.lineTo(m.l + pw, yy); ctx.stroke(); if ((e - lg.lo) % every === 0) ctx.fillText(e === 0 ? '1' : '10' + supTxt(e), m.l - 6, yy + 4); }
+    for (let e = Math.ceil(lg.lo); e <= Math.floor(lg.hi); e++){ const yy = Y(Math.pow(10, e)); ctx.beginPath(); ctx.moveTo(m.l, yy); ctx.lineTo(m.l + pw, yy); ctx.stroke(); if (opts.yTicks && (e - Math.ceil(lg.lo)) % every === 0) ctx.fillText(e === 0 ? '1' : '10' + supTxt(e), m.l - 6, yy + 4); }
   } else {
     const nt = opts.ystep ? Math.round(opts.ymax / opts.ystep) : opts.yTicks ? Math.max(2, Math.round(opts.ymax / tickStep(opts.ymax))) : 4; for (let i = 0; i <= nt; i++){ const v = opts.ymax * i / nt, y = Y(v); ctx.beginPath(); ctx.moveTo(m.l, y); ctx.lineTo(m.l + pw, y); ctx.stroke(); if (opts.yTicks) ctx.fillText(+v.toPrecision(3), m.l - 6, y + 4); }
   }
   ctx.strokeStyle = T.ink; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(m.l, m.t); ctx.lineTo(m.l, m.t + ph); ctx.lineTo(m.l + pw, m.t + ph); ctx.stroke();
   ctx.textAlign = 'center'; ctx.fillStyle = T.muted; ctx.font = '700 12px ' + F; ctx.fillText('Time →', m.l + pw / 2, h - 8);
   ctx.save(); ctx.translate(14, m.t + ph / 2); ctx.rotate(-Math.PI / 2); ctx.fillText(opts.yLabel, 0, 0); ctx.restore();
-  if (opts.empty){ ctx.font = '700 15px ' + F; ctx.fillStyle = T.muted; ctx.fillText(opts.empty, m.l + pw / 2, m.t + ph / 2); return; }
+  if (opts.empty){ ctx.font = '700 15px ' + F; ctx.fillStyle = T.muted; ctx.fillText(opts.empty, m.l + pw / 2, m.t + ph / 2); return { X, Y, ctx }; }
   const ends = [];
   ctx.save(); ctx.beginPath(); ctx.rect(m.l, m.t - 6, pw + 6, ph + 6); ctx.clip();
   opts.series.forEach(s => {
@@ -536,6 +533,7 @@ function chart(canvas, opts){
   ends.sort((a, b) => a.y - b.y); for (let i = 1; i < ends.length; i++) if (ends[i].y - ends[i - 1].y < 17) ends[i].y = ends[i - 1].y + 17;
   ctx.font = '700 13px ' + F; ctx.textAlign = 'left';
   ends.forEach(e => { ctx.fillStyle = e.color; ctx.fillText(e.label, m.l + pw + 8, e.y + 4); });
+  return { X, Y, ctx };
 }
 function interp(pts, t){ for (let i = 1; i < pts.length; i++) if (pts[i][0] >= t){ const a = pts[i - 1], b = pts[i]; const k = (t - a[0]) / ((b[0] - a[0]) || 1); return a[1] + (b[1] - a[1]) * k; } return pts[pts.length - 1][1]; }
 function useLog(vals){
@@ -546,7 +544,7 @@ function useLog(vals){
 function drawGraphs(){
   const rx = g.rx;
   if (!g.traj){
-    chart(concC, { tmax: 1, ymax: niceMax(Math.max(...allSp(rx).map(s => g.c0[s.id]), 0.1) * 1.1), yTicks: true, yLabel: 'Concentration (mol/L)', teq: null, tcur: 0, series: [], empty: 'Set the starting concentrations, then press ▶ Play' });
+    chart(concC, { tmax: 1, ymax: niceMax(Math.max(...allSp(rx).map(s => g.c0[s.id]), 0.1) * 1.1), yTicks: true, yLabel: 'Concentration (mol/L)', teq: null, tcur: 0, series: [], empty: g.mode === 'C' ? 'Calculate the equilibrium concentrations, then press Check' : 'Set the starting concentrations, then press ▶ Play' });
     chart(rateC, { tmax: 1, ymax: 1, yLabel: 'Rate', teq: null, tcur: 0, series: [], empty: '' }); $('#concCap').textContent = ''; return;
   }
   const tr = g.traj, c0 = g.c0Run, tcur = g.prog * tr.tmax, list = allSp(rx);
@@ -566,11 +564,20 @@ function drawGraphs(){
     const hi = Math.ceil(Math.log10(ymax * 1.3)), lo = Math.max(hi - 12, Math.floor(Math.log10(Math.min(...pos))) - 1);
     log = { lo, hi };
   }
-  chart(concC, { tmax: tr.tmax, ymax: ymaxT, ystep, log, yTicks: true, yLabel: 'Concentration (mol/L)' + (log ? ', log scale' : ''), teq: tr.flat ? 0 : tr.teq, tcur, series, eqText: 'Equilibrium: concentrations constant' });
+  const cm = chart(concC, { tmax: tr.tmax, ymax: ymaxT, ystep, log, yTicks: true, yLabel: 'Concentration (mol/L)' + (log ? ', log scale' : ''), teq: tr.flat ? 0 : tr.teq, tcur, series, eqText: 'Equilibrium: concentrations constant' });
+  if (g.guess && tcur >= tr.teq){
+    const xm = cm.X(tr.teq + (tr.tmax - tr.teq) * 0.55), cx = cm.ctx;
+    list.forEach((s, i) => { const v = g.guess[s.id]; if (!(v > 0) && v !== 0) return; const y = cm.Y(Math.max(v, 0));
+      const xx = xm + (i - (list.length - 1) / 2) * 16; cx.beginPath(); cx.arc(xx, y, 7, 0, TAU); cx.lineWidth = 3; cx.strokeStyle = T[s.col]; cx.fillStyle = T.surface; cx.fill(); cx.stroke(); });
+    const F = getComputedStyle(document.body).fontFamily; cx.font = '700 12px ' + F; cx.fillStyle = T.muted; cx.textAlign = 'center';
+    cx.fillText('○ your answers', xm, concC.clientHeight - 36);
+  }
   const fwdName = g.dir > 0 ? 'Forward rate' : 'Reverse rate', revName = g.dir > 0 ? 'Reverse rate' : 'Forward rate';
   const rs = [{ pts: tr.pts.map(p => [p.t, p.f]), color: T.fwd, label: fwdName }, { pts: tr.pts.map(p => [p.t, p.r]), color: T.rev, label: revName, dash: [8, 6] }];
   let rmax = 0; rs.forEach(s => s.pts.forEach(p => rmax = Math.max(rmax, p[1])));
-  chart(rateC, { tmax: tr.tmax, ymax: (rmax || 1) * 1.1, yTicks: false, yLabel: 'Rate', teq: tr.flat ? 0 : tr.teq, tcur, series: rs, eqText: 'Rates equal', eqBottom: true });
+  let rlog = null; const req = rs[0].pts[rs[0].pts.length - 1][1];
+  if ($('#axisSel').value === 'log' || ($('#axisSel').value === 'auto' && req > 0 && req < 0.3 * rmax)){ const hi = Math.log10(rmax * 1.25), lo = Math.log10(req) - Math.max(1, (hi - Math.log10(req)) * 0.6); rlog = { lo, hi }; }
+  chart(rateC, { tmax: tr.tmax, ymax: (rmax || 1) * 1.1, log: rlog, yTicks: false, yLabel: rlog ? 'Rate (log scale)' : 'Rate', teq: tr.flat ? 0 : tr.teq, tcur, series: rs, eqText: 'Rates equal', eqBottom: true });
   $('#concCap').textContent = (log ? 'log scale: each gridline ×10 · ' : '') + (tr.flat ? 'already at equilibrium' : (tr.xe > 0 ? (g.dir > 0 ? 'the forward reaction ran' : 'shifted toward the right of the original equation') : (g.dir > 0 ? 'the reverse reaction ran' : 'shifted toward the left of the original equation')));
 }
 
@@ -586,11 +593,11 @@ function checkK(){
   if (!atEq()){ fb.innerHTML = needEq; return; }
   const v = parseK($('#kGuess').value);
   if (!isFinite(v) || v <= 0){ fb.innerHTML = '<div class="feedback info">Type a positive number, for example 0.0046, 4.6e-3 or 4.6×10^-3.</div>'; return; }
-  const ce = eqConc(), L = leftSp(), R = rightSp(), K = prodQ(R, L, ce), close = (a, b) => Math.abs(a - b) / b <= 0.03;
+  const ce = eqShown(), L = leftSp(), R = rightSp(), K = prodQ(R, L, ce), Kt = Kdisp(), close = (a, b) => Math.abs(a - b) / b <= 0.02;
   g.attempts++;
   let msg, ok = false;
-  if (close(v, K)){ ok = true; msg = `<b>Correct.</b> K = ${fmt(K)}. ${K > 1.05 ? 'K &gt; 1, so this equilibrium lies to the right (products favoured).' : K < 0.95 ? 'K &lt; 1, so this equilibrium lies to the left (reactants favoured).' : 'K ≈ 1, so neither reactants nor products are strongly favoured.'}`; }
-  else if (close(v, 1 / K)) msg = 'That is the value for the <b>other direction</b>. Products go on top, reactants on the bottom, for the equation as it is written above.';
+  if (close(v, K) || close(v, Kt)){ ok = true; msg = `<b>Correct.</b> K = ${fmt(K)}.${Math.abs(K / Kt - 1) > 0.002 ? ` (The accepted value is ${fmt(r3(Kt))}. The small difference comes from rounding the concentrations to 3 significant figures.)` : ''} ${K > 1.05 ? 'K &gt; 1, so this equilibrium lies to the right (products favoured).' : K < 0.95 ? 'K &lt; 1, so this equilibrium lies to the left (reactants favoured).' : 'K ≈ 1, so neither reactants nor products are strongly favoured.'}`; }
+  else if (close(v, 1 / K) || close(v, 1 / Kt)) msg = 'That is the value for the <b>other direction</b>. Products go on top, reactants on the bottom, for the equation as it is written above.';
   else { const noExp = (() => { let n = 1, d = 1; R.forEach(s => n *= ce[s.id]); L.forEach(s => d *= ce[s.id]); return n / d; })(); const mult = (() => { let n = 1, d = 1; R.forEach(s => n *= s.nu * ce[s.id]); L.forEach(s => d *= s.nu * ce[s.id]); return n / d; })();
     const anyNu = allSp(g.rx).some(s => s.nu > 1);
     if (anyNu && close(v, noExp)) msg = 'Close, but the coefficients are missing. Each coefficient becomes an <b>exponent</b> on its concentration.';
@@ -601,7 +608,7 @@ function checkK(){
 }
 function showSolution(){
   if (!atEq()){ $('#feedback').innerHTML = needEq; return; }
-  const ce = eqConc(), L = leftSp(), R = rightSp(), K = prodQ(R, L, ce);
+  const ce = eqShown(), L = leftSp(), R = rightSp(), K = prodQ(R, L, ce);
   $('#solution').innerHTML = `<div class="solution"><div class="label-up">Solution</div><div class="kexpr"><span>K =</span> ${fracHTML(R, L, ce)} <span>=</span> <span class="big">${fmt(K)}</span></div></div>`;
 }
 $('#checkBtn').onclick = checkK; $('#kGuess').onkeydown = e => { if (e.key === 'Enter') checkK(); };
@@ -610,7 +617,7 @@ $('#revealEq').onchange = renderEqTable;
 
 function clearAnswers(){ g.attempts = 0; $('#kGuess').value = ''; $('#feedback').innerHTML = ''; $('#solution').innerHTML = ''; }
 function setReaction(i){
-  g.rx = RXNS[i]; g.dir = 1; g.c0 = { ...g.rx.def }; clearAnswers(); $('#revealEq').checked = false;
+  g.rx = RXNS[i]; g.dir = 1; g.c0 = { ...g.rx.def }; g.attempts = 0; clearAnswers(); $('#revealEq').checked = false; rxSel.value = i;
   renderEq(); buildSliders(); buildPresets(); staleRun();
 }
 $('#runBtn').onclick = () => {
@@ -619,7 +626,73 @@ $('#runBtn').onclick = () => {
   run();
 };
 rxSel.onchange = e => setReaction(+e.target.value);
-$('#flipBtn').onclick = () => { g.dir *= -1; g.apx = null; clearAnswers(); renderEq(); buildSliders(); renderEqTable(); drawGraphs(); };
+
+/* ---------- mode 2: determining equilibrium concentrations ---------- */
+function rxDir(){ return { R: leftSp(), P: rightSp(), K: Kdisp() }; }
+function buildConc(){
+  const L = leftSp(), R = rightSp(), list = L.concat(R);
+  $('#cInit').innerHTML = `<tr><th></th>${list.map(s => `<th style="color:var(--${s.col})">[${s.html}]</th>`).join('')}</tr><tr><td>Initial (mol/L)</td>${list.map(s => `<td class="num">${fmt(g.c0[s.id])}</td>`).join('')}</tr>`;
+  $('#cInputs').innerHTML = list.map(s => `<label class="nm" for="c_${s.id}" style="color:var(--${s.col})">[${s.html}]<sub>eq</sub></label><input id="c_${s.id}" inputmode="decimal" autocomplete="off" placeholder="mol/L"><span class="mk" id="m_${s.id}"></span>`).join('');
+  list.forEach(s => $('#c_' + s.id).onkeydown = e => { if (e.key === 'Enter') checkConc(); });
+  $('#cFeedback').innerHTML = ''; $('#cSolution').innerHTML = '';
+}
+function exactEq(){ const rx = rxDir(); return concAt(rx, g.c0, solveEq(rx, g.c0)); }
+function checkConc(){
+  const list = leftSp().concat(rightSp()), ex = exactEq(), guess = {}; let bad = 0, empty = 0;
+  list.forEach(s => { const raw = $('#c_' + s.id).value; const v = raw.trim() === '' ? NaN : parseK(raw); if (!isFinite(v) || v < 0) empty++; else guess[s.id] = v; });
+  if (empty){ $('#cFeedback').innerHTML = '<div class="feedback info">Type a concentration for every substance (for example 0.0125 or 1.25e-2), then press Check.</div>'; return; }
+  const right = s => { const e = ex[s.id], v = guess[s.id]; return e < 1e-12 ? v < 1e-9 : Math.abs(v - e) / e <= 0.03; };
+  list.forEach(s => { const ok = right(s); if (!ok) bad++; $('#c_' + s.id).className = ok ? 'ok' : 'bad'; const m = $('#m_' + s.id); m.className = 'mk ' + (ok ? 'ok' : 'bad'); m.textContent = ok ? '✓' : '✗'; });
+  g.guess = guess; run();
+  let msg;
+  if (!bad){ let n = 1, d = 1; rightSp().forEach(s => n *= Math.pow(guess[s.id], s.nu)); leftSp().forEach(s => d *= Math.pow(guess[s.id], s.nu));
+    msg = `<div class="feedback ok"><b>All correct.</b> Watch the reaction settle at your values (hollow circles). Check: your concentrations give K = ${fmt(r3(n / d))}, and the given K is ${fmt(Kgiven())}${Math.abs(r3(n / d) / Kgiven() - 1) > 0.002 ? ' (the small difference comes from rounding)' : ''}.</div>`; }
+  else msg = `<div class="feedback bad"><b>${list.length - bad} of ${list.length} correct.</b> Watch where the curves level off compared with your hollow circles. Check the change row of your ICE table: the coefficients set the ratio of the changes.${g.attempts++ >= 1 ? ' You can press <b>Show solution</b>.' : ''}</div>`;
+  $('#cFeedback').innerHTML = msg;
+}
+function iceSolution(){
+  const L = leftSp(), R = rightSp(), list = L.concat(R), c0 = g.c0, K = Kgiven(), rx = rxDir(), xw = solveEq(rx, c0), fwd = xw >= 0, x = Math.abs(xw), ex = exactEq();
+  const sg = s => (L.includes(s) ? -1 : 1) * (fwd ? 1 : -1), co = s => s.nu > 1 ? s.nu : '';
+  const chg = s => `${sg(s) < 0 ? '−' : '+'}${co(s)}x`;
+  const eex = s => c0[s.id] ? `${fmt(c0[s.id])} ${sg(s) < 0 ? '−' : '+'} ${co(s)}x` : `${co(s)}x`;
+  const term = s => { const e = eex(s); return (/ /.test(e) || s.nu > 1 ? `(${e})` : e) + (s.nu > 1 ? `<sup>${s.nu}</sup>` : ''); };
+  const a = apxInfo(), useApx = a && a.yes;
+  const termApx = s => L.includes(s) && useApx ? `(${fmt(c0[s.id])})` + (s.nu > 1 ? `<sup>${s.nu}</sup>` : '') : term(s);
+  const frac = (top, bot, fn) => `<span class="frac"><span>${top.map(fn).join(' ')}</span><span>${bot.map(fn).join(' ')}</span></span>`;
+  const anyStart = list.filter(s => c0[s.id] > 0);
+  let html = `<div class="solution"><div class="label-up">Solution</div>
+    <ol class="steps">
+    <li>${R.every(s => c0[s.id] === 0) ? 'There are no products yet, so the reaction can only go forward.' : L.every(s => c0[s.id] === 0) ? 'There are no reactants yet, so the reaction can only go in reverse.' : (() => { let n = 1, d = 1; R.forEach(s => n *= Math.pow(c0[s.id], s.nu)); L.forEach(s => d *= Math.pow(c0[s.id], s.nu)); const q = n / d; return `Q = ${fmt(r3(q))} is ${q < K ? 'less' : 'greater'} than K, so the reaction shifts ${q < K ? 'right (forward)' : 'left (reverse)'}.`; })()} Let x be the change.</li>
+    <li><div class="tablewrap"><table class="eqtable ice"><tr><th></th>${list.map(s => `<th style="color:var(--${s.col})">[${s.html}]</th>`).join('')}</tr>
+      <tr><td>I</td>${list.map(s => `<td class="num">${fmt(c0[s.id])}</td>`).join('')}</tr>
+      <tr><td>C</td>${list.map(s => `<td class="num">${chg(s)}</td>`).join('')}</tr>
+      <tr><td>E</td>${list.map(s => `<td class="num">${eex(s)}</td>`).join('')}</tr></table></div></li>
+    <li><span class="kexpr" style="font-size:16px">${fmt(K)} = ${frac(R, L, term)}</span></li>`;
+  if (useApx) html += `<li>${fmt(a.ci)} ≥ 1000 × ${fmt(K)}, so use the approximation: ${L.map(s => `${eex(s)} ≈ ${fmt(c0[s.id])}`).join(', ')}.<br><span class="kexpr" style="font-size:16px">${fmt(K)} = ${frac(R, L, termApx)}</span></li>`;
+  let xs = x, eqv = ex;
+  if (useApx){ let num = K, den = 1, pw = 0; L.forEach(s => num *= Math.pow(c0[s.id], s.nu)); R.forEach(s => { den *= Math.pow(s.nu, s.nu); pw += s.nu; }); xs = Math.pow(num / den, 1 / pw); eqv = {}; L.forEach(s => eqv[s.id] = c0[s.id]); R.forEach(s => eqv[s.id] = s.nu * xs); }
+  html += `<li>Solving gives <b>x = ${fmt(r3(xs))}</b>${useApx ? `. (Without the approximation, x = ${fmt(r3(x))}: almost the same.)` : '.'}</li>
+    <li>Equilibrium: ${list.map(s => `[${s.html}] = <b>${fmt(r3(eqv[s.id]))}</b>`).join(', ')} mol/L.</li></ol></div>`;
+  $('#cSolution').innerHTML = html;
+}
+$('#cCheck').onclick = checkConc;
+$('#cSolve').onclick = () => { iceSolution(); if (!g.traj){ g.guess = null; run(); } };
+
+function buildRxOptions(){
+  const cur = RXNS.indexOf(g.rx); rxSel.innerHTML = '';
+  RXNS.forEach((r, i) => { if (g.mode === 'C' && r.hard) return; const o = document.createElement('option'); o.value = i; o.textContent = r.name; rxSel.appendChild(o); });
+  const keep = !(g.mode === 'C' && g.rx.hard); rxSel.value = keep ? cur : rxSel.options[0].value; return keep ? cur : +rxSel.options[0].value;
+}
+function setMode(m){
+  g.mode = m; const C = m === 'C';
+  $('#tab-K').setAttribute('aria-selected', !C); $('#tab-C').setAttribute('aria-selected', C);
+  $('#predictCard').hidden = C; $('#concCard').hidden = !C;
+  $('#runBtn').hidden = C; $('#showKLabel').hidden = C; $('#kGiven').hidden = !C;
+  setReaction(buildRxOptions());
+  try { history.replaceState(null, '', C ? '#concentrations' : '#constants'); } catch (e) {}
+}
+$('#tab-K').onclick = () => setMode('K'); $('#tab-C').onclick = () => setMode('C');
+$('#flipBtn').onclick = () => { g.dir *= -1; g.apx = null; clearAnswers(); renderEq(); buildSliders(); buildPresets(); staleRun(); };
 $('#showK').onchange = () => { renderReverse(); };
 $('#axisSel').onchange = drawGraphs;
 
@@ -654,8 +727,9 @@ document.addEventListener('fullscreenchange', syncFs); document.addEventListener
 document.addEventListener('keydown', e => { if ((e.key === 'f' || e.key === 'F') && !/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) toggleFs(); });
 
 /* ---------- boot ---------- */
-window.__eqq = { simulate, RXNS, solveEq, g, setReaction, eqConc, atEq };
+window.__eqq = { simulate, RXNS, solveEq, g, setReaction, eqConc, eqShown, atEq, setMode, exactEq };
 setReaction(0);
+if (location.hash === '#concentrations') setMode('C');
 requestAnimationFrame(t => { last = t; frame(t); });
 })();
 </script>
