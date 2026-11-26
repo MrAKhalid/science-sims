@@ -170,6 +170,13 @@ footer{margin-top:26px;font-size:13px;color:var(--muted)}
 /* sim 2 layout */
 .bigtabs{margin:0 0 12px;display:inline-flex}
 .bigtabs button{font-size:18px;padding:10px 22px}
+.bigtabs{background:var(--ok-soft);border:1.5px solid var(--ok)}
+.bigtabs button{color:var(--ok)}
+.bigtabs button:hover{background:var(--surface)}
+.bigtabs button[aria-selected="true"]{background:var(--ok);color:var(--tab-on)}
+:root{--tab-on:#FFFFFF}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --tab-on:#06180E } }
+:root[data-theme="dark"]{ --tab-on:#06180E }
 .kgiven{font-family:var(--font-mono);font-size:clamp(18px,2vw,24px);font-weight:600;padding:6px 14px;border-radius:8px;background:var(--accent-soft);border:1.5px solid var(--accent)}
 .cinputs{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px 10px;align-items:center;margin-top:12px}
 .cinputs .nm{font-family:var(--font-mono);font-weight:600;font-size:16px}
