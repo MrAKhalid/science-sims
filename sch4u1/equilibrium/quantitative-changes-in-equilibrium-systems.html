@@ -214,7 +214,6 @@ tr.eqhidden td{color:var(--muted)}
     <h1>Quantitative Changes in Equilibrium Systems</h1>
   </div>
   <div class="headright">
-    <label class="check" id="showKLabel"><input type="checkbox" id="showK"> Show K values (teacher)</label>
     <button class="btn" id="fsBtn" title="Full screen (F)">⛶ Full screen</button>
   </div>
 </header>
@@ -405,7 +404,7 @@ const allSp = rx => rx.R.concat(rx.P);
 const leftSp = () => g.dir > 0 ? g.rx.R : g.rx.P;
 const rightSp = () => g.dir > 0 ? g.rx.P : g.rx.R;
 const Kdisp = () => g.dir > 0 ? g.rx.K : 1 / g.rx.K;
-const unlocked = dir => $('#showK').checked || !!g.unlock[g.rx.id + (dir > 0 ? 'f' : 'r')];
+const unlocked = dir => !!g.unlock[g.rx.id + (dir > 0 ? 'f' : 'r')];
 
 const leftAll = () => g.dir > 0 ? g.rx.LA : g.rx.PA, rightAll = () => g.dir > 0 ? g.rx.PA : g.rx.LA;
 function eqHTML(left, right){ const side = a => a.map(s => `${s.nu > 1 ? s.nu : ''}${s.html}(${s.ph})`).join(' + '); return `${side(left)} <span class="arrow">⇌</span> ${side(right)}`; }
@@ -727,13 +726,12 @@ function setMode(m){
   g.mode = m; const C = m === 'C';
   $('#tab-K').setAttribute('aria-selected', !C); $('#tab-C').setAttribute('aria-selected', C);
   $('#predictCard').hidden = C; $('#approxCard').hidden = !C; $('#concCard').hidden = !C;
-  $('#runBtn').hidden = C; $('#showKLabel').hidden = C; $('#kGiven').hidden = !C;
+  $('#runBtn').hidden = C; $('#kGiven').hidden = !C;
   setReaction(buildRxOptions());
   try { history.replaceState(null, '', C ? '#concentrations' : '#constants'); } catch (e) {}
 }
 $('#tab-K').onclick = () => setMode('K'); $('#tab-C').onclick = () => setMode('C');
 $('#flipBtn').onclick = () => { g.dir *= -1; g.apx = null; clearAnswers(); renderEq(); buildSliders(); buildPresets(); staleRun(); };
-$('#showK').onchange = () => { renderReverse(); };
 $('#axisSel').onchange = drawGraphs;
 
 /* ---------- main loop ---------- */
