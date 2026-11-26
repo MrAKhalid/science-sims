@@ -1,0 +1,662 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"></head><body><title>Quantitative Changes in Equilibrium Systems</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,750&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a lab bench. Header with two tabs; each tab is a stage (simulation) + an instrument panel (readouts). */
+:root{
+  --bg:#EEF3F4; --surface:#FFFFFF; --surface-2:#E5ECEE; --ink:#11232B; --muted:#52646C; --line:#CFDADE;
+  --accent:#0A6A86; --accent-soft:rgba(10,106,134,.12); --on-accent:#FFFFFF;
+  --fwd:#C96A17; --rev:#5B46BD; --ok:#22744A; --bad:#B23B26; --ok-soft:rgba(34,116,74,.12); --bad-soft:rgba(178,59,38,.10);
+  --sp1:#C0392B; --sp2:#2563B0; --sp3:#2F8442; --sp4:#7A4FC0; --sp5:#B86E00;
+  --liquid:rgba(70,145,200,.17); --liquid-line:rgba(30,100,160,.55); --glass:#7D939C; --glass-fill:rgba(255,255,255,.55);
+  --o:#D8453A; --c:#3B4148; --h:#FFFFFF; --n:#3E6FD8; --atomline:rgba(0,0,0,.38);
+  --ca:#A8C35F; --i2:#6E2B90; --i2-gas:rgba(140,60,180,.30); --ice:#DDF1F8; --ice-line:#86BCD2;
+  --solid:#ECE6DA; --solid-line:#B5A992; --iodine-solid:#3E3346; --sky:#D7E8F1; --sea:#2E6F92; --no2:#9A4B14;
+  --na:#9478CF; --cl:#4EAE70; --cap:#C0392B; --label:#11232B; --frame:#0A6A86;
+  --font-display:'Bricolage Grotesque','Segoe UI',system-ui,sans-serif;
+  --font-body:'Atkinson Hyperlegible',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0E171B; --surface:#152229; --surface-2:#1C2C34; --ink:#E5EEF1; --muted:#97A9B1; --line:#2B3D46;
+  --accent:#4DB6D3; --accent-soft:rgba(77,182,211,.16); --on-accent:#06181F;
+  --fwd:#F0A24E; --rev:#A595F2; --ok:#5DCB8E; --bad:#F08A72; --ok-soft:rgba(93,203,142,.14); --bad-soft:rgba(240,138,114,.12);
+  --sp1:#F07A6A; --sp2:#6FA8F0; --sp3:#6CC97E; --sp4:#B497F2; --sp5:#F0B04E;
+  --liquid:rgba(80,160,220,.20); --liquid-line:rgba(120,190,240,.6); --glass:#8FA6AF; --glass-fill:rgba(255,255,255,.06);
+  --o:#EE6A5E; --c:#9AA3AB; --h:#F1F5F7; --n:#78A0F5; --atomline:rgba(0,0,0,.55);
+  --ca:#B9D277; --i2:#B57BE0; --i2-gas:rgba(170,100,220,.30); --ice:#2B5363; --ice-line:#6FB2CC;
+  --solid:#4A453C; --solid-line:#8C8170; --iodine-solid:#5C4E68; --sky:#1A2E3A; --sea:#1D4A63; --no2:#C0682A;
+  --na:#B39BEA; --cl:#77CC93; --cap:#E0675A; --label:#E5EEF1; --frame:#4DB6D3; color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0E171B; --surface:#152229; --surface-2:#1C2C34; --ink:#E5EEF1; --muted:#97A9B1; --line:#2B3D46;
+  --accent:#4DB6D3; --accent-soft:rgba(77,182,211,.16); --on-accent:#06181F;
+  --fwd:#F0A24E; --rev:#A595F2; --ok:#5DCB8E; --bad:#F08A72; --ok-soft:rgba(93,203,142,.14); --bad-soft:rgba(240,138,114,.12);
+  --sp1:#F07A6A; --sp2:#6FA8F0; --sp3:#6CC97E; --sp4:#B497F2; --sp5:#F0B04E;
+  --liquid:rgba(80,160,220,.20); --liquid-line:rgba(120,190,240,.6); --glass:#8FA6AF; --glass-fill:rgba(255,255,255,.06);
+  --o:#EE6A5E; --c:#9AA3AB; --h:#F1F5F7; --n:#78A0F5; --atomline:rgba(0,0,0,.55);
+  --ca:#B9D277; --i2:#B57BE0; --i2-gas:rgba(170,100,220,.30); --ice:#2B5363; --ice-line:#6FB2CC;
+  --solid:#4A453C; --solid-line:#8C8170; --iodine-solid:#5C4E68; --sky:#1A2E3A; --sea:#1D4A63; --no2:#C0682A;
+  --na:#B39BEA; --cl:#77CC93; --cap:#E0675A; --label:#E5EEF1; --frame:#4DB6D3; color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.5}
+.wrap{max-width:1360px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px 40px}
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;padding-bottom:14px;border-bottom:1px solid var(--line);margin-bottom:18px}
+.brand .eyebrow{font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:700}
+h1{font-family:var(--font-display);font-weight:750;font-size:clamp(26px,3.2vw,38px);line-height:1.05;margin:2px 0 0;text-wrap:balance;letter-spacing:-.01em}
+h2{font-family:var(--font-display);font-weight:600;font-size:22px;line-height:1.2;margin:0;text-wrap:balance}
+h3{font-family:var(--font-display);font-weight:600;font-size:17px;margin:0}
+.tabs{display:flex;gap:4px;background:var(--surface-2);padding:4px;border-radius:10px;flex-wrap:wrap}
+.tabs button{font:inherit;font-weight:700;font-size:15px;border:0;background:transparent;color:var(--muted);padding:9px 16px;border-radius:7px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.tabs button:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+sub,sup{font-size:.7em;line-height:0}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;margin-bottom:14px}
+label.field{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+select{font:inherit;font-size:17px;font-weight:700;color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:8px;padding:8px 12px;min-width:0;max-width:100%}
+.btn{font:inherit;font-weight:700;font-size:15px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);padding:8px 14px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--ink)}
+.check{display:inline-flex;gap:8px;align-items:center;font-weight:700;font-size:15px;cursor:pointer}
+.check input{width:18px;height:18px;accent-color:var(--accent)}
+.stage-grid{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:1020px){.stage-grid{grid-template-columns:minmax(0,1fr)}}
+.stage{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;min-width:0}
+.stage canvas{display:block;width:100%;height:auto}
+.stage-controls{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;align-items:center}
+.status{font-size:14px;color:var(--muted);margin-left:auto}
+.panel{display:flex;flex-direction:column;gap:14px;min-width:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;min-width:0}
+.eqn{font-family:var(--font-mono);font-size:clamp(19px,1.8vw,25px);font-weight:600;letter-spacing:-.01em;margin:6px 0 4px;overflow-wrap:anywhere}
+.eqn .arrow{color:var(--accent);padding:0 .25em}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{font-size:13px;font-weight:700;padding:5px 10px;border-radius:99px;border:1.5px solid var(--line);color:var(--muted);background:transparent}
+.chip.on{border-color:var(--accent);background:var(--accent);color:var(--on-accent)}
+.chip.half{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.typenote{font-size:15px;margin:10px 0 0}
+.hidden-answer{display:flex;align-items:center;gap:10px;margin-top:10px;padding:10px 12px;border:1.5px dashed var(--line);border-radius:8px;font-size:15px;color:var(--muted)}
+.dir{display:grid;grid-template-columns:auto 1fr;gap:6px 10px;font-size:15px;margin-top:4px}
+.dir .k{font-weight:700;white-space:nowrap}
+.k.fwd{color:var(--fwd)} .k.rev{color:var(--rev)}
+.meter{display:grid;grid-template-columns:minmax(0,9.5em) minmax(0,1fr) 5.5em;gap:8px;align-items:center;font-size:14px;margin-top:8px}
+.meter .bar{height:14px;border-radius:7px;background:var(--surface-2);overflow:hidden}
+.meter .bar i{display:block;height:100%;width:0;border-radius:7px;transition:width .25s linear}
+.meter .v{font-family:var(--font-mono);font-size:13px;text-align:right;font-variant-numeric:tabular-nums}
+.verdict{margin-top:10px;font-weight:700;font-size:15px;padding:7px 10px;border-radius:8px}
+.verdict.eq{background:var(--ok-soft);color:var(--ok)} .verdict.neq{background:var(--bad-soft);color:var(--bad)}
+.twocol{display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:15px}
+.twocol ul{margin:6px 0 0;padding-left:18px}
+@media (max-width:520px){.twocol{grid-template-columns:1fr}}
+.small{font-size:14px;color:var(--muted)}
+.label-up{font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+canvas.chart{display:block;width:100%;height:170px}
+
+/* Tab 2 */
+.g-head{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:flex-end;margin-bottom:14px}
+.g-head .eqn{font-size:clamp(20px,2.4vw,28px);margin:0}
+.g-grid{display:grid;grid-template-columns:minmax(0,300px) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:900px){.g-grid{grid-template-columns:minmax(0,1fr)}}
+.sl{display:grid;grid-template-columns:4.6em minmax(0,1fr) 5.4em;gap:8px;align-items:center;margin-top:8px}
+.sl .nm{font-family:var(--font-mono);font-weight:600;font-size:15px}
+.sl input[type=range]{width:100%;accent-color:var(--accent)}
+.sl input[type=number]{font:inherit;font-family:var(--font-mono);font-size:14px;width:100%;padding:4px 6px;border:1.5px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink)}
+.grouplabel{margin-top:12px}
+.btnrow{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.charts{display:grid;gap:14px;min-width:0}
+.charts figure{margin:0;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;min-width:0}
+.charts figcaption{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-weight:700;font-size:15px;margin-bottom:4px}
+#concChart{height:300px} #rateChart{height:190px}
+.g-grid>.charts{min-width:0}
+.g-bottom{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:18px;margin-top:18px}
+@media (max-width:900px){.g-bottom{grid-template-columns:minmax(0,1fr)}}
+.kexpr{display:inline-flex;align-items:center;gap:10px;font-family:var(--font-mono);font-size:20px;font-weight:600}
+.frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle}
+.frac>span{padding:0 6px}
+.frac>span:first-child{border-bottom:2px solid currentColor;padding-bottom:3px}
+.frac>span:last-child{padding-top:3px}
+.eqtable{border-collapse:collapse;font-variant-numeric:tabular-nums;width:100%;font-size:15px;margin-top:10px}
+.eqtable th,.eqtable td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left}
+.eqtable th{font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.eqtable td.num{font-family:var(--font-mono);font-size:14px}
+.tablewrap{overflow-x:auto}
+.predict{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}
+.predict input{font:inherit;font-family:var(--font-mono);font-size:18px;width:11em;max-width:100%;padding:7px 10px;border:1.5px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
+.feedback{margin-top:10px;padding:10px 12px;border-radius:8px;font-size:15px}
+.feedback.ok{background:var(--ok-soft);color:var(--ink);border-left:4px solid var(--ok)}
+.feedback.bad{background:var(--bad-soft);color:var(--ink);border-left:4px solid var(--bad)}
+.feedback.info{background:var(--surface-2)}
+.solution{margin-top:10px;font-size:15px}
+.solution .kexpr{font-size:17px}
+.big{font-family:var(--font-mono);font-weight:600;font-size:22px}
+.krow{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;align-items:center;margin-top:10px}
+.krow .eqn{font-size:16px;margin:0}
+canvas#kLine{display:block;width:100%;height:96px;margin-top:8px}
+.lies{font-weight:700}
+.note{font-size:13px;color:var(--muted);margin-top:8px}
+.placeholder{color:var(--muted);font-style:italic}
+footer{margin-top:26px;font-size:13px;color:var(--muted)}
+
+.headright{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.g-side{display:flex;flex-direction:column;gap:18px;min-width:0}
+.g-grid{grid-template-columns:minmax(0,300px) minmax(0,1fr)}
+.g-side{grid-column:1 / -1}
+@media (min-width:901px) and (max-width:1199px){ .g-side{display:grid;grid-template-columns:1fr 1fr;align-items:start} }
+.fs-msg{font-size:13px;color:var(--bad)}
+/* Landscape: fit a projector screen without scrolling */
+@media (orientation: landscape) and (min-width:1000px){
+  .wrap{max-width:none;padding-block:10px 16px}
+  header.top{padding-bottom:8px;margin-bottom:10px}
+  h1{font-size:clamp(22px,2.2vw,30px)}
+  .toolbar{margin-bottom:8px}
+  .stage-grid{grid-template-columns:minmax(0,1fr) minmax(330px,25vw)}
+  .stage-grid .panel{max-height:calc(100vh - 150px);overflow-y:auto;padding-right:4px}
+  .stage-grid .card{padding:12px 14px}
+  .twocol{grid-template-columns:1fr}
+  #sysCanvas{margin:0 auto}
+}
+@media (orientation: landscape) and (min-width:1200px){
+  .g-grid{grid-template-columns:minmax(0,270px) minmax(0,1fr) minmax(360px,26vw)}
+  .g-side{grid-column:auto;max-height:calc(100vh - 150px);overflow-y:auto;padding-right:4px}
+  #concChart{height:max(260px,calc(100vh - 440px))}
+  #rateChart{height:140px}
+}
+:fullscreen body, body:fullscreen{overflow-y:auto}
+@media (prefers-reduced-motion: reduce){ .meter .bar i{transition:none} }
+/* sim 2 layout */
+main{display:block}
+.capright{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.axissel{display:inline-flex;gap:6px;align-items:center;font-size:13px;font-weight:700;color:var(--muted)}
+.axissel select{font-size:14px;padding:3px 8px}
+tr.eqhidden td{color:var(--muted)}
+#approxCard .btnrow .btn{font-size:14px}
+@media (orientation: landscape) and (min-width:1200px){
+  .g-grid{grid-template-columns:minmax(0,270px) minmax(0,1fr) minmax(380px,28vw)}
+  .g-side{grid-column:auto;max-height:calc(100vh - 170px);overflow-y:auto;padding-right:4px}
+  .g-side .card{padding:12px 14px}
+  #concChart{height:max(260px,calc(100vh - 470px))}
+  #rateChart{height:150px}
+  .g-head{margin-bottom:10px}
+}
+</style>
+
+<div class="wrap">
+<header class="top">
+  <div class="brand">
+    <div class="eyebrow">SCH4U · Chemical Systems &amp; Equilibrium</div>
+    <h1>Quantitative Changes in Equilibrium Systems</h1>
+  </div>
+  <div class="headright">
+    <label class="check"><input type="checkbox" id="showK"> Show K values (teacher)</label>
+    <button class="btn" id="fsBtn" title="Full screen (F)">⛶ Full screen</button>
+  </div>
+</header>
+
+<main id="panel-graphs">
+  <div class="g-head">
+    <label class="field" for="rxSelect">Reaction
+      <select id="rxSelect"></select>
+    </label>
+    <div>
+      <div class="label-up" id="rxDirLabel">Reaction as written</div>
+      <div class="eqn" id="rxEq"></div>
+    </div>
+    <button class="btn" id="flipBtn" aria-pressed="false">⇄ Write it in reverse</button>
+  </div>
+
+  <div class="g-grid">
+    <div class="card">
+      <h3>Initial concentrations (mol/L)</h3>
+      <div id="sliders"></div>
+      <div class="btnrow" id="presets"></div>
+      <div class="btnrow"><button class="btn primary" id="runBtn">▶ Play</button></div>
+      <p class="note" id="rxNote"></p>
+    </div>
+    <div class="charts">
+      <figure>
+        <figcaption><span>Concentration vs time</span>
+          <span class="capright"><span class="small" id="concCap"></span>
+            <label class="axissel">Scale <select id="axisSel"><option value="auto">Auto</option><option value="lin">Linear</option><option value="log">Log</option></select></label></span></figcaption>
+        <canvas class="chart" id="concChart" aria-label="Concentration of each substance versus time"></canvas>
+      </figure>
+      <figure>
+        <figcaption><span>Rate vs time</span><span class="small">forward and reverse reaction rates</span></figcaption>
+        <canvas class="chart" id="rateChart" aria-label="Forward and reverse rate versus time"></canvas>
+      </figure>
+    </div>
+    <div class="g-side">
+      <div class="card" id="predictCard">
+        <h2>Predict K</h2>
+        <p class="small" style="margin:4px 0 0">Write the equilibrium law, find the equilibrium concentrations, and calculate K for the reaction as written above.</p>
+        <div style="margin-top:10px" class="kexpr"><span>K<sub>eq</sub> =</span><span id="kExpr"></span></div>
+        <div class="tablewrap"><table class="eqtable" id="eqTable"></table></div>
+        <label class="check" style="margin-top:10px"><input type="checkbox" id="revealEq"> Reveal equilibrium concentrations</label>
+        <div class="predict">
+          <label for="kGuess" class="label-up">Your K</label>
+          <input id="kGuess" inputmode="decimal" placeholder="e.g. 4.6e-3" autocomplete="off">
+          <button class="btn primary" id="checkBtn">Check</button>
+          <button class="btn" id="revealBtn">Show solution</button>
+        </div>
+        <div id="feedback" aria-live="polite"></div>
+        <div id="solution"></div>
+      </div>
+      <div class="card" id="approxCard">
+        <h2>Approximation rule</h2>
+        <p class="small" style="margin:4px 0 0">When [i] ≥ 1000 × K<sub>eq</sub>, we can approximate that [i] = [e]: so little reactant is used up that its concentration barely changes.</p>
+        <div id="apxBox" aria-live="polite"></div>
+      </div>
+      <div class="card" id="reverseCard">
+        <h2>Forward vs reverse</h2>
+        <p class="small" style="margin:4px 0 0">Same flask, same equilibrium concentrations. Only the way we write the equation changes.</p>
+        <div id="revBox"></div>
+        <canvas id="kLine" aria-label="Number line of K on a logarithmic scale"></canvas>
+        <p class="note">Log scale. K &gt; 1: products favoured (lies to the right). K &lt; 1: reactants favoured (lies to the left).</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>Graphs come from a simple rate model (rate = k[A]<sup>a</sup>[B]<sup>b</sup>); time units are arbitrary. All substances are gases, and K values are K<sub>c</sub> at the temperature shown, from standard textbook data.</footer>
+</div>
+
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const TAU = Math.PI * 2;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+/* ---------- theme tokens for canvas ---------- */
+let T = {};
+const TOKS = ['bg','surface','surface-2','ink','muted','line','accent','accent-soft','fwd','rev','ok','sp1','sp2','sp3','sp4','sp5'];
+function readTokens(){ const cs = getComputedStyle(document.documentElement); TOKS.forEach(k => T[k] = cs.getPropertyValue('--' + k).trim()); }
+readTokens();
+try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { readTokens(); redrawAll(); }); } catch (e) {}
+new MutationObserver(() => { readTokens(); redrawAll(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+function fit(canvas){
+  const dpr = window.devicePixelRatio || 1, w = canvas.clientWidth, h = canvas.clientHeight;
+  const W = Math.round(w * dpr), H = Math.round(h * dpr);
+  if (canvas.width !== W || canvas.height !== H){ canvas.width = W; canvas.height = H; }
+  return { w, h, dpr };
+}
+
+/* ---------- reactions ---------- */
+const sp = (id, html, txt, nu, max, col) => ({ id, html, txt, nu, max, col });
+const RXNS = [
+  { id: 'hi', name: 'H₂ + I₂ ⇌ 2HI   (448 °C)', K: 50.5,
+    R: [sp('H2', 'H<sub>2</sub>', 'H₂', 1, 2, 'sp2'), sp('I2', 'I<sub>2</sub>', 'I₂', 1, 2, 'sp4')],
+    P: [sp('HI', 'HI', 'HI', 2, 4, 'sp1')],
+    presets: [['Only reactants', { H2: 1, I2: 1, HI: 0 }], ['Only product', { H2: 0, I2: 0, HI: 2 }], ['Mixture', { H2: 1, I2: 0.5, HI: 0.5 }]],
+    def: { H2: 1, I2: 1, HI: 0 }, note: 'Hydrogen and iodine vapour in a sealed flask at 448 °C. Iodine vapour is violet and hydrogen iodide is colourless, so the colour fades as HI forms.' },
+  { id: 'n2o4', name: 'N₂O₄ ⇌ 2NO₂   (25 °C)', K: 4.63e-3,
+    R: [sp('N2O4', 'N<sub>2</sub>O<sub>4</sub>', 'N₂O₄', 1, 0.2, 'sp1')],
+    P: [sp('NO2', 'NO<sub>2</sub>', 'NO₂', 2, 0.4, 'sp2')],
+    presets: [['Only reactant', { N2O4: 0.0400, NO2: 0 }], ['Only product', { N2O4: 0, NO2: 0.0800 }], ['Mixture', { N2O4: 0.0400, NO2: 0.0200 }]],
+    def: { N2O4: 0.0400, NO2: 0 }, note: 'Colourless N₂O₄ and brown NO₂. The depth of the brown colour shows how much NO₂ is in the flask.' },
+  { id: 'h2s', name: '2H₂S ⇌ 2H₂ + S₂   (800 °C)', K: 1.67e-7,
+    R: [sp('H2S', 'H<sub>2</sub>S', 'H₂S', 2, 1, 'sp5')],
+    P: [sp('H2', 'H<sub>2</sub>', 'H₂', 2, 1, 'sp2'), sp('S2', 'S<sub>2</sub>', 'S₂', 1, 0.5, 'sp3')],
+    presets: [['Only reactant', { H2S: 0.200, H2: 0, S2: 0 }], ['Only products', { H2S: 0, H2: 0.200, S2: 0.100 }], ['Mixture', { H2S: 0.200, H2: 0.0100, S2: 0.0100 }]],
+    def: { H2S: 0.200, H2: 0, S2: 0 }, note: 'Hydrogen sulfide, removed from natural gas, breaking down at high temperature into hydrogen and sulfur vapour.' },
+  { id: 'no', name: 'N₂ + O₂ ⇌ 2NO   (2000 K)', K: 4.1e-4,
+    R: [sp('N2', 'N<sub>2</sub>', 'N₂', 1, 1, 'sp2'), sp('O2', 'O<sub>2</sub>', 'O₂', 1, 1, 'sp1')],
+    P: [sp('NO', 'NO', 'NO', 2, 1, 'sp4')],
+    presets: [['Only reactants', { N2: 0.500, O2: 0.500, NO: 0 }], ['Only product', { N2: 0, O2: 0, NO: 1.00 }], ['Mixture', { N2: 0.500, O2: 0.500, NO: 0.0500 }]],
+    def: { N2: 0.500, O2: 0.500, NO: 0 }, note: 'Nitrogen and oxygen from the air react in very hot places, like a car engine or a lightning bolt, to form nitrogen monoxide, a pollutant.' },
+  { id: 'cocl2', name: 'COCl₂ ⇌ CO + Cl₂   (100 °C)', K: 2.2e-10,
+    R: [sp('COCl2', 'COCl<sub>2</sub>', 'COCl₂', 1, 1, 'sp4')],
+    P: [sp('CO', 'CO', 'CO', 1, 1, 'sp5'), sp('Cl2', 'Cl<sub>2</sub>', 'Cl₂', 1, 1, 'sp3')],
+    presets: [['Only reactant', { COCl2: 0.500, CO: 0, Cl2: 0 }], ['Only products', { COCl2: 0, CO: 0.500, Cl2: 0.500 }], ['Mixture', { COCl2: 0.300, CO: 0.200, Cl2: 0.200 }]],
+    def: { COCl2: 0.500, CO: 0, Cl2: 0 }, note: 'Phosgene, a toxic gas used to make plastics such as polycarbonate, breaking down into carbon monoxide and chlorine.' },
+  { id: 'pcl5', name: 'PCl₅ ⇌ PCl₃ + Cl₂   (250 °C)', K: 0.042,
+    R: [sp('PCl5', 'PCl<sub>5</sub>', 'PCl₅', 1, 1, 'sp4')],
+    P: [sp('PCl3', 'PCl<sub>3</sub>', 'PCl₃', 1, 1, 'sp5'), sp('Cl2', 'Cl<sub>2</sub>', 'Cl₂', 1, 1, 'sp3')],
+    presets: [['Only reactant', { PCl5: 0.200, PCl3: 0, Cl2: 0 }], ['Only products', { PCl5: 0, PCl3: 0.200, Cl2: 0.200 }], ['Mixture', { PCl5: 0.200, PCl3: 0.100, Cl2: 0 }]],
+    def: { PCl5: 0.200, PCl3: 0, Cl2: 0 }, note: 'Phosphorus pentachloride vapour breaking down when it is heated.' },
+  { id: 'wgs', name: 'CO + H₂O ⇌ CO₂ + H₂   (700 K)', K: 5.10,
+    R: [sp('CO', 'CO', 'CO', 1, 2, 'sp5'), sp('H2O', 'H<sub>2</sub>O', 'H₂O', 1, 2, 'sp3')],
+    P: [sp('CO2', 'CO<sub>2</sub>', 'CO₂', 1, 2, 'sp4'), sp('H2', 'H<sub>2</sub>', 'H₂', 1, 2, 'sp2')],
+    presets: [['Only reactants', { CO: 1, H2O: 1, CO2: 0, H2: 0 }], ['Only products', { CO: 0, H2O: 0, CO2: 1, H2: 1 }], ['Mixture', { CO: 1, H2O: 0.5, CO2: 0.2, H2: 0 }]],
+    def: { CO: 1, H2O: 1, CO2: 0, H2: 0 }, note: 'The water–gas shift reaction, used in industry to make hydrogen from carbon monoxide and steam.' },
+  { id: 'wgs1', name: 'CO + H₂O ⇌ CO₂ + H₂   (about 830 °C)', K: 1.00,
+    R: [sp('CO', 'CO', 'CO', 1, 2, 'sp5'), sp('H2O', 'H<sub>2</sub>O', 'H₂O', 1, 2, 'sp3')],
+    P: [sp('CO2', 'CO<sub>2</sub>', 'CO₂', 1, 2, 'sp4'), sp('H2', 'H<sub>2</sub>', 'H₂', 1, 2, 'sp2')],
+    presets: [['Only reactants', { CO: 1, H2O: 1, CO2: 0, H2: 0 }], ['Only products', { CO: 0, H2O: 0, CO2: 1, H2: 1 }], ['Mixture', { CO: 0.5, H2O: 1.5, CO2: 0, H2: 0 }]],
+    def: { CO: 1, H2O: 1, CO2: 0, H2: 0 }, note: 'The same water–gas shift reaction at a higher temperature. Compare the graph with the 700 K version.' },
+  { id: 'icl', name: 'I₂ + Cl₂ ⇌ 2ICl   (25 °C)', K: 81.9,
+    R: [sp('I2', 'I<sub>2</sub>', 'I₂', 1, 0.5, 'sp4'), sp('Cl2', 'Cl<sub>2</sub>', 'Cl₂', 1, 0.5, 'sp3')],
+    P: [sp('ICl', 'ICl', 'ICl', 2, 1, 'sp1')],
+    presets: [['Only reactants', { I2: 0.100, Cl2: 0.100, ICl: 0 }], ['Only product', { I2: 0, Cl2: 0, ICl: 0.200 }], ['Mixture', { I2: 0.100, Cl2: 0.0500, ICl: 0.0500 }]],
+    def: { I2: 0.100, Cl2: 0.100, ICl: 0 }, note: 'Iodine vapour and chlorine gas combining to form iodine monochloride.' },
+  { id: 'so3', name: '2SO₂ + O₂ ⇌ 2SO₃   (1000 K)', K: 280,
+    R: [sp('SO2', 'SO<sub>2</sub>', 'SO₂', 2, 0.5, 'sp5'), sp('O2', 'O<sub>2</sub>', 'O₂', 1, 0.5, 'sp1')],
+    P: [sp('SO3', 'SO<sub>3</sub>', 'SO₃', 2, 0.5, 'sp2')],
+    presets: [['Only reactants', { SO2: 0.100, O2: 0.0500, SO3: 0 }], ['Only product', { SO2: 0, O2: 0, SO3: 0.100 }], ['Mixture', { SO2: 0.100, O2: 0.100, SO3: 0.0500 }]],
+    def: { SO2: 0.100, O2: 0.0500, SO3: 0 }, note: 'A key step in making sulfuric acid (the contact process).' },
+  { id: 'nh3', name: 'N₂ + 3H₂ ⇌ 2NH₃   (472 °C)', K: 0.105,
+    R: [sp('N2', 'N<sub>2</sub>', 'N₂', 1, 2, 'sp2'), sp('H2', 'H<sub>2</sub>', 'H₂', 3, 6, 'sp3')],
+    P: [sp('NH3', 'NH<sub>3</sub>', 'NH₃', 2, 2, 'sp4')],
+    presets: [['Only reactants', { N2: 1.00, H2: 3.00, NH3: 0 }], ['Only product', { N2: 0, H2: 0, NH3: 2.00 }], ['Mixture', { N2: 1.00, H2: 1.00, NH3: 0.500 }]],
+    def: { N2: 1.00, H2: 3.00, NH3: 0 }, note: 'The Haber process, which makes ammonia for fertilizers.' }
+];
+const g = { rx: RXNS[0], dir: 1, c0: {}, c0Run: null, traj: null, prog: 0, running: false, paused: false, unlock: {}, attempts: 0, apx: null };
+
+const allSp = rx => rx.R.concat(rx.P);
+const leftSp = () => g.dir > 0 ? g.rx.R : g.rx.P;
+const rightSp = () => g.dir > 0 ? g.rx.P : g.rx.R;
+const Kdisp = () => g.dir > 0 ? g.rx.K : 1 / g.rx.K;
+const unlocked = dir => $('#showK').checked || !!g.unlock[g.rx.id + (dir > 0 ? 'f' : 'r')];
+
+function eqHTML(left, right){ const side = a => a.map(s => `${s.nu > 1 ? s.nu : ''}${s.html}(g)`).join(' + '); return `${side(left)} <span class="arrow">⇌</span> ${side(right)}`; }
+function termHTML(list, vals){ return list.map(s => { const base = vals ? `(${fmt(vals[s.id])})` : `[${s.html}]`; return base + (s.nu > 1 ? `<sup>${s.nu}</sup>` : ''); }).join(vals ? ' × ' : ''); }
+function fracHTML(top, bot, vals){ return `<span class="frac"><span>${termHTML(top, vals)}</span><span>${termHTML(bot, vals)}</span></span>`; }
+function prodQ(top, bot, c){ let n = 1, d = 1; top.forEach(s => n *= Math.pow(c[s.id], s.nu)); bot.forEach(s => d *= Math.pow(c[s.id], s.nu)); return n / d; }
+
+function supTxt(n){ const d = '⁰¹²³⁴⁵⁶⁷⁸⁹'; return (n < 0 ? '⁻' : '') + String(Math.abs(n)).split('').map(c => d[+c]).join(''); }
+function fmt(v){ if (!isFinite(v)) return '—'; if (v === 0) return '0'; const a = Math.abs(v); if (a < 1e-3 || a >= 1e4){ const e = Math.floor(Math.log10(a)); const m = v / Math.pow(10, e); return `${m.toFixed(2)} × 10<sup>${String(e).replace('-', '−')}</sup>`; } return v.toPrecision(3); }
+
+/* ---------- equilibrium + kinetics ---------- */
+function concAt(rx, c0, x){ const c = {}; rx.R.forEach(s => c[s.id] = c0[s.id] - s.nu * x); rx.P.forEach(s => c[s.id] = c0[s.id] + s.nu * x); return c; }
+function bounds(rx, c0){ let hi = Infinity, lo = -Infinity; rx.R.forEach(s => hi = Math.min(hi, c0[s.id] / s.nu)); rx.P.forEach(s => lo = Math.max(lo, -c0[s.id] / s.nu)); return [lo, hi]; }
+function rates(rx, c0, x){ const c = concAt(rx, c0, x); let f = 1, r = 1; rx.R.forEach(s => f *= Math.pow(Math.max(0, c[s.id]), s.nu)); rx.P.forEach(s => r *= Math.pow(Math.max(0, c[s.id]), s.nu)); return { f, r: r / rx.K }; }
+function solveEq(rx, c0){
+  const [lo, hi] = bounds(rx, c0); if (hi - lo < 1e-15) return lo;
+  let a = lo, b = hi; for (let i = 0; i < 200; i++){ const m = (a + b) / 2; const q = rates(rx, c0, m); if (q.f - q.r > 0) a = m; else b = m; } return (a + b) / 2;
+}
+function simulate(rx, c0){
+  const xe = solveEq(rx, c0), pts = [];
+  const scale = Math.max(...allSp(rx).map(s => c0[s.id])) || 1;
+  const r0 = rates(rx, c0, 0);
+  if (Math.abs(xe) < 1e-12 * scale || Math.abs(r0.f - r0.r) < 1e-16){ for (let i = 0; i <= 20; i++) pts.push({ t: i, x: 0, ...r0 }); return { pts, xe: 0, teq: 0, tmax: 20, flat: true }; }
+  const N = 600, lnEnd = Math.log(1e-5); let t = 0, prevX = 0, prevInv = 1 / Math.abs(r0.f - r0.r);
+  pts.push({ t: 0, x: 0, f: r0.f, r: r0.r });
+  let teq = null;
+  for (let k = 1; k <= N; k++){
+    const d = xe * Math.exp(lnEnd * k / N), x = xe - d; const q = rates(rx, c0, x); const inv = 1 / Math.max(1e-300, Math.abs(q.f - q.r));
+    t += 0.5 * (inv + prevInv) * Math.abs(x - prevX); prevX = x; prevInv = inv;
+    pts.push({ t, x, f: q.f, r: q.r });
+    if (teq === null && Math.abs(d) <= 0.03 * Math.abs(xe)) teq = t;
+  }
+  const tmax = teq / 0.6;
+  const out = pts.filter(p => p.t <= tmax); const qe = rates(rx, c0, xe); out.push({ t: tmax, x: xe, f: qe.f, r: qe.r });
+  return { pts: out, xe, teq, tmax, flat: false };
+}
+
+/* ---------- UI build ---------- */
+const rxSel = $('#rxSelect'); RXNS.forEach((r, i) => { const o = document.createElement('option'); o.value = i; o.textContent = r.name; rxSel.appendChild(o); });
+function buildSliders(){
+  const box = $('#sliders'); box.innerHTML = '';
+  [['Reactants', leftSp()], ['Products', rightSp()]].forEach(([lab, list]) => {
+    const h = document.createElement('div'); h.className = 'label-up grouplabel'; h.textContent = lab + (g.dir < 0 ? ' (as written)' : ''); box.appendChild(h);
+    list.forEach(s => {
+      const row = document.createElement('div'); row.className = 'sl';
+      row.innerHTML = `<label class="nm" for="r_${s.id}" style="color:var(--${s.col})">[${s.html}]</label><input type="range" id="r_${s.id}" min="0" max="${s.max}" step="${s.max / 1000}" value="${g.c0[s.id]}"><input type="number" id="n_${s.id}" min="0" max="${s.max}" step="0.0001" value="${g.c0[s.id]}" aria-label="[${s.txt}] initial">`;
+      box.appendChild(row);
+      const rg = row.querySelector('input[type=range]'), nb = row.querySelector('input[type=number]');
+      rg.oninput = () => { g.c0[s.id] = +rg.value; nb.value = rg.value; staleRun(); };
+      nb.onchange = () => { const v = clamp(+nb.value || 0, 0, s.max); g.c0[s.id] = v; nb.value = v; rg.value = v; staleRun(); };
+    });
+  });
+}
+function buildPresets(){
+  const box = $('#presets'); box.innerHTML = '';
+  g.rx.presets.forEach(([lab, vals]) => { const b = document.createElement('button'); b.className = 'btn'; b.textContent = lab; b.onclick = () => { Object.assign(g.c0, vals); buildSliders(); staleRun(); }; box.appendChild(b); });
+}
+function renderEq(){
+  $('#rxEq').innerHTML = eqHTML(leftSp(), rightSp());
+  $('#rxDirLabel').textContent = g.dir > 0 ? 'Reaction as written' : 'Written in reverse';
+  $('#flipBtn').setAttribute('aria-pressed', g.dir < 0);
+  $('#kExpr').innerHTML = fracHTML(rightSp(), leftSp());
+  $('#rxNote').textContent = g.rx.note;
+}
+function staleRun(){ g.running = false; g.paused = false; g.traj = null; g.prog = 0; g.apx = null; $('#runBtn').textContent = '▶ Play'; drawGraphs(); renderEqTable(); }
+function run(){ g.c0Run = { ...g.c0 }; g.traj = simulate(g.rx, g.c0Run); g.prog = 0; g.running = true; g.paused = false; $('#runBtn').textContent = '❚❚ Pause'; renderEqTable(); }
+function atEq(){ return !!g.traj && g.prog * g.traj.tmax >= g.traj.teq - 1e-12; }
+function eqConc(){ return concAt(g.rx, g.c0Run, g.traj.xe); }
+
+function renderEqTable(){
+  const tb = $('#eqTable'), list = leftSp().concat(rightSp());
+  const show = atEq(), reveal = $('#revealEq').checked;
+  const ce = show ? eqConc() : null, c0 = g.traj ? g.c0Run : g.c0;
+  const eqCell = s => !reveal ? '<span class="placeholder">hidden</span>' : show ? fmt(ce[s.id]) : '<span class="placeholder">press Play</span>';
+  tb.innerHTML = `<tr><th></th>${list.map(s => `<th style="color:var(--${s.col})">[${s.html}]</th>`).join('')}</tr>
+    <tr><td>Initial (mol/L)</td>${list.map(s => `<td class="num">${fmt(c0[s.id])}</td>`).join('')}</tr>
+    <tr class="${reveal ? '' : 'eqhidden'}"><td>Equilibrium (mol/L)</td>${list.map(s => `<td class="num">${eqCell(s)}</td>`).join('')}</tr>`;
+  renderReverse(); renderApprox();
+}
+function renderReverse(){
+  const box = $('#revBox'), rx = g.rx, show = atEq(), ce = show ? eqConc() : null;
+  const uf = unlocked(1), ur = unlocked(-1);
+  const val = (dir, ok) => !show ? '<span class="placeholder">press Play</span>' : ok ? `<span class="big">${fmt(dir > 0 ? prodQ(rx.P, rx.R, ce) : prodQ(rx.R, rx.P, ce))}</span>` : '<span class="big">?</span>';
+  box.innerHTML = `
+    <div class="krow"><span class="label-up">Forward</span><span class="eqn">${eqHTML(rx.R, rx.P)}</span>
+      <span></span><span class="kexpr" style="font-size:16px"><span>K<sub>f</sub> =</span> ${fracHTML(rx.P, rx.R)} <span>=</span> ${val(1, uf)}</span></div>
+    <div class="krow"><span class="label-up">Reverse</span><span class="eqn">${eqHTML(rx.P, rx.R)}</span>
+      <span></span><span class="kexpr" style="font-size:16px"><span>K<sub>r</sub> =</span> ${fracHTML(rx.R, rx.P)} <span>=</span> ${val(-1, ur)}</span></div>
+    <div class="feedback ${uf && ur && show ? 'ok' : 'info'}" style="margin-top:12px">${uf && ur && show
+      ? `The reverse expression is the forward one turned upside down, so <b>K<sub>r</sub> = 1 / K<sub>f</sub></b>.<br>1 / ${fmt(rx.K)} = ${fmt(1 / rx.K)}, and K<sub>f</sub> × K<sub>r</sub> = 1.${Math.abs(Math.log10(rx.K)) < 0.01 ? ' When K = 1, the reverse K is also 1: neither side is favoured.' : ''}`
+      : uf || ur ? 'You found one K. Press <b>⇄ Write it in reverse</b> and predict the other one before you calculate it. How are the two expressions related?'
+      : 'Find K for the reaction as written first.'}</div>`;
+  drawKLine();
+}
+function drawKLine(){
+  const c = $('#kLine'), ctx = c.getContext('2d'); const { w, h } = fit(c); const dpr = c.width / w; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, h);
+  const lo = -10, hi = 10, m = 22, X = v => m + (v - lo) / (hi - lo) * (w - 2 * m), y = 52;
+  ctx.fillStyle = T['accent-soft']; ctx.fillRect(X(0), y - 10, X(hi) - X(0), 20);
+  ctx.fillStyle = T['surface-2']; ctx.fillRect(X(lo), y - 10, X(0) - X(lo), 20);
+  const F = getComputedStyle(document.body).fontFamily;
+  ctx.font = '700 12px ' + F; ctx.fillStyle = T.muted; ctx.textAlign = 'center';
+  for (let e = lo; e <= hi; e++){ ctx.fillRect(X(e) - .5, y + 10, 1, e % 2 ? 3 : 6); if (e % 4 === 0 || (w > 380 && e % 2 === 0)) ctx.fillText(e === 0 ? '1' : '10' + supTxt(e), X(e), y + 28); }
+  ctx.textAlign = 'left'; ctx.fillText('reactants favoured', X(lo), y - 16); ctx.textAlign = 'right'; ctx.fillText('products favoured', X(hi), y - 16);
+  if (!atEq()) return;
+  const mark = (K, col, name) => { const lv = clamp(Math.log10(K), lo, hi); ctx.beginPath(); ctx.arc(X(lv), y, 8, 0, TAU); ctx.fillStyle = col; ctx.fill(); ctx.font = '700 13px ' + F; ctx.textAlign = 'center'; ctx.fillStyle = col; ctx.fillText(name, clamp(X(lv), m + 24, w - m - 24), y - 16); };
+  const same = Math.abs(Math.log10(g.rx.K)) < 0.05;
+  if (unlocked(1)) mark(g.rx.K, T.fwd, same && unlocked(-1) ? 'Kf = Kr' : 'Kf');
+  if (unlocked(-1) && !(same && unlocked(1))) mark(1 / g.rx.K, T.rev, 'Kr');
+}
+
+/* ---------- approximation rule ---------- */
+function apxInfo(){
+  const L = leftSp(), Rt = rightSp(), c0 = g.traj ? g.c0Run : g.c0, K = Kdisp();
+  if (Rt.some(s => c0[s.id] > 0) || L.some(s => !(c0[s.id] > 0))) return null;
+  const s = L.reduce((a, b) => c0[b.id] < c0[a.id] ? b : a, L[0]);
+  return { s, ci: c0[s.id], K, lim: 1000 * K, yes: c0[s.id] >= 1000 * K };
+}
+function renderApprox(){
+  const box = $('#apxBox'), a = apxInfo();
+  if (!a){ box.innerHTML = `<div class="feedback info" style="margin-top:10px">The rule is used when a reaction starts with <b>only reactants</b>. Set every product to 0 (or press <b>Only reactant${leftSp().length > 1 ? 's' : ''}</b>) to try it.</div>`; return; }
+  const nm = `[${a.s.html}]<sub>i</sub>`;
+  let html = `<p style="margin:10px 0 0;font-size:15px">Here ${nm} = <b>${fmt(a.ci)} mol/L</b>${leftSp().length > 1 ? ' (the smaller starting reactant)' : ''}. Use your K from <b>Predict K</b>. Can we use the approximation?</p>
+    <div class="btnrow"><button class="btn" data-apx="1" aria-pressed="${g.apx === true}">Yes, [i] ≥ 1000 × K</button><button class="btn" data-apx="0" aria-pressed="${g.apx === false}">No, [i] &lt; 1000 × K</button></div>`;
+  if (g.apx !== null){
+    const right = g.apx === a.yes;
+    html += `<div class="feedback ${right ? 'ok' : 'bad'}"><b>${right ? 'Correct.' : 'Not this time.'}</b> K = ${fmt(a.K)}, so 1000 × K = <b>${fmt(a.lim)}</b>. ${nm} = ${fmt(a.ci)} is ${a.yes ? '<b>at least</b>' : '<b>less than</b>'} 1000 × K, so ${a.yes ? 'we <b>can</b> use the approximation [i] − x ≈ [i].' : 'we <b>cannot</b> use the approximation. We must keep the “− x” and solve the full equation.'}`;
+    if (atEq()){
+      const ce = eqConc();
+      html += `<br>Check with the graph: [${a.s.html}] went from ${fmt(a.ci)} to ${fmt(ce[a.s.id])} mol/L, a change of <b>${pct((a.ci - ce[a.s.id]) / a.ci)}</b>.`;
+      html += a.yes ? ' That is small enough to ignore.' : ' That is too big to ignore.';
+    } else html += '<br>Press ▶ Play to see how much it really changes.';
+    html += '</div>';
+  }
+  box.innerHTML = html;
+  box.querySelectorAll('[data-apx]').forEach(b => b.onclick = () => { g.apx = b.dataset.apx === '1'; renderApprox(); });
+}
+function pct(f){ const p = f * 100; return (p < 1 ? String(+p.toPrecision(2)) : p < 10 ? p.toFixed(1) : p.toFixed(0)) + ' %'; }
+
+/* ---------- charts ---------- */
+const concC = $('#concChart'), rateC = $('#rateChart');
+function tightMax(v){ if (v <= 0) return 1; const step = tickStep(v); return Math.ceil(v * 1.06 / step) * step; }
+function niceMax(v){ if (v <= 0) return 1; const e = Math.pow(10, Math.floor(Math.log10(v))); const f = v / e; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * e; }
+function tickStep(v){ const raw = v / 4, e = Math.pow(10, Math.floor(Math.log10(raw))), f = raw / e; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * e; }
+function chart(canvas, opts){
+  const ctx = canvas.getContext('2d'); const { w, h } = fit(canvas); const dpr = canvas.width / w; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, h);
+  const F = getComputedStyle(document.body).fontFamily;
+  const m = { l: 62, r: w < 520 ? 92 : 128, t: 14, b: 30 }, pw = w - m.l - m.r, ph = h - m.t - m.b;
+  const X = t => m.l + t / opts.tmax * pw;
+  const lg = opts.log;
+  const Y = lg ? v => v <= Math.pow(10, lg.lo) ? m.t + ph : m.t + ph - (Math.log10(v) - lg.lo) / (lg.hi - lg.lo) * ph
+               : v => m.t + ph - v / opts.ymax * ph;
+  if (opts.teq !== null && opts.tcur >= opts.teq){
+    ctx.fillStyle = T['accent-soft']; ctx.fillRect(X(opts.teq), m.t, X(opts.tmax) - X(opts.teq), ph);
+    ctx.setLineDash([6, 5]); ctx.strokeStyle = T.accent; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(X(opts.teq), m.t); ctx.lineTo(X(opts.teq), m.t + ph); ctx.stroke(); ctx.setLineDash([]);
+    let ty = opts.eqBottom ? m.t + ph - 8 : m.t + 16;
+    if (!opts.eqBottom && opts.series.length){
+      const ys = opts.series.map(s => Y(interp(s.pts, (opts.teq + opts.tmax) / 2)));
+      const cands = [m.t + 16, m.t + ph - 8, m.t + ph * 0.5, m.t + ph * 0.3, m.t + ph * 0.7];
+      let best = -1; cands.forEach(c => { const d = Math.min(...ys.map(y => Math.abs(y - (c - 5)))); if (d > best + 12){ best = d; ty = c; } });
+    }
+    ctx.font = '700 13px ' + F; ctx.fillStyle = T.accent; ctx.textAlign = 'left'; ctx.fillText(opts.eqText, X(opts.teq) + 8, ty);
+  }
+  ctx.font = '12px ' + F; ctx.fillStyle = T.muted; ctx.strokeStyle = T.line; ctx.lineWidth = 1; ctx.textAlign = 'right';
+  if (lg){
+    const span = lg.hi - lg.lo, every = span > 8 ? 2 : 1;
+    for (let e = lg.lo; e <= lg.hi; e++){ const y = Y(Math.pow(10, e)) - (e === lg.lo ? 0 : 0); const yy = e === lg.lo ? m.t + ph : y; ctx.beginPath(); ctx.moveTo(m.l, yy); ctx.lineTo(m.l + pw, yy); ctx.stroke(); if ((e - lg.lo) % every === 0) ctx.fillText(e === 0 ? '1' : '10' + supTxt(e), m.l - 6, yy + 4); }
+  } else {
+    const nt = opts.ystep ? Math.round(opts.ymax / opts.ystep) : opts.yTicks ? Math.max(2, Math.round(opts.ymax / tickStep(opts.ymax))) : 4; for (let i = 0; i <= nt; i++){ const v = opts.ymax * i / nt, y = Y(v); ctx.beginPath(); ctx.moveTo(m.l, y); ctx.lineTo(m.l + pw, y); ctx.stroke(); if (opts.yTicks) ctx.fillText(+v.toPrecision(3), m.l - 6, y + 4); }
+  }
+  ctx.strokeStyle = T.ink; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(m.l, m.t); ctx.lineTo(m.l, m.t + ph); ctx.lineTo(m.l + pw, m.t + ph); ctx.stroke();
+  ctx.textAlign = 'center'; ctx.fillStyle = T.muted; ctx.font = '700 12px ' + F; ctx.fillText('Time →', m.l + pw / 2, h - 8);
+  ctx.save(); ctx.translate(14, m.t + ph / 2); ctx.rotate(-Math.PI / 2); ctx.fillText(opts.yLabel, 0, 0); ctx.restore();
+  if (opts.empty){ ctx.font = '700 15px ' + F; ctx.fillStyle = T.muted; ctx.fillText(opts.empty, m.l + pw / 2, m.t + ph / 2); return; }
+  const ends = [];
+  ctx.save(); ctx.beginPath(); ctx.rect(m.l, m.t - 6, pw + 6, ph + 6); ctx.clip();
+  opts.series.forEach(s => {
+    ctx.beginPath(); let last = null;
+    for (const p of s.pts){ if (p[0] > opts.tcur) break; last = p; const x = X(p[0]), y = Y(p[1]); if (p === s.pts[0]) ctx.moveTo(x, y); else ctx.lineTo(x, y); }
+    if (opts.tcur < opts.tmax){ const v = interp(s.pts, opts.tcur); ctx.lineTo(X(opts.tcur), Y(v)); last = [opts.tcur, v]; }
+    ctx.strokeStyle = s.color; ctx.lineWidth = 4; ctx.setLineDash(s.dash || []); ctx.stroke(); ctx.setLineDash([]);
+    if (last){ ctx.beginPath(); ctx.arc(X(last[0]), Y(last[1]), 4, 0, TAU); ctx.fillStyle = s.color; ctx.fill(); if (s.label) ends.push({ y: Y(last[1]), label: s.label, color: s.color }); }
+  });
+  ctx.restore();
+  ends.sort((a, b) => a.y - b.y); for (let i = 1; i < ends.length; i++) if (ends[i].y - ends[i - 1].y < 17) ends[i].y = ends[i - 1].y + 17;
+  ctx.font = '700 13px ' + F; ctx.textAlign = 'left';
+  ends.forEach(e => { ctx.fillStyle = e.color; ctx.fillText(e.label, m.l + pw + 8, e.y + 4); });
+}
+function interp(pts, t){ for (let i = 1; i < pts.length; i++) if (pts[i][0] >= t){ const a = pts[i - 1], b = pts[i]; const k = (t - a[0]) / ((b[0] - a[0]) || 1); return a[1] + (b[1] - a[1]) * k; } return pts[pts.length - 1][1]; }
+function useLog(vals){
+  const mode = $('#axisSel').value; if (mode === 'lin') return false; if (mode === 'log') return true;
+  const pos = vals.filter(v => v > 0); if (!pos.length) return false;
+  return Math.min(...pos) < 0.04 * Math.max(...pos);
+}
+function drawGraphs(){
+  const rx = g.rx;
+  if (!g.traj){
+    chart(concC, { tmax: 1, ymax: niceMax(Math.max(...allSp(rx).map(s => g.c0[s.id]), 0.1) * 1.1), yTicks: true, yLabel: 'Concentration (mol/L)', teq: null, tcur: 0, series: [], empty: 'Set the starting concentrations, then press ▶ Play' });
+    chart(rateC, { tmax: 1, ymax: 1, yLabel: 'Rate', teq: null, tcur: 0, series: [], empty: '' }); $('#concCap').textContent = ''; return;
+  }
+  const tr = g.traj, c0 = g.c0Run, tcur = g.prog * tr.tmax, list = allSp(rx);
+  const groups = [];
+  list.forEach(s => { const sideR = rx.R.includes(s); const key = (sideR ? 'R' : 'P') + s.nu + ':' + c0[s.id].toFixed(6); let gr = groups.find(x => x.key === key); if (!gr){ gr = { key, sp: [] }; groups.push(gr); } gr.sp.push(s); });
+  const series = [];
+  groups.forEach(gr => gr.sp.forEach((s, i) => {
+    const sign = rx.R.includes(s) ? -1 : 1;
+    series.push({ pts: tr.pts.map(p => [p.t, Math.max(0, c0[s.id] + sign * s.nu * p.x)]), color: T[s.col], dash: i ? [8, 6] : null, label: i ? '' : gr.sp.map(q => `[${q.txt}]`).join(' and ') });
+  }));
+  let ymax = 0; series.forEach(s => s.pts.forEach(p => ymax = Math.max(ymax, p[1])));
+  const ystep = tickStep(ymax || 1), ymaxT = Math.ceil((ymax || 1) * 1.06 / ystep) * ystep;
+  const ce = eqConc(), eqVals = list.map(s => ce[s.id]);
+  let log = null;
+  if (useLog(eqVals.concat(list.map(s => c0[s.id])))){
+    const pos = eqVals.concat(list.map(s => c0[s.id])).filter(v => v > 0);
+    const hi = Math.ceil(Math.log10(ymax * 1.3)), lo = Math.max(hi - 12, Math.floor(Math.log10(Math.min(...pos))) - 1);
+    log = { lo, hi };
+  }
+  chart(concC, { tmax: tr.tmax, ymax: ymaxT, ystep, log, yTicks: true, yLabel: 'Concentration (mol/L)' + (log ? ', log scale' : ''), teq: tr.flat ? 0 : tr.teq, tcur, series, eqText: 'Equilibrium: concentrations constant' });
+  const fwdName = g.dir > 0 ? 'Forward rate' : 'Reverse rate', revName = g.dir > 0 ? 'Reverse rate' : 'Forward rate';
+  const rs = [{ pts: tr.pts.map(p => [p.t, p.f]), color: T.fwd, label: fwdName }, { pts: tr.pts.map(p => [p.t, p.r]), color: T.rev, label: revName, dash: [8, 6] }];
+  let rmax = 0; rs.forEach(s => s.pts.forEach(p => rmax = Math.max(rmax, p[1])));
+  chart(rateC, { tmax: tr.tmax, ymax: (rmax || 1) * 1.1, yTicks: false, yLabel: 'Rate', teq: tr.flat ? 0 : tr.teq, tcur, series: rs, eqText: 'Rates equal', eqBottom: true });
+  $('#concCap').textContent = (log ? 'log scale: each gridline ×10 · ' : '') + (tr.flat ? 'already at equilibrium' : (tr.xe > 0 ? (g.dir > 0 ? 'the forward reaction ran' : 'shifted toward the right of the original equation') : (g.dir > 0 ? 'the reverse reaction ran' : 'shifted toward the left of the original equation')));
+}
+
+/* ---------- K checking ---------- */
+function parseK(s){
+  s = s.trim().replace(/−/g, '-').replace(/\s+/g, '').replace(/,/g, '.');
+  s = s.replace(/[×xX*·]10\^?\(?([+\-]?\d+)\)?$/, 'e$1').replace(/^10\^\(?([+\-]?\d+)\)?$/, '1e$1');
+  if (!/^[+\-]?(\d+\.?\d*|\.\d+)(e[+\-]?\d+)?$/i.test(s)) return NaN; return parseFloat(s);
+}
+const needEq = '<div class="feedback info">Press ▶ Play and let the reaction reach equilibrium first.</div>';
+function checkK(){
+  const fb = $('#feedback');
+  if (!atEq()){ fb.innerHTML = needEq; return; }
+  const v = parseK($('#kGuess').value);
+  if (!isFinite(v) || v <= 0){ fb.innerHTML = '<div class="feedback info">Type a positive number, for example 0.0046, 4.6e-3 or 4.6×10^-3.</div>'; return; }
+  const ce = eqConc(), L = leftSp(), R = rightSp(), K = prodQ(R, L, ce), close = (a, b) => Math.abs(a - b) / b <= 0.03;
+  g.attempts++;
+  let msg, ok = false;
+  if (close(v, K)){ ok = true; msg = `<b>Correct.</b> K = ${fmt(K)}. ${K > 1.05 ? 'K &gt; 1, so this equilibrium lies to the right (products favoured).' : K < 0.95 ? 'K &lt; 1, so this equilibrium lies to the left (reactants favoured).' : 'K ≈ 1, so neither reactants nor products are strongly favoured.'}`; }
+  else if (close(v, 1 / K)) msg = 'That is the value for the <b>other direction</b>. Products go on top, reactants on the bottom, for the equation as it is written above.';
+  else { const noExp = (() => { let n = 1, d = 1; R.forEach(s => n *= ce[s.id]); L.forEach(s => d *= ce[s.id]); return n / d; })(); const mult = (() => { let n = 1, d = 1; R.forEach(s => n *= s.nu * ce[s.id]); L.forEach(s => d *= s.nu * ce[s.id]); return n / d; })();
+    const anyNu = allSp(g.rx).some(s => s.nu > 1);
+    if (anyNu && close(v, noExp)) msg = 'Close, but the coefficients are missing. Each coefficient becomes an <b>exponent</b> on its concentration.';
+    else if (anyNu && close(v, mult)) msg = 'Coefficients become <b>exponents</b>, not multipliers. Square [X] instead of doubling it.';
+    else msg = 'Not quite. Check that you used the <b>equilibrium</b> concentrations (not the initial ones) and the expression shown above.' + (g.attempts >= 2 ? ' You can tick <b>Reveal equilibrium concentrations</b> or press <b>Show solution</b>.' : ''); }
+  fb.innerHTML = `<div class="feedback ${ok ? 'ok' : 'bad'}">${msg}</div>`;
+  if (ok){ g.unlock[g.rx.id + (g.dir > 0 ? 'f' : 'r')] = true; showSolution(); renderReverse(); }
+}
+function showSolution(){
+  if (!atEq()){ $('#feedback').innerHTML = needEq; return; }
+  const ce = eqConc(), L = leftSp(), R = rightSp(), K = prodQ(R, L, ce);
+  $('#solution').innerHTML = `<div class="solution"><div class="label-up">Solution</div><div class="kexpr"><span>K =</span> ${fracHTML(R, L, ce)} <span>=</span> <span class="big">${fmt(K)}</span></div></div>`;
+}
+$('#checkBtn').onclick = checkK; $('#kGuess').onkeydown = e => { if (e.key === 'Enter') checkK(); };
+$('#revealBtn').onclick = () => { if (!atEq()) return showSolution(); g.unlock[g.rx.id + (g.dir > 0 ? 'f' : 'r')] = true; showSolution(); renderReverse(); };
+$('#revealEq').onchange = renderEqTable;
+
+function clearAnswers(){ g.attempts = 0; $('#kGuess').value = ''; $('#feedback').innerHTML = ''; $('#solution').innerHTML = ''; }
+function setReaction(i){
+  g.rx = RXNS[i]; g.dir = 1; g.c0 = { ...g.rx.def }; clearAnswers(); $('#revealEq').checked = false;
+  renderEq(); buildSliders(); buildPresets(); staleRun();
+}
+$('#runBtn').onclick = () => {
+  if (g.traj && g.running){ g.running = false; g.paused = true; $('#runBtn').textContent = '▶ Play'; return; }
+  if (g.traj && g.paused){ g.running = true; g.paused = false; $('#runBtn').textContent = '❚❚ Pause'; return; }
+  run();
+};
+rxSel.onchange = e => setReaction(+e.target.value);
+$('#flipBtn').onclick = () => { g.dir *= -1; g.apx = null; clearAnswers(); renderEq(); buildSliders(); renderEqTable(); drawGraphs(); };
+$('#showK').onchange = () => { renderReverse(); };
+$('#axisSel').onchange = drawGraphs;
+
+/* ---------- main loop ---------- */
+function redrawAll(){ drawGraphs(); drawKLine(); }
+window.addEventListener('resize', redrawAll);
+let last = performance.now();
+function frame(now){
+  const dtReal = Math.min(0.05, (now - last) / 1000); last = now;
+  if (g.running){
+    const wasEq = atEq();
+    g.prog = Math.min(1, g.prog + dtReal / 5);
+    drawGraphs(); if (!wasEq && atEq()) renderEqTable();
+    if (g.prog >= 1){ g.running = false; $('#runBtn').textContent = '↺ Replay'; renderEqTable(); }
+  }
+  requestAnimationFrame(frame);
+}
+
+/* ---------- full screen ---------- */
+const fsBtn = $('#fsBtn');
+function fsEl(){ return document.fullscreenElement || document.webkitFullscreenElement; }
+function syncFs(){ fsBtn.textContent = fsEl() ? '✕ Exit full screen' : '⛶ Full screen'; setTimeout(redrawAll, 60); }
+function toggleFs(){
+  const el = document.documentElement;
+  if (fsEl()){ (document.exitFullscreen || document.webkitExitFullscreen).call(document); return; }
+  const req = el.requestFullscreen || el.webkitRequestFullscreen;
+  if (!req){ fsBtn.title = 'Full screen is not available here. Use your browser\'s full-screen key (F11).'; return; }
+  try { const p = req.call(el); if (p && p.catch) p.catch(() => { fsBtn.textContent = 'Full screen blocked: press F11'; }); } catch (e) { fsBtn.textContent = 'Full screen blocked: press F11'; }
+}
+fsBtn.onclick = toggleFs;
+document.addEventListener('fullscreenchange', syncFs); document.addEventListener('webkitfullscreenchange', syncFs);
+document.addEventListener('keydown', e => { if ((e.key === 'f' || e.key === 'F') && !/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) toggleFs(); });
+
+/* ---------- boot ---------- */
+window.__eqq = { simulate, RXNS, solveEq, g, setReaction, eqConc, atEq };
+setReaction(0);
+requestAnimationFrame(t => { last = t; frame(t); });
+})();
+</script>
+</body></html>
