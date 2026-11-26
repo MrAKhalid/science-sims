@@ -168,6 +168,9 @@ footer{margin-top:26px;font-size:13px;color:var(--muted)}
 :fullscreen body, body:fullscreen{overflow-y:auto}
 @media (prefers-reduced-motion: reduce){ .meter .bar i{transition:none} }
 /* sim 2 layout */
+#rxSelect{max-width:100%;text-overflow:ellipsis}
+.g-head > label.field{max-width:280px;min-width:0}
+.kgiven{font-size:clamp(16px,1.5vw,21px)!important;padding:5px 10px!important}
 .bigtabs{margin:0 0 12px;display:inline-flex}
 .bigtabs button{font-size:18px;padding:10px 22px}
 .bigtabs{background:var(--ok-soft);border:1.5px solid var(--ok)}
@@ -211,7 +214,6 @@ tr.eqhidden td{color:var(--muted)}
     <h1>Quantitative Changes in Equilibrium Systems</h1>
   </div>
   <div class="headright">
-    <label class="check" id="showKLabel"><input type="checkbox" id="showK"> Show K values (teacher)</label>
     <button class="btn" id="fsBtn" title="Full screen (F)">⛶ Full screen</button>
   </div>
 </header>
@@ -257,7 +259,7 @@ tr.eqhidden td{color:var(--muted)}
       <div class="card" id="predictCard">
         <h2>Predict K</h2>
         <p class="small" style="margin:4px 0 0">Write the equilibrium law, find the equilibrium concentrations, and calculate K for the reaction as written above.</p>
-        <div style="margin-top:10px" class="kexpr"><span>K<sub>eq</sub> =</span><span id="kExpr"></span></div>
+        <div style="margin-top:10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap"><span class="kexpr"><span>K<sub>eq</sub> =</span><span id="kExpr"></span></span><button class="btn" id="lawBtn" aria-pressed="false">Show the equilibrium law</button></div>
         <div class="tablewrap"><table class="eqtable" id="eqTable"></table></div>
         <label class="check" style="margin-top:10px"><input type="checkbox" id="revealEq"> Reveal equilibrium concentrations</label>
         <div class="predict">
@@ -281,7 +283,7 @@ tr.eqhidden td{color:var(--muted)}
         <div id="cFeedback" aria-live="polite"></div>
         <div id="cSolution"></div>
       </div>
-      <div class="card" id="approxCard">
+      <div class="card" id="approxCard" hidden>
         <h2>Can we use the approximation rule?</h2>
         <div id="apxBox" aria-live="polite"></div>
       </div>
@@ -289,7 +291,7 @@ tr.eqhidden td{color:var(--muted)}
   </div>
 </main>
 
-<footer>Graphs come from a simple rate model (rate = k[A]<sup>a</sup>[B]<sup>b</sup>); time units are arbitrary. All substances are gases, and K values are K<sub>c</sub> at the temperature shown, from standard textbook data.</footer>
+<footer>Graphs come from a simple rate model (rate = k[A]<sup>a</sup>[B]<sup>b</sup>); time units are arbitrary. K values are K<sub>c</sub> at the temperature shown. Solids and liquids are assumed to always be present, so they never run out.</footer>
 </div>
 
 <script>
@@ -315,7 +317,7 @@ function fit(canvas){
 }
 
 /* ---------- reactions ---------- */
-const sp = (id, html, txt, nu, max, col) => ({ id, html, txt, nu, max, col });
+const sp = (id, html, txt, nu, max, col, ph = 'g') => ({ id, html, txt, nu, max, col, ph });
 const RXNS = [
   { id: 'hi', name: 'H₂ + I₂ ⇌ 2HI   (448 °C)', K: 50.5,
     R: [sp('H2', 'H<sub>2</sub>', 'H₂', 1, 2, 'sp2'), sp('I2', 'I<sub>2</sub>', 'I₂', 1, 2, 'sp4')],
@@ -372,18 +374,42 @@ const RXNS = [
     P: [sp('NH3', 'NH<sub>3</sub>', 'NH₃', 2, 2, 'sp4')],
     presets: [['Only reactants', { N2: 1.00, H2: 3.00, NH3: 0 }], ['Only product', { N2: 0, H2: 0, NH3: 2.00 }], ['Mixture', { N2: 1.00, H2: 1.00, NH3: 0.500 }]],
     def: { N2: 1.00, H2: 3.00, NH3: 0 }, note: 'The Haber process, which makes ammonia for fertilizers.' }
+  ,
+  { id: 'boud', name: 'C(s) + CO₂(g) ⇌ 2CO(g)   (about 1100 K)', K: 0.11,
+    LA: [sp('C', 'C', 'C', 1, 0, 'sp5', 's'), sp('CO2', 'CO<sub>2</sub>', 'CO₂', 1, 1, 'sp4')],
+    PA: [sp('CO', 'CO', 'CO', 2, 2, 'sp2')],
+    presets: [['Only reactants', { CO2: 0.500, CO: 0 }], ['Only product', { CO2: 0, CO: 0.500 }], ['Mixture', { CO2: 0.500, CO: 0.100 }]],
+    def: { CO2: 0.500, CO: 0 }, note: 'Carbon dioxide passing over red-hot coke (solid carbon) in a blast furnace forms carbon monoxide. There is always plenty of solid carbon.' },
+  { id: 'caco3', name: 'CaCO₃(s) ⇌ CaO(s) + CO₂(g)   (800 °C)', K: 0.0132,
+    LA: [sp('CaCO3', 'CaCO<sub>3</sub>', 'CaCO₃', 1, 0, 'sp5', 's')],
+    PA: [sp('CaO', 'CaO', 'CaO', 1, 0, 'sp3', 's'), sp('CO2', 'CO<sub>2</sub>', 'CO₂', 1, 0.05, 'sp4')],
+    presets: [['No CO₂ gas yet', { CO2: 0 }], ['Extra CO₂ added', { CO2: 0.0300 }]],
+    def: { CO2: 0 }, note: 'Limestone heated in a closed container to make lime. Some solid CaCO₃ and CaO are always present.' },
+  { id: 'nh4hs', name: 'NH₄HS(s) ⇌ NH₃(g) + H₂S(g)   (25 °C)', K: 1.8e-4,
+    LA: [sp('NH4HS', 'NH<sub>4</sub>HS', 'NH₄HS', 1, 0, 'sp5', 's')],
+    PA: [sp('NH3', 'NH<sub>3</sub>', 'NH₃', 1, 0.05, 'sp2'), sp('H2S', 'H<sub>2</sub>S', 'H₂S', 1, 0.05, 'sp3')],
+    presets: [['Only solid NH₄HS', { NH3: 0, H2S: 0 }], ['Extra NH₃ added', { NH3: 0.0300, H2S: 0 }]],
+    def: { NH3: 0, H2S: 0 }, note: 'Solid ammonium hydrogen sulfide in a sealed flask. Some solid always remains.' },
+  { id: 'h2ovap', name: 'H₂O(l) ⇌ H₂O(g)   (25 °C)', K: 1.28e-3,
+    LA: [sp('H2Ol', 'H<sub>2</sub>O', 'H₂O', 1, 0, 'sp2', 'l')],
+    PA: [sp('H2Og', 'H<sub>2</sub>O', 'H₂O(g)', 1, 0.005, 'sp2')],
+    presets: [['Dry air space', { H2Og: 0 }], ['Too much vapour', { H2Og: 0.00300 }]],
+    def: { H2Og: 0 }, note: 'Water in a closed bottle. The air space fills with water vapour until evaporation and condensation happen at the same rate.' }
 ];
+/* solids and liquids appear in the equation only; R and P (used for K, rates, graphs and tables) hold the gases */
+RXNS.forEach(rx => { rx.LA = rx.LA || rx.R; rx.PA = rx.PA || rx.P; rx.R = rx.LA.filter(s => s.ph === 'g'); rx.P = rx.PA.filter(s => s.ph === 'g'); rx.het = rx.LA.concat(rx.PA).some(s => s.ph !== 'g'); });
 const g = { rx: RXNS[0], dir: 1, c0: {}, c0Run: null, traj: null, prog: 0, running: false, paused: false, unlock: {}, attempts: 0, apx: null, mode: 'K', guess: null };
 
 const allSp = rx => rx.R.concat(rx.P);
 const leftSp = () => g.dir > 0 ? g.rx.R : g.rx.P;
 const rightSp = () => g.dir > 0 ? g.rx.P : g.rx.R;
 const Kdisp = () => g.dir > 0 ? g.rx.K : 1 / g.rx.K;
-const unlocked = dir => $('#showK').checked || !!g.unlock[g.rx.id + (dir > 0 ? 'f' : 'r')];
+const unlocked = dir => !!g.unlock[g.rx.id + (dir > 0 ? 'f' : 'r')];
 
-function eqHTML(left, right){ const side = a => a.map(s => `${s.nu > 1 ? s.nu : ''}${s.html}(g)`).join(' + '); return `${side(left)} <span class="arrow">⇌</span> ${side(right)}`; }
+const leftAll = () => g.dir > 0 ? g.rx.LA : g.rx.PA, rightAll = () => g.dir > 0 ? g.rx.PA : g.rx.LA;
+function eqHTML(left, right){ const side = a => a.map(s => `${s.nu > 1 ? s.nu : ''}${s.html}(${s.ph})`).join(' + '); return `${side(left)} <span class="arrow">⇌</span> ${side(right)}`; }
 function termHTML(list, vals){ return list.map(s => { const base = vals ? `(${fmt(vals[s.id])})` : `[${s.html}]`; return base + (s.nu > 1 ? `<sup>${s.nu}</sup>` : ''); }).join(vals ? ' × ' : ''); }
-function fracHTML(top, bot, vals){ return `<span class="frac"><span>${termHTML(top, vals)}</span><span>${termHTML(bot, vals)}</span></span>`; }
+function fracHTML(top, bot, vals){ const t = top.length ? termHTML(top, vals) : '1'; return bot.length ? `<span class="frac"><span>${t}</span><span>${termHTML(bot, vals)}</span></span>` : t; }
 function prodQ(top, bot, c){ let n = 1, d = 1; top.forEach(s => n *= Math.pow(c[s.id], s.nu)); bot.forEach(s => d *= Math.pow(c[s.id], s.nu)); return n / d; }
 
 function supTxt(n){ const d = '⁰¹²³⁴⁵⁶⁷⁸⁹'; return (n < 0 ? '⁻' : '') + String(Math.abs(n)).split('').map(c => d[+c]).join(''); }
@@ -391,7 +417,7 @@ function fmt(v){ if (!isFinite(v)) return '—'; if (v === 0) return '0'; const 
 
 /* ---------- equilibrium + kinetics ---------- */
 function concAt(rx, c0, x){ const c = {}; rx.R.forEach(s => c[s.id] = c0[s.id] - s.nu * x); rx.P.forEach(s => c[s.id] = c0[s.id] + s.nu * x); return c; }
-function bounds(rx, c0){ let hi = Infinity, lo = -Infinity; rx.R.forEach(s => hi = Math.min(hi, c0[s.id] / s.nu)); rx.P.forEach(s => lo = Math.max(lo, -c0[s.id] / s.nu)); return [lo, hi]; }
+function bounds(rx, c0){ let hi = Infinity, lo = -Infinity; rx.R.forEach(s => hi = Math.min(hi, c0[s.id] / s.nu)); rx.P.forEach(s => lo = Math.max(lo, -c0[s.id] / s.nu)); if (hi === Infinity) hi = lo + 10; if (lo === -Infinity) lo = hi - 10; return [lo, hi]; }
 function rates(rx, c0, x){ const c = concAt(rx, c0, x); let f = 1, r = 1; rx.R.forEach(s => f *= Math.pow(Math.max(0, c[s.id]), s.nu)); rx.P.forEach(s => r *= Math.pow(Math.max(0, c[s.id]), s.nu)); return { f, r: r / rx.K }; }
 function solveEq(rx, c0){
   const [lo, hi] = bounds(rx, c0); if (hi - lo < 1e-15) return lo;
@@ -422,6 +448,7 @@ function buildSliders(){
   const box = $('#sliders'); box.innerHTML = '';
   [['Reactants', leftSp()], ['Products', rightSp()]].forEach(([lab, list]) => {
     const h = document.createElement('div'); h.className = 'label-up grouplabel'; h.textContent = lab + (g.dir < 0 ? ' (as written)' : ''); box.appendChild(h);
+    if (!list.length){ const n = document.createElement('p'); n.className = 'note'; n.style.margin = '4px 0 0'; n.textContent = 'No gases: only solids or liquids, which are always present.'; box.appendChild(n); }
     list.forEach(s => {
       const row = document.createElement('div'); row.className = 'sl';
       row.innerHTML = `<label class="nm" for="r_${s.id}" style="color:var(--${s.col})">[${s.html}]</label><input type="range" id="r_${s.id}" min="0" max="${s.max}" step="${s.max / 1000}" value="${g.c0[s.id]}"><input type="number" id="n_${s.id}" min="0" max="${s.max}" step="0.0001" value="${g.c0[s.id]}" aria-label="[${s.txt}] initial">`;
@@ -436,16 +463,16 @@ function buildPresets(){
   const box = $('#presets'); box.innerHTML = '';
   const L = leftSp(), R = rightSp(), pl = (n, w) => w + (n > 1 ? 's' : '');
   const items = g.rx.presets.map(([, vals]) => {
-    const lab = R.every(s => !vals[s.id]) ? 'Only ' + pl(L.length, 'reactant') : L.every(s => !vals[s.id]) ? 'Only ' + pl(R.length, 'product') : 'Mixture';
+    const lab = !L.length || !R.length ? g.rx.presets.find(p => p[1] === vals)[0] : R.every(s => !vals[s.id]) ? 'Only ' + pl(L.length, 'reactant') : L.every(s => !vals[s.id]) ? 'Only ' + pl(R.length, 'product') : 'Mixture';
     return { lab, vals, ord: lab === 'Mixture' ? 2 : lab.includes('reactant') ? 0 : 1 };
   }).sort((a, b) => a.ord - b.ord);
   items.forEach(({ lab, vals }) => { const b = document.createElement('button'); b.className = 'btn'; b.textContent = lab; b.onclick = () => { Object.assign(g.c0, vals); buildSliders(); staleRun(); }; box.appendChild(b); });
 }
 function renderEq(){
-  $('#rxEq').innerHTML = eqHTML(leftSp(), rightSp());
+  $('#rxEq').innerHTML = eqHTML(leftAll(), rightAll());
   $('#rxDirLabel').textContent = g.dir > 0 ? 'Reaction as written' : 'Written in reverse';
   $('#flipBtn').setAttribute('aria-pressed', g.dir < 0);
-  $('#kExpr').innerHTML = fracHTML(rightSp(), leftSp());
+  $('#kExpr').innerHTML = g.law ? fracHTML(rightSp(), leftSp()) : '<span class="big">?</span>'; $('#lawBtn').setAttribute('aria-pressed', !!g.law); $('#lawBtn').textContent = g.law ? 'Hide the equilibrium law' : 'Show the equilibrium law';
   $('#rxNote').textContent = g.rx.note;
   $('#kGiven').innerHTML = `K<sub>eq</sub> = ${fmt(Kgiven())} <span class="small">at ${tempOf(g.rx)}</span>`;
 }
@@ -457,7 +484,7 @@ const r3 = v => v === 0 ? 0 : +v.toPrecision(3);
 /* the equilibrium concentrations exactly as shown on screen (3 sig figs); every K a student is marked against uses these */
 function eqShown(){ const ce = eqConc(), o = {}; for (const k in ce) o[k] = r3(ce[k]); return o; }
 const Kgiven = () => r3(Kdisp());
-const tempOf = rx => (rx.name.match(/\(([^)]+)\)/) || ['', ''])[1];
+const tempOf = rx => (rx.name.match(/\(([^)]+)\)\s*$/) || ['', ''])[1];
 
 function renderEqTable(){
   const tb = $('#eqTable'), list = leftSp().concat(rightSp());
@@ -475,12 +502,14 @@ function drawKLine(){}
 /* ---------- approximation rule ---------- */
 function apxInfo(){
   const L = leftSp(), Rt = rightSp(), c0 = g.traj ? g.c0Run : g.c0, K = Kdisp();
+  if (!L.length) return { none: true };
   if (Rt.some(s => c0[s.id] > 0) || L.some(s => !(c0[s.id] > 0))) return null;
   const s = L.reduce((a, b) => c0[b.id] < c0[a.id] ? b : a, L[0]);
   return { s, ci: c0[s.id], K, lim: 1000 * K, yes: c0[s.id] >= 1000 * K };
 }
 function renderApprox(){
   const box = $('#apxBox'), a = apxInfo();
+  if (a && a.none){ box.innerHTML = '<p class="small" style="margin:8px 0 0">Not needed here: there is no gaseous reactant, so nothing appears in the denominator.</p>'; return; }
   if (!a){ box.innerHTML = `<p class="small" style="margin:8px 0 0">Start with only reactant${leftSp().length > 1 ? 's' : ''} to use the rule.</p>`; return; }
   let html = `<div class="btnrow"><button class="btn" data-apx="1" aria-pressed="${g.apx === true}">Yes, [i] ≥ 1000 × K</button><button class="btn" data-apx="0" aria-pressed="${g.apx === false}">No, [i] &lt; 1000 × K</button></div>`;
   if (g.apx !== null){
@@ -609,7 +638,8 @@ function checkK(){
     const anyNu = allSp(g.rx).some(s => s.nu > 1);
     if (anyNu && close(v, noExp)) msg = 'Close, but the coefficients are missing. Each coefficient becomes an <b>exponent</b> on its concentration.';
     else if (anyNu && close(v, mult)) msg = 'Coefficients become <b>exponents</b>, not multipliers. Square [X] instead of doubling it.';
-    else msg = 'Not quite. Check that you used the <b>equilibrium</b> concentrations (not the initial ones) and the expression shown above.' + (g.attempts >= 2 ? ' You can tick <b>Reveal equilibrium concentrations</b> or press <b>Show solution</b>.' : ''); }
+    else if (g.rx.het && g.attempts <= 2) msg = 'Not quite. Remember that pure <b>solids and liquids are left out</b> of the equilibrium law: only the gases appear. Check that you used the equilibrium concentrations.';
+    else msg = 'Not quite. Check that you used the <b>equilibrium</b> concentrations (not the initial ones) and the right equilibrium law.' + (g.attempts >= 2 ? ' You can tick <b>Reveal equilibrium concentrations</b> or press <b>Show solution</b>.' : ''); }
   fb.innerHTML = `<div class="feedback ${ok ? 'ok' : 'bad'}">${msg}</div>`;
   if (ok){ g.unlock[g.rx.id + (g.dir > 0 ? 'f' : 'r')] = true; showSolution(); renderReverse(); }
 }
@@ -622,7 +652,7 @@ $('#checkBtn').onclick = checkK; $('#kGuess').onkeydown = e => { if (e.key === '
 $('#revealBtn').onclick = () => { if (!atEq()) return showSolution(); g.unlock[g.rx.id + (g.dir > 0 ? 'f' : 'r')] = true; showSolution(); renderReverse(); };
 $('#revealEq').onchange = renderEqTable;
 
-function clearAnswers(){ g.attempts = 0; $('#kGuess').value = ''; $('#feedback').innerHTML = ''; $('#solution').innerHTML = ''; }
+function clearAnswers(){ g.law = false; g.attempts = 0; $('#kGuess').value = ''; $('#feedback').innerHTML = ''; $('#solution').innerHTML = ''; }
 function setReaction(i){
   g.rx = RXNS[i]; g.dir = 1; g.c0 = { ...g.rx.def }; g.attempts = 0; clearAnswers(); $('#revealEq').checked = false; rxSel.value = i;
   renderEq(); buildSliders(); buildPresets(); staleRun();
@@ -633,6 +663,7 @@ $('#runBtn').onclick = () => {
   run();
 };
 rxSel.onchange = e => setReaction(+e.target.value);
+$('#lawBtn').onclick = () => { g.law = !g.law; renderEq(); };
 
 /* ---------- mode 2: determining equilibrium concentrations ---------- */
 function rxDir(){ return { R: leftSp(), P: rightSp(), K: Kdisp() }; }
@@ -665,11 +696,12 @@ function iceSolution(){
   const term = s => { const e = eex(s); return (/ /.test(e) || s.nu > 1 ? `(${e})` : e) + (s.nu > 1 ? `<sup>${s.nu}</sup>` : ''); };
   const a = apxInfo(), useApx = a && a.yes;
   const termApx = s => L.includes(s) && useApx ? `(${fmt(c0[s.id])})` + (s.nu > 1 ? `<sup>${s.nu}</sup>` : '') : term(s);
-  const frac = (top, bot, fn) => `<span class="frac"><span>${top.map(fn).join(' ')}</span><span>${bot.map(fn).join(' ')}</span></span>`;
+  const frac = (top, bot, fn) => { const t = top.length ? top.map(fn).join(' ') : '1'; return bot.length ? `<span class="frac"><span>${t}</span><span>${bot.map(fn).join(' ')}</span></span>` : t; };
   const anyStart = list.filter(s => c0[s.id] > 0);
   let html = `<div class="solution"><div class="label-up">Solution</div>
     <ol class="steps">
-    <li>${R.every(s => c0[s.id] === 0) ? 'There are no products yet, so the reaction can only go forward.' : L.every(s => c0[s.id] === 0) ? 'There are no reactants yet, so the reaction can only go in reverse.' : (() => { let n = 1, d = 1; R.forEach(s => n *= Math.pow(c0[s.id], s.nu)); L.forEach(s => d *= Math.pow(c0[s.id], s.nu)); const q = n / d; return `Q = ${fmt(r3(q))} is ${q < K ? 'less' : 'greater'} than K, so the reaction shifts ${q < K ? 'right (forward)' : 'left (reverse)'}.`; })()} Let x be the change.</li>
+    ${g.rx.het ? `<li>Leave out ${leftAll().concat(rightAll()).filter(s => s.ph !== 'g').map(s => s.html + '(' + s.ph + ')').join(' and ')}: pure solids and liquids do not appear in K.</li>` : ''}
+    <li>${R.length && R.every(s => c0[s.id] === 0) ? `There ${R.length > 1 ? 'are' : 'is'} no ${g.rx.het ? 'gaseous ' : ''}product yet, so the reaction can only go forward.` : L.length && L.every(s => c0[s.id] === 0) ? `There ${L.length > 1 ? 'are' : 'is'} no ${g.rx.het ? 'gaseous ' : ''}reactant yet, so the reaction can only go in reverse.` : (() => { let n = 1, d = 1; R.forEach(s => n *= Math.pow(c0[s.id], s.nu)); L.forEach(s => d *= Math.pow(c0[s.id], s.nu)); const q = n / d; return `Q = ${fmt(r3(q))} is ${q < K ? 'less' : 'greater'} than K, so the reaction shifts ${q < K ? 'right (forward)' : 'left (reverse)'}.`; })()} Let x be the change.</li>
     <li><div class="tablewrap"><table class="eqtable ice"><tr><th></th>${list.map(s => `<th style="color:var(--${s.col})">[${s.html}]</th>`).join('')}</tr>
       <tr><td>I</td>${list.map(s => `<td class="num">${fmt(c0[s.id])}</td>`).join('')}</tr>
       <tr><td>C</td>${list.map(s => `<td class="num">${chg(s)}</td>`).join('')}</tr>
@@ -693,14 +725,13 @@ function buildRxOptions(){
 function setMode(m){
   g.mode = m; const C = m === 'C';
   $('#tab-K').setAttribute('aria-selected', !C); $('#tab-C').setAttribute('aria-selected', C);
-  $('#predictCard').hidden = C; $('#concCard').hidden = !C;
-  $('#runBtn').hidden = C; $('#showKLabel').hidden = C; $('#kGiven').hidden = !C;
+  $('#predictCard').hidden = C; $('#approxCard').hidden = !C; $('#concCard').hidden = !C;
+  $('#runBtn').hidden = C; $('#kGiven').hidden = !C;
   setReaction(buildRxOptions());
   try { history.replaceState(null, '', C ? '#concentrations' : '#constants'); } catch (e) {}
 }
 $('#tab-K').onclick = () => setMode('K'); $('#tab-C').onclick = () => setMode('C');
 $('#flipBtn').onclick = () => { g.dir *= -1; g.apx = null; clearAnswers(); renderEq(); buildSliders(); buildPresets(); staleRun(); };
-$('#showK').onchange = () => { renderReverse(); };
 $('#axisSel').onchange = drawGraphs;
 
 /* ---------- main loop ---------- */
