@@ -1,0 +1,788 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"></head><body><title>Introduction to Equilibrium Systems</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,750&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a lab bench. Header with two tabs; each tab is a stage (simulation) + an instrument panel (readouts). */
+:root{
+  --bg:#EEF3F4; --surface:#FFFFFF; --surface-2:#E5ECEE; --ink:#11232B; --muted:#52646C; --line:#CFDADE;
+  --accent:#0A6A86; --accent-soft:rgba(10,106,134,.12); --on-accent:#FFFFFF;
+  --fwd:#C96A17; --rev:#5B46BD; --ok:#22744A; --bad:#B23B26; --ok-soft:rgba(34,116,74,.12); --bad-soft:rgba(178,59,38,.10);
+  --sp1:#C0392B; --sp2:#2563B0; --sp3:#2F8442; --sp4:#7A4FC0; --sp5:#B86E00;
+  --liquid:rgba(70,145,200,.17); --liquid-line:rgba(30,100,160,.55); --glass:#7D939C; --glass-fill:rgba(255,255,255,.55);
+  --o:#D8453A; --c:#3B4148; --h:#FFFFFF; --n:#3E6FD8; --atomline:rgba(0,0,0,.38);
+  --ca:#A8C35F; --i2:#6E2B90; --i2-gas:rgba(140,60,180,.30); --ice:#DDF1F8; --ice-line:#86BCD2;
+  --solid:#ECE6DA; --solid-line:#B5A992; --iodine-solid:#3E3346; --sky:#D7E8F1; --sea:#2E6F92; --no2:#9A4B14;
+  --na:#9478CF; --cl:#4EAE70; --cap:#C0392B; --label:#11232B; --frame:#0A6A86;
+  --font-display:'Bricolage Grotesque','Segoe UI',system-ui,sans-serif;
+  --font-body:'Atkinson Hyperlegible',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0E171B; --surface:#152229; --surface-2:#1C2C34; --ink:#E5EEF1; --muted:#97A9B1; --line:#2B3D46;
+  --accent:#4DB6D3; --accent-soft:rgba(77,182,211,.16); --on-accent:#06181F;
+  --fwd:#F0A24E; --rev:#A595F2; --ok:#5DCB8E; --bad:#F08A72; --ok-soft:rgba(93,203,142,.14); --bad-soft:rgba(240,138,114,.12);
+  --sp1:#F07A6A; --sp2:#6FA8F0; --sp3:#6CC97E; --sp4:#B497F2; --sp5:#F0B04E;
+  --liquid:rgba(80,160,220,.20); --liquid-line:rgba(120,190,240,.6); --glass:#8FA6AF; --glass-fill:rgba(255,255,255,.06);
+  --o:#EE6A5E; --c:#9AA3AB; --h:#F1F5F7; --n:#78A0F5; --atomline:rgba(0,0,0,.55);
+  --ca:#B9D277; --i2:#B57BE0; --i2-gas:rgba(170,100,220,.30); --ice:#2B5363; --ice-line:#6FB2CC;
+  --solid:#4A453C; --solid-line:#8C8170; --iodine-solid:#5C4E68; --sky:#1A2E3A; --sea:#1D4A63; --no2:#C0682A;
+  --na:#B39BEA; --cl:#77CC93; --cap:#E0675A; --label:#E5EEF1; --frame:#4DB6D3; color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0E171B; --surface:#152229; --surface-2:#1C2C34; --ink:#E5EEF1; --muted:#97A9B1; --line:#2B3D46;
+  --accent:#4DB6D3; --accent-soft:rgba(77,182,211,.16); --on-accent:#06181F;
+  --fwd:#F0A24E; --rev:#A595F2; --ok:#5DCB8E; --bad:#F08A72; --ok-soft:rgba(93,203,142,.14); --bad-soft:rgba(240,138,114,.12);
+  --sp1:#F07A6A; --sp2:#6FA8F0; --sp3:#6CC97E; --sp4:#B497F2; --sp5:#F0B04E;
+  --liquid:rgba(80,160,220,.20); --liquid-line:rgba(120,190,240,.6); --glass:#8FA6AF; --glass-fill:rgba(255,255,255,.06);
+  --o:#EE6A5E; --c:#9AA3AB; --h:#F1F5F7; --n:#78A0F5; --atomline:rgba(0,0,0,.55);
+  --ca:#B9D277; --i2:#B57BE0; --i2-gas:rgba(170,100,220,.30); --ice:#2B5363; --ice-line:#6FB2CC;
+  --solid:#4A453C; --solid-line:#8C8170; --iodine-solid:#5C4E68; --sky:#1A2E3A; --sea:#1D4A63; --no2:#C0682A;
+  --na:#B39BEA; --cl:#77CC93; --cap:#E0675A; --label:#E5EEF1; --frame:#4DB6D3; color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.5}
+.wrap{max-width:1360px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px 40px}
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;padding-bottom:14px;border-bottom:1px solid var(--line);margin-bottom:18px}
+.brand .eyebrow{font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:700}
+h1{font-family:var(--font-display);font-weight:750;font-size:clamp(26px,3.2vw,38px);line-height:1.05;margin:2px 0 0;text-wrap:balance;letter-spacing:-.01em}
+h2{font-family:var(--font-display);font-weight:600;font-size:22px;line-height:1.2;margin:0;text-wrap:balance}
+h3{font-family:var(--font-display);font-weight:600;font-size:17px;margin:0}
+.tabs{display:flex;gap:4px;background:var(--surface-2);padding:4px;border-radius:10px;flex-wrap:wrap}
+.tabs button{font:inherit;font-weight:700;font-size:15px;border:0;background:transparent;color:var(--muted);padding:9px 16px;border-radius:7px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.tabs button:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+sub,sup{font-size:.7em;line-height:0}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;margin-bottom:14px}
+label.field{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+select{font:inherit;font-size:17px;font-weight:700;color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:8px;padding:8px 12px;min-width:0;max-width:100%}
+.btn{font:inherit;font-weight:700;font-size:15px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);padding:8px 14px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--ink)}
+.check{display:inline-flex;gap:8px;align-items:center;font-weight:700;font-size:15px;cursor:pointer}
+.check input{width:18px;height:18px;accent-color:var(--accent)}
+.stage-grid{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:1020px){.stage-grid{grid-template-columns:minmax(0,1fr)}}
+.stage{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;min-width:0}
+.stage canvas{display:block;width:100%;height:auto}
+.stage-controls{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;align-items:center}
+.status{font-size:14px;color:var(--muted);margin-left:auto}
+.panel{display:flex;flex-direction:column;gap:14px;min-width:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;min-width:0}
+.eqn{font-family:var(--font-mono);font-size:clamp(19px,1.8vw,25px);font-weight:600;letter-spacing:-.01em;margin:6px 0 4px;overflow-wrap:anywhere}
+.eqn .arrow{color:var(--accent);padding:0 .25em}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{font-size:13px;font-weight:700;padding:5px 10px;border-radius:99px;border:1.5px solid var(--line);color:var(--muted);background:transparent}
+.chip.on{border-color:var(--accent);background:var(--accent);color:var(--on-accent)}
+.chip.half{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.typenote{font-size:15px;margin:10px 0 0}
+.hidden-answer{display:flex;align-items:center;gap:10px;margin-top:10px;padding:10px 12px;border:1.5px dashed var(--line);border-radius:8px;font-size:15px;color:var(--muted)}
+.dir{display:grid;grid-template-columns:auto 1fr;gap:6px 10px;font-size:15px;margin-top:4px}
+.dir .k{font-weight:700;white-space:nowrap}
+.k.fwd{color:var(--fwd)} .k.rev{color:var(--rev)}
+.meter{display:grid;grid-template-columns:minmax(0,9.5em) minmax(0,1fr) 5.5em;gap:8px;align-items:center;font-size:14px;margin-top:8px}
+.meter .bar{height:14px;border-radius:7px;background:var(--surface-2);overflow:hidden}
+.meter .bar i{display:block;height:100%;width:0;border-radius:7px;transition:width .25s linear}
+.meter .v{font-family:var(--font-mono);font-size:13px;text-align:right;font-variant-numeric:tabular-nums}
+.verdict{margin-top:10px;font-weight:700;font-size:15px;padding:7px 10px;border-radius:8px}
+.verdict.eq{background:var(--ok-soft);color:var(--ok)} .verdict.neq{background:var(--bad-soft);color:var(--bad)}
+.twocol{display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:15px}
+.twocol ul{margin:6px 0 0;padding-left:18px}
+@media (max-width:520px){.twocol{grid-template-columns:1fr}}
+.small{font-size:14px;color:var(--muted)}
+.label-up{font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+canvas.chart{display:block;width:100%;height:170px}
+
+.headright{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.fs-msg{font-size:13px;color:var(--bad)}
+/* Landscape: fit a projector screen without scrolling */
+@media (orientation: landscape) and (min-width:1000px){
+  .wrap{max-width:none;padding-block:10px 16px}
+  header.top{padding-bottom:8px;margin-bottom:10px}
+  h1{font-size:clamp(22px,2.2vw,30px)}
+  .toolbar{margin-bottom:8px}
+  .stage-grid{grid-template-columns:minmax(0,1fr) minmax(330px,25vw)}
+  .stage-grid .panel{max-height:calc(100vh - 150px);overflow-y:auto;padding-right:4px}
+  .stage-grid .card{padding:12px 14px}
+  .twocol{grid-template-columns:1fr}
+  #sysCanvas{margin:0 auto}
+}
+:fullscreen body, body:fullscreen{overflow-y:auto}
+@media (prefers-reduced-motion: reduce){ .meter .bar i{transition:none} }
+</style>
+
+<div class="wrap">
+<header class="top">
+  <div class="brand">
+    <div class="eyebrow">SCH4U · Chemical Systems &amp; Equilibrium · Introduction</div>
+    <h1>Introduction to Equilibrium Systems</h1>
+  </div>
+  <div class="headright">
+  <button class="btn" id="fsBtn" title="Full screen (F)">⛶ Full screen</button>
+  </div>
+</header>
+
+<!-- ============ TAB 1 ============ -->
+<section id="panel-systems">
+  <div class="toolbar">
+    <label class="field" for="sysSelect">Example system
+      <select id="sysSelect">
+        <option value="soda">Closed bottle of club soda</option>
+        <option value="caco3">Calcium carbonate in water</option>
+        <option value="ice">Sea ice and the water below</option>
+        <option value="iodine">Solid iodine in a vacuum-sealed tube</option>
+        <option value="n2o4">N₂O₄ and NO₂ in a sealed flask</option>
+      </select>
+    </label>
+    <label class="check" style="margin-top:18px"><input type="checkbox" id="hideType" checked> Hide the classification (students classify first)</label>
+  </div>
+
+  <div class="stage-grid">
+    <div class="stage">
+      <canvas id="sysCanvas" aria-label="Macro view and molecular view of the selected equilibrium system"></canvas>
+      <div class="stage-controls">
+        <button class="btn" id="restartBtn">↺ Restart at equilibrium</button>
+        <button class="btn" id="scratchBtn">Start from scratch</button>
+        <button class="btn" id="pauseBtn" aria-pressed="false">❚❚ Pause</button>
+        <button class="btn" id="trackBtn" aria-pressed="false">◎ Follow one particle</button>
+        <button class="btn" id="capBtn" aria-pressed="false">Open the cap</button>
+        <label class="check small" for="speedSel">Speed
+          <select id="speedSel" style="font-size:14px;padding:4px 8px">
+            <option value="0.5">½×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option>
+          </select></label>
+        <span class="status" id="trackStatus"></span>
+      </div>
+      <p class="small" id="startNote" style="margin:8px 0 0"></p>
+    </div>
+
+    <div class="panel">
+      <div class="card">
+        <div class="label-up">Equilibrium equation</div>
+        <div class="eqn" id="sysEq"></div>
+        <div id="typeBox"></div>
+      </div>
+      <div class="card">
+        <div class="label-up">Both processes are happening</div>
+        <div class="dir" id="sysDir"></div>
+        <p class="small" style="margin:10px 0 0">Watch the molecular view: molecules <b>trade places</b>. A dashed circle marks the next ones to cross. At the same moment that one crosses forward (<b class="k fwd">orange</b>), another crosses back (<b class="k rev">purple</b>), so the amounts on each side never change.</p>
+        <div class="verdict neq" id="verdict" hidden></div>
+      </div>
+  <div class="card">
+        <div class="twocol">
+          <div><h3>Stays constant (macro scale)</h3><ul id="constList"></ul></div>
+          <div><h3>Keeps changing (molecular scale)</h3><ul id="changeList"></ul></div>
+        </div>
+        <p class="small" id="worldNote" style="margin:12px 0 0"></p>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<!-- ============ TAB 2 ============ -->
+<footer>Molecular views are simplified models: only a few particles are drawn and speeds are slowed so individual events can be seen.<!-- N₂O₄ ⇌ 2NO₂ from the lesson data at 25 °C; water–gas shift values from Moe's correlation for K<sub>p</sub> (equal moles of gas on each side, so K<sub>c</sub> = K<sub>p</sub>); 2SO₂ + O₂ ⇌ 2SO₃ from Example 2 data.--></footer>
+</div>
+
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const TAU = Math.PI * 2;
+const rnd = (a, b) => a + Math.random() * (b - a);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+/* ---------- theme tokens for canvas ---------- */
+let T = {};
+const TOKS = ['bg','surface','surface-2','ink','muted','line','accent','accent-soft','fwd','rev','ok','sp1','sp2','sp3','sp4','sp5','liquid','liquid-line','glass','glass-fill','o','c','h','n','atomline','ca','i2','i2-gas','ice','ice-line','solid','solid-line','iodine-solid','sky','sea','no2','na','cl','cap','label','frame'];
+function readTokens(){ const cs = getComputedStyle(document.documentElement); TOKS.forEach(k => T[k] = cs.getPropertyValue('--' + k).trim()); }
+readTokens();
+try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { readTokens(); redrawAll(); }); } catch (e) {}
+new MutationObserver(() => { readTokens(); redrawAll(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+function fit(canvas, logicalW, logicalH){
+  const dpr = window.devicePixelRatio || 1;
+  const w = canvas.clientWidth;
+  const h = logicalW ? w * logicalH / logicalW : canvas.clientHeight;
+  if (logicalW) canvas.style.height = h + 'px';
+  const W = Math.round(w * dpr), H = Math.round(h * dpr);
+  if (canvas.width !== W || canvas.height !== H){ canvas.width = W; canvas.height = H; }
+  return { w, h, dpr };
+}
+
+/* ---------- glyphs (molecular coords) ---------- */
+function atom(ctx, x, y, r, fill){ ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fillStyle = fill; ctx.fill(); ctx.lineWidth = 1; ctx.strokeStyle = T.atomline; ctx.stroke(); }
+const G = {
+  co2(ctx, x, y, a){ const dx = Math.cos(a) * 7.5, dy = Math.sin(a) * 7.5; atom(ctx, x - dx, y - dy, 4.6, T.o); atom(ctx, x + dx, y + dy, 4.6, T.o); atom(ctx, x, y, 4.4, T.c); },
+  h2o(ctx, x, y, a, alpha){ if (alpha !== undefined) ctx.globalAlpha = alpha; const d = 6.2; atom(ctx, x + Math.cos(a + 0.91) * d, y + Math.sin(a + 0.91) * d, 3.1, T.h); atom(ctx, x + Math.cos(a - 0.91) * d, y + Math.sin(a - 0.91) * d, 3.1, T.h); atom(ctx, x, y, 5.2, T.o); ctx.globalAlpha = 1; },
+  ca(ctx, x, y){ atom(ctx, x, y, 6.4, T.ca); ctx.strokeStyle = T.c; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(x - 3, y); ctx.lineTo(x + 3, y); ctx.moveTo(x, y - 3); ctx.lineTo(x, y + 3); ctx.stroke(); },
+  co3(ctx, x, y, a){ for (let i = 0; i < 3; i++){ const t = a + i * TAU / 3; atom(ctx, x + Math.cos(t) * 6.4, y + Math.sin(t) * 6.4, 3.9, T.o); } atom(ctx, x, y, 3.6, T.c); },
+  i2(ctx, x, y, a){ const dx = Math.cos(a) * 4.8, dy = Math.sin(a) * 4.8; atom(ctx, x - dx, y - dy, 5.6, T.i2); atom(ctx, x + dx, y + dy, 5.6, T.i2); },
+  na(ctx, x, y){ atom(ctx, x, y, 4.6, T.na); },
+  cl(ctx, x, y){ atom(ctx, x, y, 6.2, T.cl); },
+  no2(ctx, x, y, a){ const d = 7; atom(ctx, x + Math.cos(a + 1.15) * d, y + Math.sin(a + 1.15) * d, 4.3, T.o); atom(ctx, x + Math.cos(a - 1.15) * d, y + Math.sin(a - 1.15) * d, 4.3, T.o); atom(ctx, x, y, 4.3, T.n); },
+  n2o4(ctx, x, y, a){ const ux = Math.cos(a), uy = Math.sin(a); const bx = ux * 5, by = uy * 5;
+    ctx.strokeStyle = T.atomline; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x - bx, y - by); ctx.lineTo(x + bx, y + by); ctx.stroke();
+    G.no2(ctx, x + bx, y + by, a); G.no2(ctx, x - bx, y - by, a + Math.PI); }
+};
+const GS = 1.6, GLOW = 2.4, PERIOD = 2.2;
+const RADIUS = { co2: 9 * GS, h2o: 8 * GS, ca: 7 * GS, co3: 9 * GS, i2: 9 * GS, na: 5 * GS, cl: 6.5 * GS, no2: 9 * GS, n2o4: 15 * GS };
+function drawG(ctx, sp, x, y, a, alpha){ ctx.save(); ctx.translate(x, y); ctx.scale(GS, GS); G[sp](ctx, 0, 0, a, alpha); ctx.restore(); }
+
+/* ---------- molecular engine: 640 x 480 zoom window ---------- */
+const MW = 640, MH = 480;
+function newP(sp, x, y, mode, speed){
+  const ang = rnd(0, TAU), s = mode === 'gas' ? speed * rnd(0.8, 1.2) : rnd(10, speed);
+  return { sp, x, y, px: x, py: y, vx: Math.cos(ang) * s, vy: Math.sin(ang) * s, a: rnd(0, TAU), va: rnd(-2, 2), mode, speed, tag: false, trail: [] };
+}
+function moveP(p, dt){
+  p.px = p.x; p.py = p.y;
+  if (p.mode === 'liq'){
+    p.vx += (Math.random() * 2 - 1) * 900 * dt; p.vy += (Math.random() * 2 - 1) * 900 * dt;
+    const s = Math.hypot(p.vx, p.vy); if (s > p.speed){ p.vx *= p.speed / s; p.vy *= p.speed / s; }
+    p.va += (Math.random() * 2 - 1) * 8 * dt; p.va = clamp(p.va, -2, 2);
+  } else {
+    const s = Math.hypot(p.vx, p.vy) || 1; const target = p.speed; p.vx *= (1 + (target / s - 1) * 0.02); p.vy *= (1 + (target / s - 1) * 0.02);
+  }
+  p.x += p.vx * dt; p.y += p.vy * dt; p.a += p.va * dt;
+  if (p.tag){ p.trail.push(p.x, p.y); if (p.trail.length > 80) p.trail.splice(0, 2); }
+}
+function walls(p, x0, y0, x1, y1){
+  const r = RADIUS[p.sp];
+  if (p.x < x0 + r){ p.x = x0 + r; p.vx = Math.abs(p.vx); }
+  if (p.x > x1 - r){ p.x = x1 - r; p.vx = -Math.abs(p.vx); }
+  if (p.y < y0 + r){ p.y = y0 + r; p.vy = Math.abs(p.vy); }
+  if (p.y > y1 - r){ p.y = y1 - r; p.vy = -Math.abs(p.vy); }
+}
+
+class BaseScene {
+  warm(){ this.reset(); for (let i = 0; i < 150 * 30; i++) this.update(1 / 30); this.endTrade && this.endTrade(); this.flashes = []; (this.ps || []).forEach(p => p.glow = null); this.siteGlow = []; this.applyTag(); }
+  resetStats(){ this.t = 0; this.fwdT = []; this.revT = []; this.fwdTotal = 0; this.revTotal = 0; this.hist = []; this.nextSample = 0; this.flashes = []; }
+  event(kind, x, y){ (kind === 'fwd' ? this.fwdT : this.revT).push(this.t); kind === 'fwd' ? this.fwdTotal++ : this.revTotal++; this.flashes.push({ x, y, age: 0, kind }); }
+  rates(){ const W = 20, t0 = this.t - W; this.fwdT = this.fwdT.filter(t => t > t0); this.revT = this.revT.filter(t => t > t0); const span = Math.max(1, Math.min(W, this.t)); return { f: this.fwdT.length / span, r: this.revT.length / span }; }
+  sample(){ if (this.t >= this.nextSample){ const c = this.counts(); this.hist.push({ t: this.t, a: c.a, b: c.b }); this.nextSample = this.t + 0.25; while (this.hist.length && this.hist[0].t < this.t - 60) this.hist.shift(); } }
+  stepFlashes(dt){ this.flashes.forEach(f => f.age += dt); this.flashes = this.flashes.filter(f => f.age < 0.7);
+    (this.ps || []).forEach(p => { if (p.glow){ p.glow.age += dt; if (p.glow.age > GLOW) p.glow = null; } });
+    if (this.siteGlow){ this.siteGlow.forEach(gw => gw.age += dt); this.siteGlow = this.siteGlow.filter(gw => gw.age < GLOW && gw.r < this.h[gw.c]); } }
+  glowAt(ctx, x, y, r, gw){
+    const k = gw.age / GLOW, col = gw.kind === 'fwd' ? T.fwd : T.rev;
+    ctx.save(); ctx.globalAlpha = 0.28 * (1 - k); ctx.beginPath(); ctx.arc(x, y, r + 12, 0, TAU); ctx.fillStyle = col; ctx.fill();
+    ctx.globalAlpha = 1 - k * 0.8; ctx.lineWidth = 3.5; ctx.strokeStyle = col; ctx.beginPath(); ctx.arc(x, y, r + 12, 0, TAU); ctx.stroke();
+    if (this.names && !gw.quiet && gw.age < GLOW * 0.75){ ctx.font = '700 19px ' + getComputedStyle(document.body).fontFamily; ctx.lineWidth = 4; ctx.strokeStyle = T.surface; const t = (gw.kind === 'fwd' ? '→ ' + this.names[0] : '← ' + this.names[1]).toLowerCase(); const right = x < MW - 190; ctx.textAlign = right ? 'left' : 'right'; const tx = right ? x + r + 18 : x - r - 18, ty = clamp(y + 6, 50, MH - 30); ctx.strokeText(t, tx, ty); ctx.fillStyle = col; ctx.fillText(t, tx, ty); }
+    ctx.restore();
+  }
+  tradeN(){ return Math.random() < 0.6 ? 1 : 2; }
+  tick(dt){ if (this.trade){ this.trade.t += dt; return; } this.cycle = (this.cycle ?? 1) - dt; if (this.cycle <= 0){ this.startTrade(); if (!this.trade) this.cycle = PERIOD; } }
+  endTrade(){ this.trade = null; this.cycle = PERIOD; (this.ps || []).forEach(p => { p.want = null; p.hold = false; }); }
+  steer(p, tx, ty, sp, dt){ const dx = tx - p.x, dy = ty - p.y, d = Math.hypot(dx, dy); if (d < 4){ p.x = tx; p.y = ty; p.vx = 0; p.vy = 0; p.hold = true; return; } const v = Math.min(sp, d / dt); p.vx = dx / d * v; p.vy = dy / d * v; }
+  drawWants(ctx){ (this.ps || []).forEach(p => { if (p.want){ ctx.save(); ctx.setLineDash([5, 5]); ctx.lineWidth = 2.5; ctx.strokeStyle = T.muted; ctx.beginPath(); ctx.arc(p.x, p.y, RADIUS[p.sp] + 9, 0, TAU); ctx.stroke(); ctx.restore(); } }); }
+  drawGlows(ctx){ this.drawWants(ctx); (this.ps || []).forEach(p => { if (p.glow) this.glowAt(ctx, p.x, p.y, RADIUS[p.sp], p.glow); }); (this.siteGlow || []).forEach(gw => { const q = this.sitePos(gw.c, gw.r); this.glowAt(ctx, q.x, q.y, RADIUS[this.siteType(gw.c, gw.r)], gw); }); }
+  drawFlashes(ctx){ return; this.flashes.forEach(f => { const k = f.age / 0.7; ctx.beginPath(); ctx.arc(f.x, f.y, 8 + k * 18, 0, TAU); ctx.strokeStyle = f.kind === 'fwd' ? T.fwd : T.rev; ctx.globalAlpha = 1 - k; ctx.lineWidth = 3; ctx.stroke(); ctx.globalAlpha = 1; }); }
+  drawTagged(ctx, p){
+    if (!p) return;
+    if (p.trail.length > 4){ ctx.beginPath(); ctx.moveTo(p.trail[0], p.trail[1]); for (let i = 2; i < p.trail.length; i += 2) ctx.lineTo(p.trail[i], p.trail[i + 1]); ctx.strokeStyle = T.accent; ctx.globalAlpha = .55; ctx.lineWidth = 2; ctx.setLineDash([4, 4]); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1; }
+    this.ring(ctx, p.x, p.y, RADIUS[p.sp] + 6);
+  }
+  ring(ctx, x, y, r){ ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.strokeStyle = T.accent; ctx.lineWidth = 3; ctx.stroke(); }
+}
+
+/* Club soda: CO2(aq) <-> CO2(g) across a liquid surface */
+class SodaScene extends BaseScene {
+  constructor(){ super(); this.level = 190; this.N = 16; this.target = 5; this.reset(); }
+  reset(){
+    this.resetStats(); this.cap = false; this.escaped = 0; this.trade = null; this.cycle = 1;
+    this.ps = []; for (let i = 0; i < this.N; i++) this.ps.push(newP('co2', rnd(20, MW - 20), rnd(this.level + 20, MH - 20), 'liq', 80));
+    this.water = []; for (let i = 0; i < 0; i++) this.water.push(newP('h2o', rnd(20, MW - 20), rnd(this.level + 15, MH - 15), 'liq', 40));
+    this.ps.forEach(p => p.ph = 'aq');
+    this.tagIdx = 0; this.applyTag();
+  }
+  applyTag(){ this.ps.forEach((p, i) => { p.tag = this.tracking && i === this.tagIdx; p.trail = []; }); }
+  counts(){ let a = 0, b = 0; this.ps.forEach(p => p.ph === 'aq' ? a++ : b++); return { a, b }; }
+  startTrade(){
+    const L = this.level, aq = this.ps.filter(p => p.ph === 'aq').sort((a, b) => a.y - b.y), g = this.ps.filter(p => p.ph === 'g').sort((a, b) => b.y - a.y);
+    const paired = !this.cap && g.length >= this.target;
+    let n = Math.min(this.tradeN(), aq.length, paired ? g.length : 99); if (n < 1) return;
+    const fwd = aq.slice(0, n), rev = paired ? g.slice(0, n) : [];
+    fwd.forEach(p => p.want = 'fwd'); rev.forEach(p => p.want = 'rev');
+    this.trade = { fwd, rev, t: 0 };
+  }
+  update(dt){
+    this.t += dt; const L = this.level, r = RADIUS.co2; this.tick(dt);
+    for (const p of this.ps){
+      if (p.want){ const tx = clamp(p.x, 30, MW - 30); this.steer(p, tx, p.ph === 'aq' ? L + r + 2 : L - r - 2, 120, dt); p.x += p.vx * dt; p.y += p.vy * dt; if (p.tag){ p.trail.push(p.x, p.y); if (p.trail.length > 80) p.trail.splice(0, 2); } continue; }
+      moveP(p, dt);
+      if (p.ph === 'aq'){ if (p.y < L + r){ p.y = L + r; p.vy = Math.abs(p.vy); } walls(p, 0, L - 50, MW, MH); }
+      else {
+        if (p.y > L - r && p.vy > 0){ p.y = L - r; p.vy = -Math.abs(p.vy); }
+        if (this.cap && p.y < 4 + r){ p.gone = true; this.escaped++; continue; }
+        walls(p, 0, 0, MW, L + 50);
+      }
+    }
+    if (this.cap) this.ps = this.ps.filter(p => !p.gone);
+    const tr = this.trade;
+    if (tr){
+      const all = tr.fwd.concat(tr.rev).filter(p => this.ps.includes(p));
+      if (all.every(p => p.hold) || tr.t > 6){
+        tr.fwd.forEach(p => { p.ph = 'g'; p.mode = 'gas'; p.speed = 115; p.y = L - r - 2; const ang = rnd(-2.4, -0.7); p.vx = Math.cos(ang) * 115; p.vy = Math.sin(ang) * 115; p.glow = { age: 0, kind: 'fwd' }; this.event('fwd', p.x, L); });
+        tr.rev.forEach(p => { p.ph = 'aq'; p.mode = 'liq'; p.speed = 80; p.y = L + r + 2; p.vx = rnd(-20, 20); p.vy = 60; p.glow = { age: 0, kind: 'rev' }; this.event('rev', p.x, L); });
+        this.endTrade();
+      }
+    }
+    this.stepFlashes(dt); this.sample();
+  }
+  tagged(){ return this.ps.find(p => p.tag); }
+  trackText(){ if (!this.tracking) return ''; const p = this.tagged(); if (!p) return 'Your tracked CO₂ escaped out of the bottle.'; return p.ph === 'aq' ? 'Tracked CO₂: dissolved in the soda (aq)' : 'Tracked CO₂: in the air space (g)'; }
+  draw(ctx){
+    ctx.fillStyle = T.surface; ctx.fillRect(0, 0, MW, MH);
+    ctx.fillStyle = T.liquid; ctx.fillRect(0, this.level, MW, MH - this.level);
+    ctx.strokeStyle = T['liquid-line']; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(0, this.level); ctx.lineTo(MW, this.level); ctx.stroke();
+    this.water.forEach(w => drawG(ctx, 'h2o', w.x, w.y, w.a, .35));
+    if (this.cap){ ctx.fillStyle = T.muted; ctx.font = '600 15px ' + getComputedStyle(document.body).fontFamily; ctx.textAlign = 'center'; ctx.fillText('↑ open neck: gas escapes ↑', MW / 2, 22); }
+    this.drawGlows(ctx);
+    this.ps.forEach(p => drawG(ctx, 'co2', p.x, p.y, p.a));
+    this.drawFlashes(ctx); if (this.tracking) this.drawTagged(ctx, this.tagged());
+    label(ctx, 'air space: CO₂(g)', 14, 26); label(ctx, 'soda: CO₂(aq) in water', 14, this.level + 26);
+  }
+  drawMacro(ctx, A){
+    const cx = A.x + A.w / 2, top = A.y + 40, bot = A.y + A.h - 14, bw = Math.min(A.w * 0.5, 150), nw = bw * 0.36;
+    const shoulder = top + 70, levelY = shoulder + 45;
+    const gasFrac = this.counts().b / Math.max(1, this.N);
+    // body
+    ctx.save();
+    const path = new Path2D();
+    path.moveTo(cx - nw / 2, top); path.lineTo(cx - nw / 2, top + 30); path.quadraticCurveTo(cx - bw / 2, top + 40, cx - bw / 2, shoulder);
+    path.lineTo(cx - bw / 2, bot - 12); path.quadraticCurveTo(cx - bw / 2, bot, cx - bw / 2 + 12, bot); path.lineTo(cx + bw / 2 - 12, bot); path.quadraticCurveTo(cx + bw / 2, bot, cx + bw / 2, bot - 12);
+    path.lineTo(cx + bw / 2, shoulder); path.quadraticCurveTo(cx + bw / 2, top + 40, cx + nw / 2, top + 30); path.lineTo(cx + nw / 2, top);
+    ctx.fillStyle = T['glass-fill']; ctx.fill(path);
+    ctx.save(); ctx.clip(path); ctx.fillStyle = T.liquid; ctx.fillRect(cx - bw / 2, levelY, bw, bot - levelY); ctx.fillStyle = T.liquid; ctx.fillRect(cx - bw / 2, levelY, bw, bot - levelY);
+    // bubbles
+    const nb = this.cap ? 26 : 5;
+    for (let i = 0; i < nb; i++){ const ph = (this.t * (this.cap ? 0.9 : 0.35) + i * 0.6180339) % 1; const bx = cx - bw / 2 + 12 + ((i * 37) % (bw - 24)); const by = bot - 8 - ph * (bot - levelY - 10); ctx.beginPath(); ctx.arc(bx, by, 2.2 + (i % 3), 0, TAU); ctx.strokeStyle = T['liquid-line']; ctx.lineWidth = 1.2; ctx.stroke(); }
+    // gas dots in headspace
+    for (let i = 0; i < Math.round(gasFrac * 20); i++){ const gx = cx - nw / 2 + 4 + ((i * 53) % Math.max(4, bw - 10)) * (nw - 8) / Math.max(4, bw - 10); const gy = top + 6 + ((i * 29) % Math.max(4, levelY - top - 12)); ctx.beginPath(); ctx.arc(gx + ((i % 2) ? (bw - nw) * .25 * Math.sin(i) : 0), gy, 1.6, 0, TAU); ctx.fillStyle = T.muted; ctx.globalAlpha = .6; ctx.fill(); ctx.globalAlpha = 1; }
+    ctx.restore();
+    ctx.strokeStyle = T['liquid-line']; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(cx - bw / 2 + 1, levelY); ctx.lineTo(cx + bw / 2 - 1, levelY); ctx.stroke();
+    ctx.strokeStyle = T.glass; ctx.lineWidth = 3; ctx.stroke(path);
+    // cap
+    ctx.fillStyle = T.cap;
+    if (!this.cap){ ctx.fillRect(cx - nw / 2 - 4, top - 14, nw + 8, 16); }
+    else { ctx.save(); ctx.translate(cx + nw / 2 + 26, top - 18); ctx.rotate(0.6); ctx.fillRect(-nw / 2 - 4, -8, nw + 8, 16); ctx.restore(); }
+    ctx.restore();
+    macroLabel(ctx, this.cap ? 'Open bottle: going flat' : 'Closed bottle: stays fizzy', cx, bot + 4);
+    return { x: cx + bw * 0.12, y: levelY, r: 22 };
+  }
+}
+
+/* Lattice scenes: solid  <->  dissolved / liquid / gas particles */
+class LatticeScene extends BaseScene {
+  constructor(cfg){ super(); Object.assign(this, cfg); this.reset(); }
+  reset(){
+    this.resetStats(); this.trade = null; this.cycle = 1;
+    this.h = Array.from({ length: this.cols }, () => this.h0);
+    this.ps = []; this.extras = [];
+    const fy0 = this.anchor === 'bottom' ? 14 : this.base + this.h0 * this.rh + 14;
+    const fy1 = this.anchor === 'bottom' ? this.base - this.h0 * this.rh - 14 : MH - 14;
+    for (let i = 0; i < this.startFree; i++){ const sp = this.freeSpecies[i % this.freeSpecies.length]; this.ps.push(newP(sp, rnd(14, MW - 14), rnd(fy0, fy1), this.mode, this.speed)); }
+    (this.extraSpecies || []).forEach(sp => { for (let i = 0; i < this.extraN; i++) this.extras.push(newP(sp, rnd(14, MW - 14), rnd(fy0, fy1), this.mode, this.speed)); });
+    this.tagSite = null; this.applyTag();
+  }
+  applyTag(){
+    this.ps.forEach(p => { p.tag = false; p.trail = []; }); this.tagSite = null;
+    if (!this.tracking) return;
+    if (this.ps.length) this.ps[0].tag = true;
+    else { const c = Math.floor(this.cols / 2); this.tagSite = { c, r: this.h[c] - 1 }; }
+  }
+  cw(){ return MW / this.cols; }
+  colOf(x){ return clamp(Math.floor(x / this.cw()), 0, this.cols - 1); }
+  surf(c){ return this.anchor === 'bottom' ? this.base - this.h[c] * this.rh : this.base + this.h[c] * this.rh; }
+  sitePos(c, r){ const x = (c + 0.5) * this.cw() + ((r % 2) ? 2.5 : -2.5); const y = this.anchor === 'bottom' ? this.base - (r + 0.5) * this.rh : this.base + (r + 0.5) * this.rh; return { x, y }; }
+  counts(){ let solid = 0; this.h.forEach(v => solid += v); return { a: solid, b: this.ps.length }; }
+  dissolveOne(sp, avoid){
+    // exposed particles (on peaks) leave more easily than ones in hollows
+    const cand = [], wts = []; let tot = 0;
+    const far = c => !avoid || avoid.every(a => Math.abs(a - c) >= 3);
+    for (const strict of [true, false]){
+      for (let c = 0; c < this.cols; c++) if (this.h[c] > this.minH && (strict ? far(c) : !avoid || !avoid.includes(c)) && (!sp || this.siteType(c, this.h[c] - 1) === sp)){ const w = 1 + 3 * this.exposed(c); cand.push(c); wts.push(w); tot += w; }
+      if (cand.length) break;
+    }
+    if (!cand.length) return;
+    let pick = Math.random() * tot, k = 0; while (k < cand.length - 1 && (pick -= wts[k]) > 0) k++;
+    const c = cand[k], r = this.h[c] - 1, spc = this.siteType(c, r), pos = this.sitePos(c, r);
+    this.h[c]--; this.lastCol = c;
+    const p = newP(spc, pos.x, pos.y, this.mode, this.speed);
+    const dirY = this.anchor === 'bottom' ? -1 : 1;
+    const ang = rnd(0.6, 2.5); p.vx = Math.cos(ang) * this.speed * .9; p.vy = dirY * Math.sin(ang) * this.speed * .9;
+    if (this.tagSite && this.tagSite.c === c && this.tagSite.r === r){ p.tag = true; this.tagSite = null; }
+    p.glow = { age: 0, kind: 'fwd' }; this.ps.push(p); this.event('fwd', pos.x, this.surf(c));
+  }
+  startTrade(){
+    const bottom = this.anchor === 'bottom';
+    if (this.ps.length < this.target){ const n = this.tradeN(); for (let i = 0; i < n; i++) this.dissolveOne(); return; }
+    const n = this.tradeN(), used = new Set(), rev = [];
+    const free = this.ps.slice().sort((a, b) => bottom ? b.y - a.y : a.y - b.y);
+    for (const p of free){
+      if (rev.length >= n) break;
+      let best = -1, bd = 1e9;
+      for (let c = 0; c < this.cols; c++){ if (used.has(c) || this.h[c] >= this.maxH || this.siteType(c, this.h[c]) !== p.sp) continue; if (!this.cols || ![...Array(this.cols).keys()].some(k => k !== c && this.h[k] > this.minH && this.siteType(k, this.h[k] - 1) === p.sp)) continue; const d = Math.abs((c + .5) * this.cw() - p.x); if (d < bd){ bd = d; best = c; } }
+      if (best < 0) continue; used.add(best); p.want = { c: best }; rev.push(p);
+    }
+    if (rev.length) this.trade = { rev, t: 0 };
+  }
+  exposed(c){ const h = this.h[c], l = c > 0 ? this.h[c - 1] : h, r = c < this.cols - 1 ? this.h[c + 1] : h; return (l < h ? 1 : 0) + (r < h ? 1 : 0); }
+  hollow(c){ const h = this.h[c], l = c > 0 ? this.h[c - 1] : h, r = c < this.cols - 1 ? this.h[c + 1] : h; return (l > h ? 1 : 0) + (r > h ? 1 : 0); }
+  update(dt){
+    this.t += dt; this.tick(dt); const bottom = this.anchor === 'bottom';
+    for (const p of this.ps){
+      if (p.want){
+        const c = p.want.c, r = RADIUS[p.sp], tx = (c + .5) * this.cw(), ty = bottom ? this.surf(c) - r - 2 : this.surf(c) + r + 2;
+        let lo = Math.min(p.x, tx), hi = Math.max(p.x, tx), safe = bottom ? MH : 0;
+        for (let k = this.colOf(lo); k <= this.colOf(hi); k++) safe = bottom ? Math.min(safe, this.surf(k) - r - 6) : Math.max(safe, this.surf(k) + r + 6);
+        if (Math.abs(tx - p.x) > 4 && (bottom ? p.y > safe : p.y < safe)) this.steer(p, p.x, safe, 120, dt), p.hold = false;
+        else if (Math.abs(tx - p.x) > 4) this.steer(p, tx, p.y, 120, dt), p.hold = false;
+        else this.steer(p, tx, ty, 120, dt);
+        p.x += p.vx * dt; p.y += p.vy * dt; if (p.tag){ p.trail.push(p.x, p.y); if (p.trail.length > 80) p.trail.splice(0, 2); }
+        continue;
+      }
+      moveP(p, dt); walls(p, 0, 0, MW, MH); this.contact(p, false);
+    }
+    const tr = this.trade;
+    if (tr && (tr.rev.every(p => p.hold) || tr.t > 7)){
+      const stuck = [];
+      tr.rev.forEach(p => { const c = p.want.c; if (this.h[c] >= this.maxH || this.siteType(c, this.h[c]) !== p.sp) return; if (p.tag) this.tagSite = { c, r: this.h[c] }; (this.siteGlow = this.siteGlow || []).push({ c, r: this.h[c], age: 0, kind: 'rev' }); this.h[c]++; this.event('rev', p.x, this.surf(c)); stuck.push(p); });
+      this.ps = this.ps.filter(p => !stuck.includes(p));
+      const cols = stuck.map(p => p.want.c); stuck.forEach(p => { this.dissolveOne(p.sp, cols); cols.push(this.lastCol); });
+      this.endTrade();
+    }
+    this.stepFlashes(dt); this.sample();
+  }
+  contact(p, canStick){
+    const r = RADIUS[p.sp], c = this.colOf(p.x), s = this.surf(c), bottom = this.anchor === 'bottom';
+    const inside = bottom ? p.y + r > s : p.y - r < s;
+    if (!inside) return false;
+    const pc = this.colOf(p.px);
+    if (pc !== c && (bottom ? p.py + r <= this.surf(c) + 0.01 : p.py - r >= this.surf(c) - 0.01) === false){ p.x = p.px; p.vx = -p.vx; if (bottom) p.y = Math.min(p.y, this.surf(this.colOf(p.x)) - r); else p.y = Math.max(p.y, this.surf(this.colOf(p.x)) + r); return false; }
+    // vertical hit on column c
+    if (canStick && this.h[c] < this.maxH && p.sp === this.siteType(c, this.h[c]) && Math.random() < this.pStick * (this.exposed(c) ? 0.4 : [1, 1.3, 1.6][this.hollow(c)])){
+      if (p.tag) this.tagSite = { c, r: this.h[c] };
+      (this.siteGlow = this.siteGlow || []).push({ c, r: this.h[c], age: 0, kind: 'rev' }); this.h[c]++; this.event('rev', p.x, s); return true;
+    }
+    if (bottom){ p.y = s - r; p.vy = -Math.abs(p.vy); } else { p.y = s + r; p.vy = Math.abs(p.vy); }
+    return false;
+  }
+  tagged(){ return this.ps.find(p => p.tag); }
+  trackText(){ if (!this.tracking) return ''; return this.tagged() ? 'Tracked particle: ' + this.freeName : 'Tracked particle: in the ' + this.solidName; }
+  draw(ctx){
+    this.drawBackground(ctx);
+    const cw = this.cw();
+    for (let c = 0; c < this.cols; c++){
+      const s = this.surf(c), y0 = this.anchor === 'bottom' ? s : this.base, hgt = this.h[c] * this.rh;
+      ctx.fillStyle = T[this.solidFill]; ctx.fillRect(c * cw, Math.min(y0, y0 + hgt), cw + 0.5, hgt);
+    }
+    ctx.strokeStyle = T[this.solidLine]; ctx.lineWidth = 2; ctx.beginPath();
+    for (let c = 0; c < this.cols; c++){ const s = this.surf(c); if (c === 0) ctx.moveTo(0, s); else ctx.lineTo(c * cw, s); ctx.lineTo((c + 1) * cw, s); }
+    ctx.stroke();
+    for (let c = 0; c < this.cols; c++) for (let r = 0; r < this.h[c]; r++){ const q = this.sitePos(c, r); if (q.y < -12 || q.y > MH + 12) continue; drawG(ctx, this.siteType(c, r), q.x, q.y, this.siteAngle); }
+    this.drawGlows(ctx);
+    this.extras.forEach(p => drawG(ctx, p.sp, p.x, p.y, p.a));
+    this.ps.forEach(p => drawG(ctx, p.sp, p.x, p.y, p.a));
+    this.drawFlashes(ctx);
+    if (this.tracking){ const p = this.tagged(); if (p) this.drawTagged(ctx, p); else if (this.tagSite){ const q = this.sitePos(this.tagSite.c, this.tagSite.r); this.ring(ctx, q.x, q.y, 17); } }
+    this.labels(ctx);
+  }
+}
+
+function label(ctx, text, x, y, align){ ctx.font = '700 16px ' + getComputedStyle(document.body).fontFamily; ctx.textAlign = align || 'left'; ctx.lineWidth = 4; ctx.strokeStyle = T.surface; ctx.strokeText(text, x, y); ctx.fillStyle = T.label; ctx.fillText(text, x, y); }
+function macroLabel(ctx, text, x, y){ ctx.font = '700 14px ' + getComputedStyle(document.body).fontFamily; ctx.textAlign = 'center'; ctx.fillStyle = T.muted; ctx.fillText(text, x, y + 14); }
+
+function makeCaCO3(){
+  const s = new LatticeScene({ cols: 12, rh: 34, h0: 3, minH: 1, maxH: 6, base: MH, anchor: 'bottom', mode: 'liq', speed: 140, target: 6,
+    startFree: 0, freeSpecies: ['ca', 'co3'], siteType: (c, r) => ((c + r) % 2 ? 'co3' : 'ca'), siteAngle: -Math.PI / 2, solidFill: 'solid', solidLine: 'solid-line',
+    freeName: 'dissolved ion (aq)', solidName: 'solid crystal (s)' });
+  s.drawBackground = function(ctx){ ctx.fillStyle = T.surface; ctx.fillRect(0, 0, MW, MH); ctx.fillStyle = T.liquid; ctx.fillRect(0, 0, MW, MH); };
+  s.labels = function(ctx){ label(ctx, 'saturated solution: Ca²⁺(aq) + CO₃²⁻(aq)', 14, 26); label(ctx, 'CaCO₃(s) crystal', 14, MH - 14); };
+  s.drawMacro = function(ctx, A){
+    const cx = A.x + A.w / 2, bw = Math.min(A.w * .66, 190), top = A.y + 70, bot = A.y + A.h - 14, lv = top + 30;
+    ctx.fillStyle = T['glass-fill']; ctx.fillRect(cx - bw / 2, top, bw, bot - top);
+    ctx.fillStyle = T.liquid; ctx.fillRect(cx - bw / 2, lv, bw, bot - lv);
+    // solid pile
+    ctx.beginPath(); ctx.moveTo(cx - bw / 2 + 2, bot - 2); ctx.quadraticCurveTo(cx - bw * .2, bot - 34, cx, bot - 30); ctx.quadraticCurveTo(cx + bw * .25, bot - 36, cx + bw / 2 - 2, bot - 2); ctx.closePath(); ctx.fillStyle = T.solid; ctx.fill(); ctx.strokeStyle = T['solid-line']; ctx.lineWidth = 1.5; ctx.stroke();
+    for (let i = 0; i < 22; i++){ const x = cx - bw * .4 + (i * 41 % (bw * .8)), y = bot - 6 - (i * 13 % 20); ctx.fillStyle = T['solid-line']; ctx.fillRect(x, y, 2, 2); }
+    ctx.strokeStyle = T['liquid-line']; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(cx - bw / 2, lv); ctx.lineTo(cx + bw / 2, lv); ctx.stroke();
+    ctx.strokeStyle = T.glass; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(cx - bw / 2 - 8, top - 6); ctx.lineTo(cx - bw / 2, top); ctx.lineTo(cx - bw / 2, bot); ctx.lineTo(cx + bw / 2, bot); ctx.lineTo(cx + bw / 2, top); ctx.stroke();
+    ctx.lineWidth = 1.5; for (let k = 1; k <= 3; k++){ const y = bot - k * (bot - lv) / 4; ctx.beginPath(); ctx.moveTo(cx - bw / 2, y); ctx.lineTo(cx - bw / 2 + 16, y); ctx.stroke(); }
+    macroLabel(ctx, 'Beaker: water + excess CaCO₃(s)', cx, bot + 4);
+    return { x: cx + 10, y: bot - 30, r: 22 };
+  };
+  return s;
+}
+function makeIce(){
+  const s = new LatticeScene({ cols: 12, rh: 30, h0: 3, minH: 2, maxH: 5, base: 0, anchor: 'top', mode: 'liq', speed: 85, target: 1,
+    startFree: 12, freeSpecies: ['h2o'], siteType: () => 'h2o', siteAngle: Math.PI / 2, solidFill: 'ice', solidLine: 'ice-line',
+    freeName: 'liquid water molecule (l)', solidName: 'ice (s)' });
+  s.drawBackground = function(ctx){ ctx.fillStyle = T.surface; ctx.fillRect(0, 0, MW, MH); ctx.fillStyle = T.liquid; ctx.fillRect(0, 0, MW, MH); };
+  s.labels = function(ctx){ label(ctx, 'sea ice: H₂O(s)', 14, 26); label(ctx, 'seawater: H₂O(l)', 14, MH - 14); };
+  s.drawMacro = function(ctx, A){
+    const x0 = A.x + 8, x1 = A.x + A.w - 8, top = A.y + 34, sea = top + 110, bot = A.y + A.h - 14;
+    ctx.fillStyle = T.sky; ctx.fillRect(x0, top, x1 - x0, sea - top);
+    ctx.fillStyle = T.sea; ctx.globalAlpha = .55; ctx.fillRect(x0, sea, x1 - x0, bot - sea); ctx.globalAlpha = 1;
+    // ice floe: 10% above water, 90% below
+    const ix0 = x0 + 30, ix1 = x1 - 30, above = 10, below = 62;
+    ctx.beginPath(); ctx.moveTo(ix0, sea - above); ctx.lineTo(ix1, sea - above); ctx.lineTo(ix1 - 6, sea + below); ctx.lineTo(ix0 + 10, sea + below - 4); ctx.closePath(); ctx.fillStyle = T.ice; ctx.fill(); ctx.strokeStyle = T['ice-line']; ctx.lineWidth = 2; ctx.stroke();
+    ctx.strokeStyle = T['liquid-line']; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x0, sea); ctx.lineTo(ix0, sea); ctx.moveTo(ix1, sea); ctx.lineTo(x1, sea); ctx.stroke();
+    ctx.font = '700 13px ' + getComputedStyle(document.body).fontFamily; ctx.textAlign = 'left'; ctx.fillStyle = T.label; ctx.fillText('about −1.9 °C', ix0, sea + below + 24);
+    macroLabel(ctx, 'Floating sea ice: thickness steady', (x0 + x1) / 2, bot + 4);
+    return { x: (ix0 + ix1) / 2 + 20, y: sea + below - 2, r: 22 };
+  };
+  return s;
+}
+function makeIodine(){
+  const s = new LatticeScene({ cols: 12, rh: 30, h0: 3, minH: 1, maxH: 6, base: MH, anchor: 'bottom', mode: 'gas', speed: 115, target: 7,
+    startFree: 0, freeSpecies: ['i2'], siteType: () => 'i2', siteAngle: 0.5, solidFill: 'iodine-solid', solidLine: 'i2',
+    freeName: 'I₂ vapour (g)', solidName: 'solid iodine crystal (s)' });
+  s.drawBackground = function(ctx){ ctx.fillStyle = T.surface; ctx.fillRect(0, 0, MW, MH); ctx.fillStyle = T['i2-gas']; ctx.globalAlpha = clamp(this.ps.length / 12, 0, 1); ctx.fillRect(0, 0, MW, MH); ctx.globalAlpha = 1; };
+  s.labels = function(ctx){ label(ctx, 'vacuum + I₂(g) vapour (no air)', 14, 26); label(ctx, 'I₂(s) crystal', 14, MH - 14); };
+  s.drawMacro = function(ctx, A){
+    const cx = A.x + A.w / 2, tw = 64, top = A.y + 40, bot = A.y + A.h - 22;
+    const path = new Path2D(); path.moveTo(cx - tw / 2, top + 30); path.lineTo(cx - tw / 2, bot - tw / 2); path.arc(cx, bot - tw / 2, tw / 2, Math.PI, 0, true); path.lineTo(cx + tw / 2, top + 30); path.quadraticCurveTo(cx + tw / 2, top + 6, cx + 4, top); path.lineTo(cx - 4, top); path.quadraticCurveTo(cx - tw / 2, top + 6, cx - tw / 2, top + 30);
+    ctx.fillStyle = T['glass-fill']; ctx.fill(path);
+    ctx.save(); ctx.clip(path); ctx.fillStyle = T.i2; ctx.globalAlpha = clamp(this.ps.length / 12, 0, 1) * .45; ctx.fillRect(cx - tw, top, tw * 2, bot - top); ctx.globalAlpha = 1;
+    for (let i = 0; i < 9; i++){ const x = cx - tw / 2 + 8 + (i * 23 % (tw - 16)), y = bot - 10 - (i * 7 % 14); ctx.save(); ctx.translate(x, y); ctx.rotate(i); ctx.fillStyle = T['iodine-solid']; ctx.fillRect(-6, -3, 12, 6); ctx.restore(); }
+    ctx.restore();
+    ctx.strokeStyle = T.glass; ctx.lineWidth = 3; ctx.stroke(path);
+    ctx.beginPath(); ctx.moveTo(cx - 3, top); ctx.lineTo(cx, top - 14); ctx.lineTo(cx + 3, top); ctx.stroke();
+    macroLabel(ctx, 'Sealed tube: violet vapour', cx, bot + 10);
+    return { x: cx, y: bot - 14, r: 20 };
+  };
+  return s;
+}
+
+/* N2O4(g) <-> 2NO2(g): a chemical equilibrium */
+class N2O4Scene extends BaseScene {
+  constructor(){ super(); this.N0 = 8; this.target = 6; this.reset(); }
+  reset(){ this.resetStats(); this.trade = null; this.cycle = 1; this.ps = []; for (let i = 0; i < this.N0; i++) this.ps.push(newP('n2o4', rnd(30, MW - 30), rnd(30, MH - 30), 'gas', 90)); this.applyTag(); }
+  applyTag(){ this.ps.forEach((p, i) => { p.tag = this.tracking && i === 0; p.trail = []; }); }
+  counts(){ let a = 0, b = 0; this.ps.forEach(p => p.sp === 'n2o4' ? a++ : b++); return { a, b }; }
+  split(p){
+    const ux = Math.cos(p.a), uy = Math.sin(p.a);
+    const q1 = newP('no2', p.x + ux * 14, p.y + uy * 14, 'gas', 100), q2 = newP('no2', p.x - ux * 14, p.y - uy * 14, 'gas', 100);
+    q1.vx = p.vx * .3 + ux * 100; q1.vy = p.vy * .3 + uy * 100; q2.vx = p.vx * .3 - ux * 100; q2.vy = p.vy * .3 - uy * 100; q1.a = p.a; q2.a = p.a + Math.PI;
+    if (p.tag){ q1.tag = true; q1.trail = p.trail; }
+    q1.glow = { age: 0, kind: 'fwd' }; q2.glow = { age: 0, kind: 'fwd', quiet: true }; this.event('fwd', p.x, p.y);
+    return [q1, q2];
+  }
+  startTrade(){
+    const n2o4 = this.ps.filter(p => p.sp === 'n2o4'), no2 = this.ps.filter(p => p.sp === 'no2');
+    let n = Math.min(this.tradeN(), n2o4.length); if (n < 1) return;
+    if (no2.length < this.target){ const dead = n2o4.sort(() => Math.random() - .5).slice(0, n); let add = []; dead.forEach(p => add = add.concat(this.split(p))); this.ps = this.ps.filter(p => !dead.includes(p)).concat(add); return; }
+    const pairs = [], pool = no2.slice();
+    while (pairs.length < n && pool.length >= 2){
+      let bi = 0, bj = 1, bd = 1e9; for (let i = 0; i < pool.length; i++) for (let j = i + 1; j < pool.length; j++){ const d = Math.hypot(pool[i].x - pool[j].x, pool[i].y - pool[j].y); if (d < bd){ bd = d; bi = i; bj = j; } }
+      const a = pool[bi], b = pool[bj]; pool.splice(bj, 1); pool.splice(bi, 1);
+      const mx = clamp((a.x + b.x) / 2, 50, MW - 50), my = clamp((a.y + b.y) / 2, 60, MH - 50);
+      a.want = { x: mx - 13, y: my }; b.want = { x: mx + 13, y: my }; pairs.push([a, b]);
+    }
+    if (pairs.length) this.trade = { pairs, t: 0 };
+  }
+  update(dt){
+    this.t += dt; this.tick(dt);
+    for (const p of this.ps){
+      if (p.want){ this.steer(p, p.want.x, p.want.y, 110, dt); p.x += p.vx * dt; p.y += p.vy * dt; p.a += p.va * dt; if (p.tag){ p.trail.push(p.x, p.y); if (p.trail.length > 80) p.trail.splice(0, 2); } continue; }
+      moveP(p, dt); walls(p, 0, 0, MW, MH);
+    }
+    const tr = this.trade;
+    if (tr && (tr.pairs.every(([a, b]) => a.hold && b.hold) || tr.t > 7)){
+      const dead = new Set(), add = [];
+      tr.pairs.forEach(([a, b]) => { dead.add(a); dead.add(b); const m = newP('n2o4', (a.x + b.x) / 2, (a.y + b.y) / 2, 'gas', 90); m.a = 0; m.glow = { age: 0, kind: 'rev' }; if (a.tag || b.tag){ m.tag = true; m.trail = (a.tag ? a : b).trail; } add.push(m); this.event('rev', m.x, m.y); });
+      const n2o4 = this.ps.filter(p => p.sp === 'n2o4').sort(() => Math.random() - .5).slice(0, tr.pairs.length);
+      n2o4.forEach(p => { dead.add(p); this.split(p).forEach(q => add.push(q)); });
+      this.ps = this.ps.filter(p => !dead.has(p)).concat(add);
+      this.endTrade();
+    }
+    this.stepFlashes(dt); this.sample();
+  }
+  tagged(){ return this.ps.find(p => p.tag); }
+  trackText(){ if (!this.tracking) return ''; const p = this.tagged(); if (!p) return ''; return p.sp === 'n2o4' ? 'Tracked atoms: part of N₂O₄ (colourless)' : 'Tracked atoms: part of NO₂ (brown)'; }
+  draw(ctx){
+    ctx.fillStyle = T.surface; ctx.fillRect(0, 0, MW, MH);
+    ctx.fillStyle = T.no2; ctx.globalAlpha = clamp(this.counts().b / 10, 0, 1) * .28; ctx.fillRect(0, 0, MW, MH); ctx.globalAlpha = 1;
+    this.drawGlows(ctx);
+    this.ps.forEach(p => drawG(ctx, p.sp, p.x, p.y, p.a));
+    this.drawFlashes(ctx); if (this.tracking) this.drawTagged(ctx, this.tagged());
+    label(ctx, 'N₂O₄(g) colourless   ·   NO₂(g) brown', 14, 26);
+  }
+  drawMacro(ctx, A){
+    const cx = A.x + A.w / 2, r = Math.min(A.w * .3, 82), cy = A.y + A.h - 30 - r, nw = 26;
+    const p2 = new Path2D(); p2.moveTo(cx - nw / 2, A.y + 48); p2.lineTo(cx - nw / 2, cy - Math.sqrt(r * r - nw * nw / 4));
+    const ang = Math.asin(nw / 2 / r); p2.arc(cx, cy, r, -Math.PI / 2 - ang, -Math.PI / 2 + ang, true); p2.lineTo(cx + nw / 2, A.y + 48); p2.closePath();
+    ctx.fillStyle = T['glass-fill']; ctx.fill(p2);
+    ctx.save(); ctx.clip(p2); ctx.fillStyle = T.no2; ctx.globalAlpha = clamp(this.counts().b / 10, 0, 1) * .75; ctx.fillRect(cx - r - 2, A.y + 40, 2 * r + 4, A.h); ctx.globalAlpha = 1; ctx.restore();
+    ctx.strokeStyle = T.glass; ctx.lineWidth = 3; ctx.stroke(p2);
+    ctx.fillStyle = T.muted; ctx.fillRect(cx - nw / 2 - 4, A.y + 36, nw + 8, 14);
+    macroLabel(ctx, 'Sealed flask: brown colour stays constant', cx, cy + r + 2);
+    return { x: cx + r * .25, y: cy + r * .1, r: 22 };
+  }
+}
+
+/* ---------- scene metadata ---------- */
+const TYPES = ['Phase equilibrium', 'Solubility equilibrium', 'Chemical equilibrium'];
+const SYS = {
+  soda: { make: () => new SodaScene(), types: [0, 1], half: [1],
+    eq: 'CO<sub>2</sub>(aq) <span class="arrow">⇌</span> CO<sub>2</sub>(g)',
+    note: '<b>Phase equilibrium</b> between dissolved CO₂ and gaseous CO₂ in the air space. Because a gas is dissolving in a liquid, it is also a <b>gas solubility equilibrium</b>. It only exists while the bottle is closed.',
+    fwd: ['Escaping', 'CO₂ molecules leave the solution and enter the air space (aq → g).'], rev: ['Dissolving', 'CO₂ molecules from the air space dissolve back into the soda (g → aq).'],
+    A: 'CO₂(aq)', B: 'CO₂(g)',
+    constant: ['The amount of fizz (dissolved CO₂) in the soda', 'The pressure of CO₂ in the air space', 'Nothing seems to happen in a closed bottle'],
+    changing: ['Individual CO₂ molecules escape and re-dissolve all the time', 'The escaping rate equals the dissolving rate'],
+    world: 'Try opening the cap. The system is no longer closed, CO₂(g) leaves, the forward rate wins, and the soda goes flat. Equilibrium needs a closed system.',
+    start: 'Start from scratch begins just after capping: all of the CO₂ is dissolved and the air space has none.' },
+  caco3: { make: makeCaCO3, types: [1], half: [],
+    eq: 'CaCO<sub>3</sub>(s) <span class="arrow">⇌</span> Ca<sup>2+</sup>(aq) + CO<sub>3</sub><sup>2−</sup>(aq)',
+    note: '<b>Solubility equilibrium</b> between undissolved solid and its dissolved ions in a saturated solution. CaCO₃ is "insoluble", but a tiny amount still dissolves (K<sub>sp</sub> ≈ 3.4 × 10⁻⁹ at 25 °C).',
+    fwd: ['Dissolving', 'Ions break away from the crystal surface into the water (dissociation).'], rev: ['Precipitating', 'Ions collide with the crystal surface and rejoin the solid (crystallization).'],
+    A: 'ions in the solid', B: 'dissolved ions',
+    constant: ['The mass of undissolved solid at the bottom', 'The concentration of Ca²⁺ and CO₃²⁻ (the solution stays saturated)'],
+    changing: ['Ions leave and rejoin the crystal at equal rates', 'The particular ions in the solid keep swapping'],
+    world: 'Shells, limestone, cave formations and kettle scale are all calcium carbonate. Only a few ions are dissolved at any moment, but they are never zero.',
+    start: 'Start from scratch begins when the solid is first added to pure water: no ions are dissolved yet.' },
+  ice: { make: makeIce, types: [0], half: [],
+    eq: 'H<sub>2</sub>O(s) <span class="arrow">⇌</span> H<sub>2</sub>O(l)',
+    note: '<b>Phase equilibrium</b> (solid ⇌ liquid) at the interface where sea ice meets the water below, at the freezing point of seawater, about −1.9 °C.',
+    fwd: ['Melting', 'Water molecules break free from the ice lattice into the liquid.'], rev: ['Freezing', 'Liquid water molecules lock into the ice lattice.'],
+    A: 'H₂O in ice', B: 'H₂O in liquid (shown)',
+    constant: ['The thickness of the ice', 'The temperature at the interface'],
+    changing: ['Molecules melt off and freeze on at equal rates', 'The particular molecules in the ice keep swapping with ones in the water'],
+    world: 'Only a few of the liquid water molecules are drawn so each swap is easy to follow. In real liquid water the molecules are packed almost as closely as in the ice.',
+    start: 'Each system opens already at equilibrium. Here, Start from scratch also begins at equilibrium, since the ice and water are already at the freezing point.' },
+  iodine: { make: makeIodine, types: [0], half: [],
+    eq: 'I<sub>2</sub>(s) <span class="arrow">⇌</span> I<sub>2</sub>(g)',
+    note: '<b>Phase equilibrium</b> (solid ⇌ gas). Iodine sublimes directly from solid to gas, and the vapour deposits back onto the crystals. The tube was evacuated, so only iodine is present.',
+    fwd: ['Subliming', 'I₂ molecules escape the crystal directly into the gas (s → g).'], rev: ['Depositing', 'Gaseous I₂ molecules hit the crystal and stick (g → s).'],
+    A: 'I₂ in the crystal', B: 'I₂ vapour',
+    constant: ['The violet colour of the vapour', 'The mass of solid crystals'],
+    changing: ['Molecules sublime and deposit at equal rates'],
+    world: 'Warm the tube in your hand and the colour deepens: a new equilibrium at a higher temperature. That is the idea behind Le Châtelier\'s principle, later in this unit.',
+    start: 'Start from scratch begins just after the tube was evacuated and sealed: there is no vapour yet.' },
+  n2o4: { make: () => new N2O4Scene(), types: [2], half: [],
+    eq: 'N<sub>2</sub>O<sub>4</sub>(g) <span class="arrow">⇌</span> 2NO<sub>2</sub>(g)',
+    note: '<b>Chemical equilibrium</b>. Bonds break and form: N₂O₄ molecules split into two NO₂ molecules, and pairs of NO₂ molecules combine. All substances are gases, so it is a homogeneous equilibrium.',
+    fwd: ['Decomposing', 'N₂O₄ molecules split into 2 NO₂ molecules.'], rev: ['Combining', 'Two NO₂ molecules collide and bond to form N₂O₄.'],
+    A: 'N₂O₄ molecules', B: 'NO₂ molecules',
+    constant: ['The brown colour of the gas', 'The concentrations of N₂O₄ and NO₂ (not equal, just constant)'],
+    changing: ['Molecules split and recombine at equal rates'],
+    world: 'NO₂ is brown and N₂O₄ is colourless. The colour stops changing at equilibrium, but it never fades completely: the reaction does not go to completion.',
+    start: 'Start from scratch begins with only colourless N₂O₄ in the flask.' }
+};
+
+/* ---------- tab 1 controller ---------- */
+const sysCanvas = $('#sysCanvas'), sctx = sysCanvas.getContext('2d');
+const scenes = {}; let cur = 'soda', paused = false, tracking = false, speed = 1;
+function scene(){ if (!scenes[cur]){ const s = SYS[cur].make(); s.warm(); scenes[cur] = s; } return scenes[cur]; }
+
+function layout(){
+  const st = sysCanvas.parentElement; const w = st.clientWidth - 24;
+  if (w >= 620) return { W: 940, H: 490, macro: { x: 0, y: 26, w: 330, h: 450 }, frame: { x: 368, y: 34, w: 560, h: 420 }, wide: true };
+  return { W: 560, H: 900, macro: { x: 0, y: 26, w: 560, h: 410 }, frame: { x: 0, y: 470, w: 560, h: 420 }, wide: false };
+}
+function sizeSysCanvas(L){
+  const stage = sysCanvas.parentElement, cs = getComputedStyle(stage);
+  const avail = stage.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  let w = avail;
+  if (innerWidth > innerHeight && innerWidth >= 1000 && L.wide){
+    const top = sysCanvas.getBoundingClientRect().top + scrollY, below = 92;
+    const maxH = Math.max(320, innerHeight - (top - scrollY) - below);
+    w = Math.min(avail, maxH * L.W / L.H);
+  }
+  sysCanvas.style.width = w + 'px';
+}
+function drawSystem(){
+  const L = layout(); sizeSysCanvas(L); fit(sysCanvas, L.W, L.H);
+  const k = sysCanvas.width / L.W; sctx.setTransform(k, 0, 0, k, 0, 0);
+  sctx.fillStyle = T.surface; sctx.fillRect(0, 0, L.W, L.H);
+  const s = scene(), F = L.frame;
+  sctx.font = '700 13px ' + getComputedStyle(document.body).fontFamily; sctx.fillStyle = T.muted; sctx.textAlign = 'left';
+  sctx.fillText('MACRO SCALE · what you observe', L.macro.x + 6, L.macro.y - 8);
+  sctx.fillText('MOLECULAR SCALE · ' + (cur === 'n2o4' ? 'zoomed in on the gas' : 'zoomed in at the boundary'), F.x, F.y - 10);
+  const spot = s.drawMacro(sctx, L.macro);
+  // zoom lines
+  sctx.strokeStyle = T.frame; sctx.lineWidth = 1.5; sctx.setLineDash([5, 5]); sctx.globalAlpha = .7; sctx.beginPath();
+  if (L.wide){ sctx.moveTo(spot.x + spot.r * .7, spot.y - spot.r * .7); sctx.lineTo(F.x, F.y); sctx.moveTo(spot.x + spot.r * .7, spot.y + spot.r * .7); sctx.lineTo(F.x, F.y + F.h); }
+  else { sctx.moveTo(spot.x - spot.r * .7, spot.y + spot.r * .7); sctx.lineTo(F.x, F.y); sctx.moveTo(spot.x + spot.r * .7, spot.y + spot.r * .7); sctx.lineTo(F.x + F.w, F.y); }
+  sctx.stroke(); sctx.setLineDash([]); sctx.globalAlpha = 1;
+  sctx.beginPath(); sctx.arc(spot.x, spot.y, spot.r, 0, TAU); sctx.strokeStyle = T.frame; sctx.lineWidth = 3; sctx.stroke();
+  // molecular frame
+  sctx.save(); sctx.beginPath(); sctx.roundRect ? sctx.roundRect(F.x, F.y, F.w, F.h, 12) : sctx.rect(F.x, F.y, F.w, F.h); sctx.clip();
+  sctx.translate(F.x, F.y); sctx.scale(F.w / MW, F.h / MH); s.draw(sctx); sctx.restore();
+  sctx.beginPath(); sctx.roundRect ? sctx.roundRect(F.x, F.y, F.w, F.h, 12) : sctx.rect(F.x, F.y, F.w, F.h); sctx.strokeStyle = T.frame; sctx.lineWidth = 3; sctx.stroke();
+}
+function updateReadouts(){
+  const s = scene(), open = cur === 'soda' && s.cap, v = $('#verdict');
+  v.hidden = !open; if (open) v.textContent = 'Open system: CO₂ escapes and does not come back, so the soda goes flat. There is no equilibrium.';
+  $('#trackStatus').textContent = s.trackText();
+}
+function setSystem(id){
+  cur = id; const m = SYS[id], s = scene();
+  s.tracking = tracking; s.applyTag();
+  $('#sysEq').innerHTML = m.eq;
+  renderType();
+  $('#sysDir').innerHTML = `<span class="k fwd">→ ${m.fwd[0]}</span><span>${m.fwd[1]}</span><span class="k rev">← ${m.rev[0]}</span><span>${m.rev[1]}</span>`;
+  s.names = [m.fwd[0], m.rev[0]];
+  $('#constList').innerHTML = m.constant.map(x => `<li>${x}</li>`).join('');
+  $('#changeList').innerHTML = m.changing.map(x => `<li>${x}</li>`).join('');
+  $('#worldNote').innerHTML = m.world; $('#startNote').textContent = (cur === 'ice' ? '' : 'Each system opens already at equilibrium. ') + m.start;
+  $('#capBtn').hidden = id !== 'soda'; syncCap();
+  drawSystem(); updateReadouts();
+}
+let revealed = false;
+function renderType(){
+  const m = SYS[cur], hide = $('#hideType').checked && !revealed;
+  if (hide){ $('#typeBox').innerHTML = `<div class="hidden-answer">Which type of equilibrium is this? <button class="btn" id="revealType">Reveal</button></div>`; $('#revealType').onclick = () => { revealed = true; renderType(); }; return; }
+  $('#typeBox').innerHTML = `<div class="chips">${TYPES.map((t, i) => `<span class="chip ${m.types.includes(i) ? (m.half.includes(i) ? 'half' : 'on') : ''}">${t}</span>`).join('')}</div><p class="typenote">${m.note}</p>`;
+}
+function syncCap(){ const s = scenes.soda; const open = !!(s && s.cap); $('#capBtn').textContent = open ? 'Close the cap' : 'Open the cap'; $('#capBtn').setAttribute('aria-pressed', open); }
+$('#sysSelect').onchange = e => { revealed = false; setSystem(e.target.value); };
+$('#hideType').onchange = () => { revealed = false; renderType(); };
+function restart(fromScratch){ const s = scene(); s.tracking = tracking; if (fromScratch){ s.reset(); s.applyTag(); } else s.warm(); syncCap(); drawSystem(); updateReadouts(); }
+$('#restartBtn').onclick = () => restart(false);
+$('#scratchBtn').onclick = () => restart(true);
+$('#pauseBtn').onclick = () => { paused = !paused; $('#pauseBtn').setAttribute('aria-pressed', paused); $('#pauseBtn').textContent = paused ? '▶ Play' : '❚❚ Pause'; };
+$('#trackBtn').onclick = () => { tracking = !tracking; $('#trackBtn').setAttribute('aria-pressed', tracking); const s = scene(); s.tracking = tracking; s.applyTag(); updateReadouts(); };
+$('#capBtn').onclick = () => { const s = scenes.soda; s.cap = !s.cap; syncCap(); };
+$('#speedSel').onchange = e => speed = +e.target.value;
+
+/* ---------- main loop ---------- */
+function redrawAll(){ drawSystem(); }
+window.addEventListener('resize', redrawAll);
+
+let last = performance.now(), readoutT = 0;
+function frame(now){
+  const dtReal = Math.min(0.05, (now - last) / 1000); last = now;
+  const s = scene();
+  if (!paused){ const dt = dtReal * speed, steps = Math.ceil(dt / 0.02); for (let i = 0; i < steps; i++) s.update(dt / steps); }
+  drawSystem(); readoutT += dtReal; if (readoutT > 0.25){ readoutT = 0; updateReadouts(); }
+  requestAnimationFrame(frame);
+}
+
+/* full screen */
+const fsBtn = $('#fsBtn');
+function fsEl(){ return document.fullscreenElement || document.webkitFullscreenElement; }
+function syncFs(){ fsBtn.textContent = fsEl() ? '✕ Exit full screen' : '⛶ Full screen'; setTimeout(redrawAll, 60); }
+function toggleFs(){
+  const el = document.documentElement;
+  if (fsEl()){ (document.exitFullscreen || document.webkitExitFullscreen).call(document); return; }
+  const req = el.requestFullscreen || el.webkitRequestFullscreen;
+  if (!req){ fsBtn.title = 'Full screen is not available here. Use your browser\'s full-screen key (F11).'; return; }
+  try { const p = req.call(el); if (p && p.catch) p.catch(() => { fsBtn.textContent = 'Full screen blocked: press F11'; }); } catch (e) { fsBtn.textContent = 'Full screen blocked: press F11'; }
+}
+fsBtn.onclick = toggleFs;
+document.addEventListener('fullscreenchange', syncFs); document.addEventListener('webkitfullscreenchange', syncFs);
+document.addEventListener('keydown', e => { if ((e.key === 'f' || e.key === 'F') && !/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) toggleFs(); });
+
+/* boot */
+window.__eqlab = { scenes, SYS, setSystem };
+setSystem('soda');
+requestAnimationFrame(t => { last = t; frame(t); });
+})();
+</script>
+</body></html>
