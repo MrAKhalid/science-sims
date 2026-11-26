@@ -2,7 +2,7 @@
 // 1. Put the .html file in the right course/unit folder.
 // 2. Add one line to that unit's "sims" list below: { title, file, blurb }.
 // Bump this number whenever a simulation file changes, so browsers load the new copy.
-window.SIMS_VERSION = "202611261710";
+window.SIMS_VERSION = "202611261800";
 
 window.COURSES = {
   sph4u1: {
@@ -39,7 +39,7 @@ window.COURSES = {
       ]},
       { id: "equilibrium", name: "Chemical Systems and Equilibrium", sims: [
         { title: "Introduction to Equilibrium Systems", file: "intro-to-equilibrium-systems.html", blurb: "Five real systems at dynamic equilibrium (club soda, CaCO₃, sea ice, iodine, N₂O₄/NO₂) at macro and molecular scale. Molecules trade places across each boundary so students see both processes happening at the same rate. Classifications stay hidden until revealed." },
-        { title: "Quantitative Changes in Equilibrium Systems", file: "quantitative-changes-in-equilibrium-systems.html", blurb: "Two activities on gas equilibria. Determining Equilibrium Constants: run the reaction and calculate K from equilibrium concentrations. Determining Equilibrium Concentrations: K is given, students solve an ICE table, type their answers and press Check to watch the graph settle on them. Includes the 1000 × K approximation rule." },
+        { title: "Quantitative Changes in Equilibrium Systems", file: "quantitative-changes-in-equilibrium-systems.html", blurb: "Two activities on gas equilibria. Determining Equilibrium Constants: run the reaction and calculate K from equilibrium concentrations. Determining Equilibrium Concentrations: K is given, students solve an ICE table, type their answers and press Check to watch the graph settle on them. Includes heterogeneous equilibria (solids and liquids left out of K) and the 1000 × K approximation rule." },
       ]},
       { id: "electrochemistry", name: "Electrochemistry", sims: [] }
     ]
